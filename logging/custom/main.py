@@ -1,6 +1,4 @@
 from sys import exit
-
-# from utils.custom_logger import logger
 from utils.custom_logger import CustomLogger
 
 log = CustomLogger(__name__, 0)
