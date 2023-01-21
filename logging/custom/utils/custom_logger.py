@@ -39,4 +39,4 @@ ch.setLevel(logging.DEBUG) # 🤔
 ch.setFormatter(CustomFormatter())
 
 logger.addHandler(ch)
-logger.info("custom logger formats created at")
+logger.info("custom logger formats created")

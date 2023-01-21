@@ -14,8 +14,11 @@ def div(x, y):
         logger.critical(f"can't divide {x} by {y}: {e}")
         exit(1)
 
+def main(): 
+    div(0, "\U0001F43C")
+    div(1, 0)
+    logger.info("done")
+    exit(0)
 
-div(0, "\U0001F43C")
-div(1, 0)
-logger.info("done")
-exit(0)
+if __name__ == "__main__":
+    main()
