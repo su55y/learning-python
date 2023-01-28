@@ -1,0 +1,5 @@
+from logging import INFO, WARNING, ERROR
+
+LOGLEVEL = INFO
+
+RESOLUTION = "1280x720"
