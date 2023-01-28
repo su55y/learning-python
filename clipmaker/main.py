@@ -20,7 +20,7 @@ def die(msg: str):
 def parse_agrs() -> Namespace:
     parser = ArgumentParser(
         prog="clipmaker",
-        description="Download clips from youtube of twitch",
+        description="Download clips from youtube or twitch",
     )
     parser.add_argument("default", metavar="URL", help="url")
     parser.add_argument(
