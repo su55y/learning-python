@@ -1,5 +1,5 @@
 from os.path import dirname, exists
-from subprocess import getoutput, run, Popen
+from subprocess import PIPE, check_output, getoutput, run, Popen
 
 
 EXE = f"{dirname(__file__)}/print_dates.sh"
@@ -14,8 +14,11 @@ def sp_run() -> int:
     return run([EXE]).returncode
 
 
-def popen_wait() -> int:
-    return Popen(EXE).wait()
+def popen_wait_check_output() -> int:
+    p = Popen(EXE, stdout=PIPE, shell=True)
+    o = check_output(["grep", "--color=never", "-oP", "\\d{4}"], stdin=p.stdout)
+    print(o.decode(), end="")
+    return p.wait()
 
 
 def main():
@@ -26,10 +29,11 @@ def main():
     print("# run()")
     print(f"exit with code: {sp_run()}")
 
-    print("\nPopen().wait()")
-    print(f"exit with code: {popen_wait()}")
+    print("\n# Popen().wait()")
+    print(f"exit with code: {popen_wait_check_output()}")
 
-    print("\n# getoutput()\n", getoutput_with_pipe(), sep="")
+    print("\n# getoutput()")
+    print(getoutput_with_pipe())
 
 
 if __name__ == "__main__":
