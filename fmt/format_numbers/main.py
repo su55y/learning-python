@@ -57,8 +57,8 @@ def print_number(num: int):
     print(
         dedent(
             """
+            dec: {0}
             hex: {0:x}
-            int: {0}
             bin: {0:b}
             oct: {0:o}
         """.format(
