@@ -6,8 +6,7 @@ EXE = f"{dirname(__file__)}/print_dates.sh"
 
 
 def getoutput_with_pipe() -> str:
-    grep_year = "grep -oP '\\d{4}'"
-    return getoutput(f"{EXE} | {grep_year}")
+    return getoutput(f"{EXE} | grep -oP '\\d{{4}}'")
 
 
 def sp_run() -> int:
@@ -16,7 +15,7 @@ def sp_run() -> int:
 
 def popen_wait_check_output() -> int:
     p = Popen(EXE, stdout=PIPE, shell=True)
-    o = check_output(["grep", "--color=never", "-oP", "\\d{4}"], stdin=p.stdout)
+    o = check_output(["grep", "-oP", "\\d{4}"], stdin=p.stdout)
     print(o.decode(), end="")
     return p.wait()
 
