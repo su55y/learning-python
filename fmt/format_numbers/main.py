@@ -1,3 +1,5 @@
+#!/usr/bin/env -S python3 -u
+
 from textwrap import dedent
 from argparse import ArgumentParser, Namespace
 from typing import Tuple
@@ -8,7 +10,7 @@ def parse_args(help=False) -> Namespace:
     parser = ArgumentParser(
         prog="numconverter",
         description="Shows input number in {dec}, {hex}, {oct} and {bin} bases".format(
-            dec="\x1b[1mdec\x1b[0m", # bold
+            dec="\x1b[1mdec\x1b[0m",  # bold
             hex="\x1b[1mhex\x1b[0m",
             oct="\x1b[1moct\x1b[0m",
             bin="\x1b[1mbin\x1b[0m",
@@ -28,7 +30,6 @@ def parse_args(help=False) -> Namespace:
 
     if help:
         parser.print_help(stderr)
-        exit(1)
 
     return parser.parse_args()
 
@@ -47,10 +48,10 @@ def parse_number(args: Namespace) -> Tuple[int, bool]:
         res = int(args.default, base)
     except Exception as e:
         print(f"\x1b[31;1m{repr(e)}\x1b[0m\n")
-        parse_args(help=True)
         return res, False
 
     return res, True
+
 
 def print_number(num: int):
     print(
@@ -65,6 +66,7 @@ def print_number(num: int):
             )
         ).strip()
     )
+
 
 def main():
     args = parse_args()
