@@ -46,10 +46,10 @@ class MyDB:
             return e
 
     def select(
-        self, tb_name: str, rows=None, where=None, limit=None
+        self, tb_name: str, cols=None, where=None, limit=None
     ) -> Tuple[Any, Error | None]:
-        rows_str = "*" if not rows else ", ".join(rows)
-        query = f"SELECT {rows_str} FROM {tb_name}{'' if not where else ' WHERE '+where}{'' if not limit else ' LIMIT '+limit}"
+        cols_str = "*" if not cols else ", ".join(cols)
+        query = f"SELECT {cols_str} FROM {tb_name}{'' if not where else ' WHERE '+where}{'' if not limit else ' LIMIT '+limit}"
         info(f"try query: '{query}'")
         try:
             with self._open_conn() as conn:
@@ -60,11 +60,11 @@ class MyDB:
             return None, e
 
     def insert_row(
-        self, tb_name: str, rows: List[str], vals: Tuple[str, str]
+        self, tb_name: str, cols: List[str], vals: Tuple[str, str]
     ) -> Error | None:
-        rows_str = ", ".join(rows)
-        vals_str = ", ".join(list(["%s" for _ in range(len(rows))]))
-        query = f"INSERT INTO {tb_name} ({rows_str}) VALUES({vals_str})"
+        cols_str = ", ".join(cols)
+        vals_str = ", ".join(list(["%s" for _ in range(len(cols))]))
+        query = f"INSERT INTO {tb_name} ({cols_str}) VALUES({vals_str})"
         info(f"try query: '{query}'")
         try:
             with self._open_conn() as conn:
@@ -77,12 +77,12 @@ class MyDB:
     def insert(
         self,
         tb_name: str,
-        rows: List[str],
+        cols: List[str],
         vals: List[Tuple[str, str] | Tuple[str, str]],
     ) -> Tuple[int, Error | None]:
-        rows_str = ", ".join(rows)
-        vals_str = ", ".join(list(["%s" for _ in range(len(rows))]))
-        query = f"INSERT INTO {tb_name} ({rows_str}) VALUES({vals_str})"
+        cols_str = ", ".join(cols)
+        vals_str = ", ".join(list(["%s" for _ in range(len(cols))]))
+        query = f"INSERT INTO {tb_name} ({cols_str}) VALUES({vals_str})"
         info(f"try query: '{query}'")
         try:
             with self._open_conn() as conn:
@@ -94,11 +94,11 @@ class MyDB:
             return 0, e
 
     def update(
-        self, tb_name: str, rows: List[str], where: List[str], vals: List[str]
+        self, tb_name: str, cols: List[str], where: List[str], vals: List[str]
     ) -> Tuple[int, Error | None]:
-        rows_str = ", ".join(list(map(lambda r: f"{r}=%s", rows)))
+        cols_str = ", ".join(list(map(lambda r: f"{r}=%s", cols)))
         where_str = " and ".join(list(map(lambda w: f"{w}=%s", where)))
-        query = f"UPDATE {tb_name} SET {rows_str} WHERE {where_str}".strip()
+        query = f"UPDATE {tb_name} SET {cols_str} WHERE {where_str}".strip()
         info(f"try query: '{query}'")
         try:
             with self._open_conn() as conn:
