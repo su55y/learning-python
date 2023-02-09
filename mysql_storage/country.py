@@ -4,7 +4,7 @@ from storage import MyDB
 from typing import List, Tuple
 
 
-@dataclass(order=True, slots=True)
+@dataclass(order=True, slots=True, eq=True)
 class Country:
     id: int
     country: str
@@ -12,6 +12,11 @@ class Country:
 
     def __str__(self) -> str:
         return f"{self.country}: {self.capital}"
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, Country):
+            return NotImplemented
+        else:
+            return self.country == other.country and self.capital == other.capital
 
 
 class CountriesStorage:
@@ -25,7 +30,7 @@ class CountriesStorage:
             return None, err
 
         try:
-            country = Country(*row)
+            country = Country(*row.pop())
         except Exception as e:
             return None, e
         else:
@@ -37,8 +42,6 @@ class CountriesStorage:
             return [], err
 
         try:
-            # bruh
-            # countries = cast(List[Country], *rows)
             countries = list([Country(*r) for r in rows])
         except Exception as e:
             return [], e
