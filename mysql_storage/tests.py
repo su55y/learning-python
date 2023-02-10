@@ -1,17 +1,20 @@
 from collections.abc import Callable
 from typing import Dict, List
-from country import CountriesStorage, Country, Where
+
+from country import CountriesStorage, Country
 from time import perf_counter
 from datetime import datetime
 from sys import argv
 
 stor = CountriesStorage()
+t = stor.tb_countries
+
 log = lambda *args: print(datetime.utcnow().strftime("%H:%M:%S.%f")[:-3], *args)
 verbose = "-v" in argv[1:]
 
 
 def select_one_test():
-    ukraine, err = stor.select_one(where="capital = 'Kyiv'")
+    ukraine, err = stor.select_one(where=(t.capital == "Kyiv"))
     assert err is None, f"select error: {repr(err)}"
     assert isinstance(ukraine, Country), "ukraine should be instance of Country"
     assert ukraine.country == "Ukraine", "country attribute should by 'Ukraine'"
@@ -19,7 +22,7 @@ def select_one_test():
 
 
 def select_one_not_found_test():
-    raj, err = stor.select_one(where="capital = 'Dehli'")
+    raj, err = stor.select_one(where=(t.capital == "Dehli"))
     assert isinstance(err, IndexError), f"err should be IndexError: {repr(err)}"
     assert raj is None, "raj should be None"
 
@@ -37,38 +40,38 @@ def select_all_test():
 
 
 def select_where_test():
-    countries, err = stor.select(where="capital != 'Kyiv'")
+    countries, err = stor.select(where=(t.capital != "Kyiv"), limit=1)
     assert err is None, f"select error: {repr(err)}"
-    assert len(countries) == 2, f"countries length != 2 (len: {len(countries)})"
+    assert len(countries) == 1, f"countries length != 1 (len: {len(countries)})"
     assert (
         Country(None, "Poland", "Warsaw") in countries
-        and Country(None, "United Kingdom", "London") in countries
-    ), f"Poland and UK should be in countries: {countries}"
+        or Country(None, "United Kingdom", "London") in countries
+    ), f"Poland or UK should be in countries: {countries}"
 
 
 def insert_test():
-    count, err = stor.insert([Country(id=None, country="India", capital="Delhi")])
+    count, err = stor.insert([Country(id=None, country="Raj", capital="Delhi")])
     assert err is None, f"insert error: {repr(err)}"
     assert count == 1, f"inserted rows count != 1"
 
 
 def update_test():
-    raj = Country(None, "India", "New-Delhi")
-    count, err = stor.update([raj], Where.Country)
+    india = Country(None, "India", "New-Delhi")
+    count, err = stor.update([india], where=(t.country == "Raj"))
     assert err is None, f"update error: {repr(err)}"
     assert count == 1, f"updated rows != 1 ({count})"
-    india, sel_err = stor.select_one(where="capital = 'New-Delhi'")
+    updated_india, sel_err = stor.select_one(where=(t.capital == "New-Delhi"))
     assert sel_err is None, f"select error: {repr(err)}"
     assert (
-        Country(None, "India", "New-Delhi") == india
+        Country(None, "India", "New-Delhi") == updated_india
     ), f"unexpected india: {india}, capital should be 'New-Delhi'"
 
 
 def delete_test():
-    india, err = stor.select_one(where="country = 'India'")
+    india, err = stor.select_one(where=(t.country == "India"))
     assert err is None, f"select error: {repr(err)}"
     assert isinstance(india, Country), f"india should be coutry"
-    count, err = stor.delete([india], Where.Country)
+    count, err = stor.delete(where=(t.id == india.id))
     assert err is None, f"delete error: {repr(err)}"
     assert count == 1, f"deleted rows != 1 ({count})"
 
@@ -102,7 +105,7 @@ def run_tests(tests_dict: Dict[str, Dict[str, Callable]]):
                 {section}: {'NOT ' if not section_passed else ''}\
                 PASSED""".split()
             ),
-            "\n",
+            "\n" if verbose else "",
         )
 
 

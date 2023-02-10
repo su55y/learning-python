@@ -1,14 +1,10 @@
 from dataclasses import dataclass
+import logging as log
+
+from pypika.dialects import Table, Term
 from config import db_config
 from storage import MyDB
 from typing import List, Tuple
-from enum import Enum
-
-
-class Where(Enum):
-    Id = "id=%s"
-    Country = "country=%s"
-    Capital = "capital=%s"
 
 
 @dataclass(order=True, slots=True, eq=True)
@@ -31,10 +27,16 @@ class CountriesStorage:
     def __init__(self):
         self.tb_name = "tb_countries"
         self.storage = MyDB(**db_config)
+        self.tb_countries = Table("tb_countries")
         self.cols = list(["id", "country", "capital"])
 
     def select_one(self, where=None) -> Tuple[Country | None, Exception | None]:
-        row, err = self.storage.select(self.tb_name, where=where, limit=1)
+        row, err = self.storage.select(
+            self.tb_name,
+            cols=None,
+            where=where,
+            limit=1,
+        )
         if err:
             return None, err
 
@@ -46,11 +48,19 @@ class CountriesStorage:
             return country, None
 
     def select(self, where=None, limit=None) -> Tuple[List[Country], Exception | None]:
-        rows, err = self.storage.select(self.tb_name, where=where, limit=limit)
+        rows, err = self.storage.select(
+            self.tb_name,
+            cols=None,
+            where=where,
+            limit=limit,
+        )
         if err:
             return [], err
 
         try:
+            if isinstance(rows, List) and len(rows) == 0:
+                return [], None
+
             countries = list([Country(*r) for r in rows])
         except Exception as e:
             return [], e
@@ -65,37 +75,45 @@ class CountriesStorage:
         )
 
     def update(
-        self, countries: List[Country], where: Where = Where.Id
+        self,
+        countries: List[Country] | Country,
+        where: List[Term] | Term,
     ) -> Tuple[int, Exception | None]:
-        match (where):
-            case Where.Country:
-                vals = [(c.country, c.capital, c.country) for c in countries]
-            case Where.Capital:
-                vals = [(c.country, c.capital, c.capital) for c in countries]
-            case _:
-                where = Where.Id
-                vals = [(c.country, c.capital, str(c.id)) for c in countries]
+        if isinstance(countries, List):
+            rowcount = 0
+            err = None
+            for c in countries:
+                count, err = self.storage.update(
+                    self.tb_name,
+                    where=where,
+                    vals=[
+                        (self.tb_countries.country, c.country),
+                        (self.tb_countries.capital, c.capital),
+                    ],
+                )
+                match count:
+                    case 0:
+                        log.warning(f"row (where {where}) not found ({c})")
+                    case -1:
+                        log.warning(f"row (where {where}) not updated ({c})")
+                    case _:
+                        rowcount += count
+                if err:
+                    break
 
-        return self.storage.update_all(
-            self.tb_name,
-            cols=["country", "capital"],
-            where=where.value,
-            vals=vals,
-        )
+            return rowcount, err
+        else:
+            return self.storage.update(
+                self.tb_name,
+                where=where,
+                vals=[
+                    (self.tb_countries.country, countries.country),
+                    (self.tb_countries.capital, countries.capital),
+                ],
+            )
 
-    def delete(
-        self, countries: List[Country], where: Where = Where.Id
-    ) -> Tuple[int, Exception | None]:
-        match (where):
-            case Where.Country:
-                vals = [(c.country,) for c in countries]
-            case Where.Capital:
-                vals = [(c.capital,) for c in countries]
-            case _:
-                vals = [(c.id,) for c in countries]
-
+    def delete(self, where: List[Term] | Term) -> Tuple[int, Exception | None]:
         return self.storage.delete(
             self.tb_name,
-            where=where.value,
-            vals=vals,
+            where=where,
         )
