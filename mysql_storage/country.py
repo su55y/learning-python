@@ -44,8 +44,8 @@ class CountriesStorage:
             country = Country(*row.pop())
         except Exception as e:
             return None, e
-        else:
-            return country, None
+
+        return country, None
 
     def select(self, where=None, limit=None) -> Tuple[List[Country], Exception | None]:
         rows, err = self.storage.select(
@@ -64,8 +64,8 @@ class CountriesStorage:
             countries = list([Country(*r) for r in rows])
         except Exception as e:
             return [], e
-        else:
-            return countries, None
+
+        return countries, None
 
     def insert(self, countries: List[Country]) -> Tuple[int, Exception | None]:
         return self.storage.insert(
@@ -79,30 +79,7 @@ class CountriesStorage:
         countries: List[Country] | Country,
         where: List[Term] | Term,
     ) -> Tuple[int, Exception | None]:
-        if isinstance(countries, List):
-            rowcount = 0
-            err = None
-            for c in countries:
-                count, err = self.storage.update(
-                    self.tb_name,
-                    where=where,
-                    vals=[
-                        (self.tb_countries.country, c.country),
-                        (self.tb_countries.capital, c.capital),
-                    ],
-                )
-                match count:
-                    case 0:
-                        log.warning(f"row (where {where}) not found ({c})")
-                    case -1:
-                        log.warning(f"row (where {where}) not updated ({c})")
-                    case _:
-                        rowcount += count
-                if err:
-                    break
-
-            return rowcount, err
-        else:
+        if isinstance(countries, Country):
             return self.storage.update(
                 self.tb_name,
                 where=where,
@@ -111,6 +88,30 @@ class CountriesStorage:
                     (self.tb_countries.capital, countries.capital),
                 ],
             )
+
+        rowcount = 0
+        err = None
+        for c in countries:
+            count, err = self.storage.update(
+                self.tb_name,
+                where=where,
+                vals=[
+                    (self.tb_countries.country, c.country),
+                    (self.tb_countries.capital, c.capital),
+                ],
+            )
+            match count:
+                case 0:
+                    log.warning(f"row (where {where}) not found ({c})")
+                case -1:
+                    log.warning(f"row (where {where}) not updated ({c})")
+                case _:
+                    rowcount += count
+
+            if err:
+                break
+
+        return rowcount, err
 
     def delete(self, where: List[Term] | Term) -> Tuple[int, Exception | None]:
         return self.storage.delete(
