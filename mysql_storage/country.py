@@ -19,26 +19,25 @@ class Country:
     def __eq__(self, other) -> bool:
         if not isinstance(other, Country):
             return NotImplemented
-        else:
-            return self.country == other.country and self.capital == other.capital
+
+        return self.country == other.country and self.capital == other.capital
 
 
 class CountriesStorage:
-    def __init__(self):
-        self.tb_name = "tb_countries"
+    def __init__(self, tb_countries):
         self.storage = MyDB(**db_config)
-        self.tb_countries = Table("tb_countries")
-        self.cols = list(["id", "country", "capital"])
+        self.tb_countries = Table(tb_countries)
 
     def select_one(self, where=None) -> Tuple[Country | None, Exception | None]:
         row, err = self.storage.select(
-            self.tb_name,
-            cols=None,
+            self.tb_countries.get_table_name(),
             where=where,
             limit=1,
         )
         if err:
             return None, err
+        if len(row) == 0:
+            return None, None
 
         try:
             country = Country(*row.pop())
@@ -49,8 +48,7 @@ class CountriesStorage:
 
     def select(self, where=None, limit=None) -> Tuple[List[Country], Exception | None]:
         rows, err = self.storage.select(
-            self.tb_name,
-            cols=None,
+            self.tb_countries.get_table_name(),
             where=where,
             limit=limit,
         )
@@ -69,7 +67,7 @@ class CountriesStorage:
 
     def insert(self, countries: List[Country]) -> Tuple[int, Exception | None]:
         return self.storage.insert(
-            self.tb_name,
+            self.tb_countries.get_table_name(),
             cols=["country", "capital"],
             vals=[(c.country, c.capital) for c in countries],
         )
@@ -81,7 +79,7 @@ class CountriesStorage:
     ) -> Tuple[int, Exception | None]:
         if isinstance(countries, Country):
             return self.storage.update(
-                self.tb_name,
+                self.tb_countries.get_table_name(),
                 where=where,
                 vals=[
                     (self.tb_countries.country, countries.country),
@@ -93,7 +91,7 @@ class CountriesStorage:
         err = None
         for c in countries:
             count, err = self.storage.update(
-                self.tb_name,
+                self.tb_countries.get_table_name(),
                 where=where,
                 vals=[
                     (self.tb_countries.country, c.country),
@@ -115,6 +113,6 @@ class CountriesStorage:
 
     def delete(self, where: List[Term] | Term) -> Tuple[int, Exception | None]:
         return self.storage.delete(
-            self.tb_name,
+            self.tb_countries.get_table_name(),
             where=where,
         )

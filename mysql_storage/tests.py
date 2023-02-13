@@ -6,11 +6,22 @@ from time import perf_counter
 from datetime import datetime
 from sys import argv
 
-stor = CountriesStorage()
+stor = CountriesStorage(tb_countries="tb_countries")
 t = stor.tb_countries
 
 log = lambda *args: print(datetime.utcnow().strftime("%H:%M:%S.%f")[:-3], *args)
 verbose = "-v" in argv[1:]
+
+
+def insert_test():
+    countries = [
+        Country(None, "Ukraine", "Kyiv"),
+        Country(None, "Poland", "Warsaw"),
+        Country(None, "United Kingdom", "London"),
+    ]
+    count, insert_err = stor.insert(countries)
+    assert insert_err is None, f"insert error: {repr(insert_err)}"
+    assert count == len(countries)
 
 
 def select_one_test():
@@ -23,7 +34,7 @@ def select_one_test():
 
 def select_one_not_found_test():
     raj, err = stor.select_one(where=(t.capital == "Dehli"))
-    assert isinstance(err, IndexError), f"err should be IndexError: {repr(err)}"
+    assert err is None, f"select error: {repr(err)}"
     assert raj is None, "raj should be None"
 
 
@@ -49,7 +60,7 @@ def select_where_test():
     ), f"Poland or UK should be in countries: {countries}"
 
 
-def insert_test():
+def insert_one_test():
     count, err = stor.insert([Country(id=None, country="Raj", capital="Delhi")])
     assert err is None, f"insert error: {repr(err)}"
     assert count == 1, f"inserted rows count != 1"
@@ -110,22 +121,27 @@ def run_tests(tests_dict: Dict[str, Dict[str, Callable]]):
 
 
 def main():
-    run_tests(
-        {
-            "country storage tests": {
-                "select_one_test": select_one_test,
-                "select_one_not_found_test": select_one_not_found_test,
-                "select_all_test": select_all_test,
-                "select_where_test": select_where_test,
-                "insert_test": insert_test,
-                "update_test": update_test,
-                "delete_test": delete_test,
-            },
-            "coutry dataclass tests": {
-                "equality_test": equality_test,
-            },
+    tests = {
+        "coutry dataclass tests": {
+            "equality_test": equality_test,
+        },
+    }
+
+    if not stor.storage.ping():
+        log("[!] can't connect to database server, skipping storage tests")
+    else:
+        tests["country storage tests"] = {
+            "insert_test": insert_test,
+            "select_one_test": select_one_test,
+            "select_one_not_found_test": select_one_not_found_test,
+            "select_all_test": select_all_test,
+            "select_where_test": select_where_test,
+            "insert_one_test": insert_one_test,
+            "update_test": update_test,
+            "delete_test": delete_test,
         }
-    )
+
+    run_tests(tests)
 
 
 if __name__ == "__main__":
