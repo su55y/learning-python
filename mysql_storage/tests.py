@@ -21,7 +21,7 @@ def insert_test():
     ]
     count, insert_err = stor.insert(countries)
     assert insert_err is None, f"insert error: {repr(insert_err)}"
-    assert count == len(countries)
+    assert count == len(countries), f"inserted rows count != 3 ({count})"
 
 
 def select_one_test():
