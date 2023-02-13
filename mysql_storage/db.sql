@@ -6,3 +6,6 @@ CREATE TABLE tb_countries (
     capital varchar(255) NOT NULL,
     PRIMARY KEY (id)
 );
+
+/* cleanup */
+DELETE FROM tb_countries;
