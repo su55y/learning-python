@@ -1,0 +1,119 @@
+#!/usr/bin/env -S python3 -u
+
+import subprocess as sp
+import logging
+import socket
+import json
+import re
+from typing import Dict
+
+log: logging.Logger
+
+LOG_FMT = "[%(asctime)-.19s %(levelname)-.4s] %(message)s (%(filename)s:%(funcName)s:%(lineno)d)"
+SOCK_FILE = "/tmp/mpv.sock"
+MPV_LOG_FILE = "/tmp/mpv_manager.log"
+APP_LOG_FILE = "/tmp/mpv_manager_app.log"
+NOTIFY_SEND_CMD = ["notify-send", "-i", "mpv", "-a", "mpv"]
+MPV_CMD = [
+    "mpv",
+    "--idle",
+    f"--input-ipc-server={SOCK_FILE}",
+    "--no-terminal",
+    "--msg-level=all=info,ao/alsa=error",
+    f"--log-file={MPV_LOG_FILE}",
+]
+
+
+def init_logger():
+    global log
+    log = logging.getLogger("gloabal_logger")
+    log.setLevel(logging.INFO)
+    stream_handler = logging.FileHandler(APP_LOG_FILE, mode="a")
+    stream_handler.setFormatter(logging.Formatter(LOG_FMT))
+    log.addHandler(stream_handler)
+
+
+def mpv_exists():
+    try:
+        out = sp.getoutput("pidof mpv")
+    except Exception as e:
+        log.warning(repr(e))
+        return False
+    else:
+        return len(out) > 0
+
+
+def start_mpv():
+    log.info(f"starting process with output to {MPV_LOG_FILE}")
+    try:
+        p = sp.Popen(MPV_CMD)
+        log.info(p.args)
+    except Exception as e:
+        log.error(repr(e))
+
+
+def notify_send(msg: str):
+    NOTIFY_SEND_CMD.append(msg)
+    try:
+        sp.run(NOTIFY_SEND_CMD)
+    except Exception as e:
+        print(repr(e))
+
+
+def send_cmd(cmd: bytes) -> Dict | None:
+    data = b""
+    json_data = None
+    try:
+        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
+            s.connect(SOCK_FILE)
+            s.send(cmd)
+            data = s.recv(2048)
+            json_data = dict(json.loads(data))
+    except Exception as e:
+        log.error(repr(e))
+        return None
+
+    return json_data
+
+
+def get_cb() -> str | None:
+    try:
+        out = sp.getoutput("xclip -o -selection clipboard")
+    except Exception as e:
+        log.error(repr(e))
+    else:
+        return out
+
+
+cmd_get_playlist = lambda: b"""{"command": ["get_property", "playlist"]}\n"""
+cmd_append_vid = (
+    lambda url: """{{"command": ["loadfile", "{url}", "append-play"]}}\n""".format(
+        url=url
+    ).encode()
+)
+
+
+def main():
+    init_logger()
+    log.info("start")
+
+    if not mpv_exists():
+        start_mpv()
+
+    if (url := get_cb()) and re.match(
+        r".*youtube\.com\/watch\?v=([\w\d_\-]{11})|.*youtu\.be\/([\w\d_\-]{11})|.*twitch\.tv\/videos\/(\d{10})$",
+        url,
+    ):
+        resp = send_cmd(cmd_append_vid(url))
+        if not resp:
+            log.error("empty socket response")
+        else:
+            match resp.get("error"):
+                case "success":
+                    notify_send(f"appended {url}")
+                case _:
+                    notify_send(f"some error: {resp.get('error')}")
+
+
+if __name__ == "__main__":
+    main()
