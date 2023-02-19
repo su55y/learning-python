@@ -72,7 +72,7 @@ def notify_send(msg: str):
     try:
         sp.run(NOTIFY_SEND_CMD)
     except Exception as e:
-        print(repr(e))
+        log.error(repr(e))
 
 
 def send_cmd(cmd: bytes) -> List[Dict] | None:
