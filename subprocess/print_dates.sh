@@ -1,7 +1,7 @@
 #!/bin/sh
 
 printRandomDate() {
-    date -d "@$(shuf -i 0-9 -n 10 -z)" +%d/%m/%Y
+    date -d "@$(shuf -rz -i 0-9 -n 10)" +%d/%m/%Y
 }
 
 printRandomDate

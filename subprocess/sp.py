@@ -1,23 +1,23 @@
 from os.path import dirname, exists
-from subprocess import PIPE, check_output, getoutput, run, Popen
+import subprocess as sp
 
 
 EXE = f"{dirname(__file__)}/print_dates.sh"
 
 
 def getoutput_with_pipe() -> str:
-    return getoutput(f"{EXE} | grep -oP '\\d{{4}}'")
+    return sp.getoutput(f"{EXE} | grep -oP '\\d{{4}}'")
 
 
 def sp_run() -> int:
-    return run([EXE]).returncode
+    return sp.run([EXE]).returncode
 
 
 def popen_wait_check_output() -> int:
-    p = Popen(EXE, stdout=PIPE, shell=True)
-    o = check_output(["grep", "-oP", "\\d{4}"], stdin=p.stdout)
-    print(o.decode(), end="")
-    return p.wait()
+    proc = sp.Popen(EXE, stdout=sp.PIPE, shell=True)
+    out = sp.check_output(["grep", "-oP", "\\d{4}"], stdin=proc.stdout)
+    print(out.decode(), end="")
+    return proc.wait()
 
 
 def main():
