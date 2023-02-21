@@ -5,7 +5,7 @@ from typing import Dict, Tuple
 def get_config(
     file="config.ini", section="config"
 ) -> Tuple[Dict[str, str], Exception | None]:
-    config: Dict[str, str] = {}
+    config = {}
     err = None
     parser = ConfigParser()
 
