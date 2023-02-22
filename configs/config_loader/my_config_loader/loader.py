@@ -1,11 +1,12 @@
 from abc import abstractmethod
 from typing import Dict, Tuple
+import logging as log
 
 from json import load as json_load
 from toml import load as toml_load
 from yaml import safe_load as yaml_load
+
 from entities import config
-import logging as log
 
 
 class ConfigLoader:
@@ -16,7 +17,7 @@ class ConfigLoader:
     def get_config(self) -> config.Config | None:
         config_dict, err = self._read()
         if err:
-            log.error(f"read yaml config error: {repr(err)}")
+            log.error(f"read config error: {repr(err)}")
             return None
 
         return self._parse(config_dict)
