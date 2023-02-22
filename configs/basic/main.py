@@ -4,11 +4,11 @@ from config_yaml import config_yaml
 from config_toml import config_toml
 from entities import entities
 
+JSON_FILE = "config_json/config.json"
+TOML_FILE = "config_toml/config.toml"
+YAML_FILE = "config_yaml/config.yaml"
 INI_FILE = "config_ini/config.ini"
 INI_SECTION = "config"
-JSON_FILE = "config_json/config.json"
-YAML_FILE = "config_yaml/config.yaml"
-TOML_FILE = "config_toml/config.toml"
 
 
 def main():

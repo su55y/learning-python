@@ -1,10 +1,10 @@
 from typing import Dict, Tuple
 from entities import config, entities
 import logging as log
-import yaml
+import toml
 
 
-def get_yaml_config(file: str) -> config.Config | None:
+def get_toml_config(file: str) -> config.Config | None:
     config_dict, err = _read_config(file)
     if err:
         log.error(f"read yaml config error: {repr(err)}")
@@ -16,7 +16,7 @@ def get_yaml_config(file: str) -> config.Config | None:
 def _read_config(file: str) -> Tuple[Dict, Exception | None]:
     try:
         with open(file) as f:
-            return yaml.safe_load(f), None
+            return toml.load(f), None
     except Exception as e:
         return {}, e
 
@@ -34,5 +34,5 @@ def _parse_config(config_dict: Dict) -> config.Config | None:
             ),
         )
     except Exception as e:
-        log.error(f"parse_ini_config_error: {repr(e)}, ({config_dict})")
+        log.error(f"parse_toml_config_error: {repr(e)}, ({config_dict})")
         return None
