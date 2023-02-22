@@ -52,7 +52,7 @@ def _parse_config(config_dict: Dict[str, str]) -> config.Config | None:
                     }
                 ),
                 test={
-                    "test.example.com": entities.Server(
+                    "example.com": entities.Server(
                         **{
                             k[len(PREFIX_SERVER_TEXT_EXAMPLE) :]: v
                             for k, v in config_dict.items()
