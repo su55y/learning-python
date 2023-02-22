@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import Dict
 
 
-@dataclass
+@dataclass(eq=True)
 class Config:
     database: Database
     servers: Servers

@@ -1,0 +1,20 @@
+[database]
+host = "localhost"
+port = "3306"
+name = "test_db"
+tables = ["tb_countries", "tb_continents"]
+
+
+[servers.test."example.com"]
+host = "31.33.77.77"
+port = "1337"
+url = "https://test.example.com/"
+
+[servers.test."localhost"]
+host = "127.0.0.1"
+port = "1337"
+
+[servers.prod]
+host = "77.77.77.77"
+port = "80"
+url = "https://example.com/"

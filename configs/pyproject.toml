@@ -1,2 +1,2 @@
 [tool.pyright]
-include = ["entities", "config_ini", "config_json"]
+include = [entities, config_ini, config_json, config_yaml, config_toml]
