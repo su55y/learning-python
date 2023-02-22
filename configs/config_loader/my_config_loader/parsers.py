@@ -1,8 +1,7 @@
-from typing import Dict, Tuple
-from entities import entities, config
 import configparser
 import logging as log
-
+from typing import Dict, Tuple
+from entities import entities, config
 from my_config_loader.loader import ConfigLoader
 
 
