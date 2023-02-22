@@ -1,0 +1,2 @@
+[tool.pyright]
+include = [entities, my_config_loader]
