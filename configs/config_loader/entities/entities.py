@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict
+from typing import Dict, List
 
 
 @dataclass
@@ -7,7 +7,7 @@ class Database:
     host: str
     port: str
     name: str
-    tables: list[str]
+    tables: List[str]
 
 
 @dataclass
