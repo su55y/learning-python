@@ -9,6 +9,7 @@ import time
 from os import path
 from typing import Dict, List
 from sys import argv
+from update_playlist import update_playlist
 
 log: logging.Logger
 silence = "-s" in argv[1:]
@@ -113,6 +114,7 @@ def main():
             match resp.get("error"):
                 case "success":
                     notify_send(f"appended {url}")
+                    update_playlist()
                 case _:
                     notify_send(f"some error: {resp.get('error')}")
         else:
