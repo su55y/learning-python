@@ -36,8 +36,8 @@ class CountriesStorageTest(unittest.TestCase):
         ), f"ukraine should be instance of Country ({ukraine}, {type(ukraine).__name__})"
         self.assertEqual(
             ukraine.country, "Ukraine"
-        ), "country attribute should by 'Ukraine'"
-        self.assertEqual(ukraine.capital, "Kyiv"), "capital attribute should by 'Kyiv'"
+        ), "country attribute should be 'Ukraine'"
+        self.assertEqual(ukraine.capital, "Kyiv"), "capital attribute should be 'Kyiv'"
 
     def test3_select_one_not_found(self):
         raj, err = self.stor.select_one(where=(self.t.capital == "Dehli"))
