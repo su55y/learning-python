@@ -29,9 +29,7 @@ class CountriesStorageTest(unittest.TestCase):
         self.assertEqual(count, len(countries)), f"inserted rows count != 3 ({count})"
 
     def test2_select_one(self):
-        ukraine, err = self.stor.select_one(
-            where=(self.stor.tb_countries.capital == "Kyiv")
-        )
+        ukraine, err = self.stor.select_one(where=(self.t.capital == "Kyiv"))
         self.assertIs(err, None), f"select error: {repr(err)}"
         self.assertIsInstance(
             ukraine, Country
