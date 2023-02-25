@@ -1,6 +1,7 @@
 import unittest
 
 from . import country_test, storage_test
+from sys import argv
 
 
 def suite():
@@ -12,7 +13,8 @@ def suite():
 
 
 def main():
-    runner = unittest.TextTestRunner()
+    verbosity = 2 if "-v" in argv[1:] else 1
+    runner = unittest.TextTestRunner(verbosity=verbosity)
     runner.run(suite())
 
 
