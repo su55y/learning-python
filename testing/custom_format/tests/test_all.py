@@ -14,7 +14,7 @@ def suite():
 
 
 def main():
-    runner = unittest.TextTestRunner(resultclass=ResultFormat)
+    runner = unittest.TextTestRunner(resultclass=ResultFormat, verbosity=0)
     runner.run(suite())
 
 

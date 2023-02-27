@@ -31,10 +31,11 @@ class ResultFormat(unittest.TextTestResult):
         )
 
     def addSuccess(self, test):
+        super().addSuccess(test)
         self.stream.write(self._msg_fmt(self.MsgType.PASS, test._testMethodName))
 
     def addFailure(self, test, err):
-        super(unittest.TextTestResult, self).addFailure(test, err)
+        super().addFailure(test, err)
         self.stream.write(
             self._msg_fmt(
                 self.MsgType.FAIL,
@@ -44,13 +45,14 @@ class ResultFormat(unittest.TextTestResult):
         )
 
     def addError(self, test, err):
+        super().addError(test, err)
         self.stream.write(
             self._msg_fmt(
                 self.MsgType.ERROR,
                 test._testMethodName,
                 err[1] or None,
             )
-        ) if self.verbosity == 1 else super().addError(test, err)
+        )
 
     def startTest(self, test):
         unittest.TestResult.startTest(self, test)
