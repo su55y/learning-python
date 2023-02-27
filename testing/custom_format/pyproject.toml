@@ -1,0 +1,2 @@
+[tool.pyright]
+include = ["math_pkg", "tests"]
