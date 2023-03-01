@@ -7,7 +7,7 @@ import json
 from models.http_models import HTTPMethod, HTTPRequest, HTTPResponse
 
 
-class CountriesTest(unittest.TestCase):
+class RequestTests(unittest.TestCase):
     def test_dict_request(self):
         get = {"method": HTTPMethod.GET, "path": "/api/items/fetch"}
         post = {
@@ -88,14 +88,6 @@ class CountriesTest(unittest.TestCase):
             f"unexpected body content: {request_post.body}",
         )
 
-    def test_response_with_date(self):
-        response_obj = HTTPResponse.with_date({"status": 204})
-        self.assertEqual(
-            response_obj.date,
-            datetime.now().date(),
-            f"unexpected date {response_obj}",
-        )
-
     def test_broken_requests(self):
         requests = [
             """{
@@ -111,6 +103,16 @@ class CountriesTest(unittest.TestCase):
         for r in requests:
             with self.assertRaises(ValidationError):
                 HTTPRequest.parse_raw(r)
+
+
+class ResponseTests(unittest.TestCase):
+    def test_response_with_date(self):
+        response_obj = HTTPResponse.with_date({"status": 204})
+        self.assertEqual(
+            response_obj.date,
+            datetime.now().date(),
+            f"unexpected date {response_obj}",
+        )
 
     def test_broken_responses(self):
         responses = [
