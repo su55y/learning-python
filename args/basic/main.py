@@ -4,12 +4,6 @@ import argparse
 from sys import exit
 
 
-VERSION = "0.13.37"
-ERR_TYPE_1 = "can't determine type of '%s'"
-ERR_TYPE_2 = "can't convert hex '%s' to int"
-ERR_TYPE_3 = "can't parse args: %s"
-
-
 def parse_agrs():
     parser = argparse.ArgumentParser(
         prog="hexdec",
@@ -21,7 +15,7 @@ def parse_agrs():
         "-H", "--hex", action="store_true", default=False, help="accept input as hex"
     )
     parser.add_argument(
-        "-V", "--version", action="version", version=(f"%(prog)s {VERSION}")
+        "-V", "--version", action="version", version=(f"%(prog)s {__vesion__}")
     )
     return parser.parse_args()
 
@@ -30,7 +24,7 @@ def main():
     try:
         args = parse_agrs()
     except Exception as e:
-        print(ERR_TYPE_3 % e)
+        print(f"can't parse args: '{repr(e)}'")
         exit(1)
 
     input = args.default
@@ -43,7 +37,7 @@ def main():
         try:
             print(f"dec: {int(input, 16)}")
         except:
-            print(ERR_TYPE_2 % input)
+            print(f"can't convert hex '{input}' to int")
             exit(1)
         exit(0)
 
@@ -53,12 +47,14 @@ def main():
         try:
             print(f"dec: {int(input, 16)}")
         except:
-            print(ERR_TYPE_1 % input)
+            print(f"can't determine type of '{input}'")
     except TypeError as e:
         print(e)
     except:
-        print(ERR_TYPE_1 % input)
+        print(f"can't determine type of '{input}'")
 
+
+__vesion__ = "1.3.37"
 
 if __name__ == "__main__":
     main()
