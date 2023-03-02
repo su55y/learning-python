@@ -1,15 +1,37 @@
 #!/usr/bin/env -S python3 -u
 
 from argparse import ArgumentParser, Namespace
-from re import match
+import logging
+import re
 from subprocess import run
 from typing import Tuple
 
-from yt_dlp import YoutubeDL
-from utils.custom_logger import CustomLogger
-from config import LOGLEVEL, RESOLUTION
+try:
+    from yt_dlp import YoutubeDL
+except ImportError as e:
+    print(f"{repr(e)}\nhttps://github.com/yt-dlp/yt-dlp#installation")
+    exit(1)
 
-log = CustomLogger(__name__, LOGLEVEL)
+from config import LOG_LEVEL, LOG_FMT, RESOLUTION
+
+
+log: logging.Logger
+
+rx_timestamp = re.compile(
+    r"(^[0-9]\:[0-5][0-9]$)|(^[0-5]?[0-9]\:[0-5][0-9]$)|(^[0-9]{1,2}\:[0-5][0-9]\:[0-5][0-9]$)|(^[0-5]?[0-9]$)"
+)
+rx_url = re.compile(
+    r".*youtube\.com\/watch\?v=([\w\d_\-]{11})|.*youtu\.be\/([\w\d_\-]{11})|.*twitch\.tv\/videos\/(\d{10})$"
+)
+
+
+def init_logger():
+    global log
+    log = logging.getLogger(__name__)
+    log.setLevel(LOG_LEVEL)
+    sh = logging.StreamHandler()
+    sh.setFormatter(logging.Formatter(LOG_FMT))
+    log.addHandler(sh)
 
 
 def die(msg: str):
@@ -27,7 +49,6 @@ def parse_agrs() -> Namespace:
         "-s",
         "--start",
         action="store",
-        type=str,
         metavar="T",
         help="clip start time (59/9:59/9:59:59)",
     )
@@ -35,7 +56,6 @@ def parse_agrs() -> Namespace:
         "-d",
         "--duration",
         action="store",
-        type=str,
         metavar="T",
         help="clip duration (59/9:59/9:59:59)",
     )
@@ -43,7 +63,6 @@ def parse_agrs() -> Namespace:
         "-t",
         "--to",
         action="store",
-        type=str,
         metavar="T",
         help="clip stop time (59/9:59/9:59:59)",
     )
@@ -65,28 +84,14 @@ def parse_agrs() -> Namespace:
     return parser.parse_args()
 
 
-def validate_time_arg(s: str) -> bool:
-    for r in [
-        r"^[0-9]\:[0-5][0-9]$",
-        r"^[0-5]?[0-9]\:[0-5][0-9]$",
-        r"^[0-9]{1,2}\:[0-5][0-9]\:[0-5][0-9]$",
-        r"^\d{1,5}$",
-    ]:
-        if match(r, s):
-            return True
-
-    log.warning(f"invalid time '{s}'")
-    return False
-
-
 def get_va(url: str) -> Tuple[str, str]:
-    if not match(r"^\d{3,4}x\d{3,4}$", RESOLUTION):
+    if not re.match(r"^\d{3,4}x\d{3,4}$", RESOLUTION):
         die(f"invalid resolution: '{RESOLUTION}'")
 
     audio, video = None, None
     with YoutubeDL({"format": "best[ext=mp4]+bestaudio"}) as ydl:
         info = ydl.extract_info(url, download=False)
-        for _, format in enumerate(info["formats"]):
+        for format in info["formats"]:
             if (
                 format.get("resolution") == "audio only" and format.get("ext") == "m4a"
             ) or (
@@ -104,27 +109,24 @@ def get_va(url: str) -> Tuple[str, str]:
         die(f"video or audio object is None: ('{video}', '{audio}')")
 
     v, a = video.get("url"), audio.get("url")
-    if not all(match(r"^https.+$", u) for u in [v, a]):
+    if not all(re.match(r"^https.+$", u) for u in [v, a]):
         die(f"invalid stream url: ('{v}', {a})")
 
     return v, a
 
 
 def build_cmd(args: Namespace) -> list[str]:
-    if not args.default or not match(
-        r".*youtube\.com\/watch\?v=([\w\d_\-]{11})|.*youtu\.be\/([\w\d_\-]{11})|.*twitch\.tv\/videos\/(\d{10})$",
-        args.default,
-    ):
+    if not args.default or not rx_url.match(args.default):
         die(f"invalid url '{args.default}'")
 
     start = "-ss 0"
-    if args.start and validate_time_arg(args.start):
+    if args.start and rx_timestamp.match(args.start):
         start = f"-ss {args.start}"
 
-    end, to = "", ""
-    if args.to and validate_time_arg(args.to):
+    end = to = ""
+    if args.to and rx_timestamp.match(args.to):
         to = f"-to {args.to}"
-    elif args.duration and validate_time_arg(args.duration):
+    elif args.duration and rx_timestamp.match(args.duration):
         end = f"-t {args.duration}"
 
     y = ""
@@ -151,4 +153,5 @@ def main():
 
 
 if __name__ == "__main__":
+    init_logger()
     main()
