@@ -11,13 +11,6 @@ from config import LOG_LEVEL, LOG_FMT, RESOLUTION
 
 log: logging.Logger
 
-rx_timestamp = re.compile(
-    r"(^[0-9]\:[0-5][0-9]$)|(^[0-5]?[0-9]\:[0-5][0-9]$)|(^[0-9]{1,2}\:[0-5][0-9]\:[0-5][0-9]$)|(^[0-5]?[0-9]$)"
-)
-rx_url = re.compile(
-    r".*youtube\.com\/watch\?v=([\w\d_\-]{11})|.*youtu\.be\/([\w\d_\-]{11})|.*twitch\.tv\/videos\/(\d{10})$"
-)
-
 
 def init_logger():
     global log
@@ -109,6 +102,13 @@ def get_va(url: str) -> Tuple[str, str]:
 
 
 def build_cmd(args: argparse.Namespace) -> list[str]:
+    rx_timestamp = re.compile(
+        r"(^[0-9]\:[0-5][0-9]$)|(^[0-5]?[0-9]\:[0-5][0-9]$)|(^[0-9]{1,2}\:[0-5][0-9]\:[0-5][0-9]$)|(^[0-5]?[0-9]$)"
+    )
+    rx_url = re.compile(
+        r".*youtube\.com\/watch\?v=([\w\d_\-]{11})|.*youtu\.be\/([\w\d_\-]{11})|.*twitch\.tv\/videos\/(\d{10})$"
+    )
+
     if not args.url or not rx_url.match(args.url):
         die(f"invalid url '{args.url}'")
 
@@ -136,10 +136,7 @@ def build_cmd(args: argparse.Namespace) -> list[str]:
 
 
 def main():
-    try:
-        args = parse_agrs()
-    except Exception as e:
-        die(repr(e))
+    args = parse_agrs()
 
     log.info(
         ", ".join(
