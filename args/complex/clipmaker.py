@@ -3,14 +3,8 @@
 from argparse import ArgumentParser, Namespace
 import logging
 import re
-from subprocess import run
+import subprocess
 from typing import Tuple
-
-try:
-    from yt_dlp import YoutubeDL
-except ImportError as e:
-    print(f"{repr(e)}\nhttps://github.com/yt-dlp/yt-dlp#installation")
-    exit(1)
 
 from config import LOG_LEVEL, LOG_FMT, RESOLUTION
 
@@ -42,34 +36,30 @@ def die(msg: str):
 def parse_agrs() -> Namespace:
     parser = ArgumentParser(
         prog="clipmaker",
-        description="Download clips from youtube or twitch",
+        description="Download clips from YouTube or Twitch",
     )
     parser.add_argument("default", metavar="URL", help="url")
     parser.add_argument(
         "-s",
         "--start",
-        action="store",
         metavar="T",
         help="clip start time (59/9:59/9:59:59)",
     )
     parser.add_argument(
         "-d",
         "--duration",
-        action="store",
         metavar="T",
         help="clip duration (59/9:59/9:59:59)",
     )
     parser.add_argument(
         "-t",
         "--to",
-        action="store",
         metavar="T",
         help="clip stop time (59/9:59/9:59:59)",
     )
     parser.add_argument(
         "-o",
         "--output",
-        action="store",
         metavar="PATH",
         help="path to output",
         default="out.mp4",
@@ -87,6 +77,10 @@ def parse_agrs() -> Namespace:
 def get_va(url: str) -> Tuple[str, str]:
     if not re.match(r"^\d{3,4}x\d{3,4}$", RESOLUTION):
         die(f"invalid resolution: '{RESOLUTION}'")
+    try:
+        from yt_dlp import YoutubeDL
+    except ImportError as e:
+        die(f"{repr(e)}\nhttps://github.com/yt-dlp/yt-dlp#installation")
 
     audio, video = None, None
     with YoutubeDL({"format": "best[ext=mp4]+bestaudio"}) as ydl:
@@ -136,7 +130,7 @@ def build_cmd(args: Namespace) -> list[str]:
     v, a = get_va(args.default)
 
     return (
-        f"""ffmpeg {y} {start} {to} -i {v}
+        f"""ffmpeg -hide_banner -loglevel warning -stats {y} {start} {to} -i {v}
             {start} {to} -i {a} {end}
             -map 0:v -map 1:a -c:v libx264 -c:a aac {args.output}"""
     ).split()
@@ -148,8 +142,13 @@ def main():
     except Exception as e:
         die(repr(e))
 
-    log.info(args)
-    log.info(run(build_cmd(args)))
+    log.info(
+        ", ".join(
+            [f"{k}={v}" for k, v in vars(args).items() if not k.startswith("__")],
+        )
+    )
+    p = subprocess.Popen(build_cmd(args))
+    log.info(f"status: {p.wait()}")
 
 
 if __name__ == "__main__":
