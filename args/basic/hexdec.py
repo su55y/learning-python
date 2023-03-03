@@ -4,54 +4,33 @@ import argparse
 from sys import exit
 
 
-def parse_agrs():
-    parser = argparse.ArgumentParser(
-        prog="hexdec",
-        description="Hex-Dec Base Converter",
-        epilog="more params: docs.python.org/3/library/argparse.html#argumentparser-objects",
-    )
-    parser.add_argument("default", nargs="?", help="input number")
+def parse_agrs() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(prog="hexdec")
+    parser.add_argument("default", metavar="NUM", help="input number")
+    parser.add_argument("-x", "--hex", action="store_true", help="accept input as hex")
     parser.add_argument(
-        "-H", "--hex", action="store_true", default=False, help="accept input as hex"
-    )
-    parser.add_argument(
-        "-V", "--version", action="version", version=(f"%(prog)s {__vesion__}")
+        "-V",
+        "--version",
+        action="version",
+        version=f"%(prog)s {__vesion__}",
     )
     return parser.parse_args()
 
 
-def main():
+def parse_num(v: str, base=10):
     try:
-        args = parse_agrs()
-    except Exception as e:
-        print(f"can't parse args: '{repr(e)}'")
-        exit(1)
+        return int(v, base)
+    except ValueError as e:
+        exit(e)
 
-    input = args.default
 
-    if not input:
-        print("input not given")
-        exit(1)
+def main():
+    args = parse_agrs()
 
     if args.hex:
-        try:
-            print(f"dec: {int(input, 16)}")
-        except:
-            print(f"can't convert hex '{input}' to int")
-            exit(1)
-        exit(0)
-
-    try:
-        print(f"hex: {hex(int(input, 10))}")
-    except ValueError:
-        try:
-            print(f"dec: {int(input, 16)}")
-        except:
-            print(f"can't determine type of '{input}'")
-    except TypeError as e:
-        print(e)
-    except:
-        print(f"can't determine type of '{input}'")
+        print(f"dec: {parse_num(args.default, 16)}")
+    else:
+        print(f"hex: {parse_num(args.default):x}")
 
 
 __vesion__ = "1.3.37"
