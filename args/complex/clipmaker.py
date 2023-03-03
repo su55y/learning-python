@@ -1,6 +1,6 @@
 #!/usr/bin/env -S python3 -u
 
-from argparse import ArgumentParser, Namespace
+import argparse
 import logging
 import re
 import subprocess
@@ -33,12 +33,12 @@ def die(msg: str):
     exit(1)
 
 
-def parse_agrs() -> Namespace:
-    parser = ArgumentParser(
+def parse_agrs() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
         prog="clipmaker",
         description="Download clips from YouTube or Twitch",
     )
-    parser.add_argument("default", metavar="URL", help="url")
+    parser.add_argument("url", metavar="URL")
     parser.add_argument(
         "-s",
         "--start",
@@ -69,7 +69,6 @@ def parse_agrs() -> Namespace:
         "--force",
         action="store_true",
         help="overwrite output file if exists",
-        default=False,
     )
     return parser.parse_args()
 
@@ -109,9 +108,9 @@ def get_va(url: str) -> Tuple[str, str]:
     return v, a
 
 
-def build_cmd(args: Namespace) -> list[str]:
-    if not args.default or not rx_url.match(args.default):
-        die(f"invalid url '{args.default}'")
+def build_cmd(args: argparse.Namespace) -> list[str]:
+    if not args.url or not rx_url.match(args.url):
+        die(f"invalid url '{args.url}'")
 
     start = "-ss 0"
     if args.start and rx_timestamp.match(args.start):
@@ -127,7 +126,7 @@ def build_cmd(args: Namespace) -> list[str]:
     if args.force:
         y = "-y"
 
-    v, a = get_va(args.default)
+    v, a = get_va(args.url)
 
     return (
         f"""ffmpeg -hide_banner -loglevel warning -stats {y} {start} {to} -i {v}
