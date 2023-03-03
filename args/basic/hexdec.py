@@ -1,7 +1,6 @@
 #!/usr/bin/env -S python3 -u
 
 import argparse
-from sys import exit
 
 
 def parse_agrs() -> argparse.Namespace:
