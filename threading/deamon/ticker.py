@@ -21,12 +21,12 @@ def main():
     q = queue.Queue()
     ticker_thread = threading.Thread(target=ticker, daemon=True, args=(q,))
     ticker_thread.start()
-    try:
-        while True:
+    while True:
+        try:
             if input() == "":
                 q.put(1)
-    except KeyboardInterrupt:
-        exit(0)
+        except KeyboardInterrupt:
+            break
 
 
 if __name__ == "__main__":
