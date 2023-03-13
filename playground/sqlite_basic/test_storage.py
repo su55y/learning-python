@@ -1,7 +1,7 @@
 import unittest
 
-import db_hooks
-import storage
+from . import db_hooks
+from storage import storage
 
 
 class StorageTest(unittest.TestCase):
