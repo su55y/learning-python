@@ -7,9 +7,9 @@ CREATE_TABLE = "CREATE TABLE tb_persons (name VARCHAR, age SMALLINT CHECK (age >
 DROP_TABLE = "DROP TABLE tb_persons"
 
 
-def execute(query: str) -> bool:
+def execute(query: str, db_file: str) -> bool:
     try:
-        with sqlite3.connect(DB_FILE) as conn:
+        with sqlite3.connect(db_file) as conn:
             conn.execute(query)
     except Exception as e:
         logging.error(e)
@@ -17,28 +17,28 @@ def execute(query: str) -> bool:
     return True
 
 
-def init_db() -> bool:
-    if os.path.exists(DB_FILE) and os.path.isfile(DB_FILE):
+def init_db(db_file=DB_FILE) -> bool:
+    if os.path.exists(db_file) and os.path.isfile(db_file):
         logging.error("db file already exists")
         return False
-    return execute(CREATE_TABLE)
+    return execute(CREATE_TABLE, db_file)
 
 
-def drop_table() -> bool:
-    return execute(DROP_TABLE)
+def drop_table(db_file=DB_FILE) -> bool:
+    return execute(DROP_TABLE, db_file)
 
 
-def drop_database() -> bool:
-    if not os.path.exists(DB_FILE):
-        logging.warning(f"{DB_FILE} not exists")
+def drop_database(db_file=DB_FILE) -> bool:
+    if not os.path.exists(db_file):
+        logging.warning(f"{db_file} not exists")
         return False
 
-    if not os.path.isfile(DB_FILE):
-        logging.warning(f"{DB_FILE} not file")
+    if not os.path.isfile(db_file):
+        logging.warning(f"{db_file} not file")
         return False
 
     try:
-        os.remove(DB_FILE)
+        os.remove(db_file)
     except Exception as e:
         logging.error(e)
     else:

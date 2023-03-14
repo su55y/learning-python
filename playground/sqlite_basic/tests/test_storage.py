@@ -23,11 +23,11 @@ class StorageTest(unittest.TestCase):
             raise Exception("remove database failed")
 
     def test1_insert(self):
-        count = self.stor.insert(self.insert_data)
+        count = self.stor.insert("tb_persons", self.insert_data)
         self.assertEqual(count, len(self.insert_data), "unexpected rowcount")
 
     def test2_select(self):
-        data = self.stor.select()
+        data = self.stor.select("tb_persons")
         self.assertEqual(
             data,
             [(person["name"], person["age"]) for person in self.insert_data],

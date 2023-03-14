@@ -1,2 +1,2 @@
 [tool.pyright]
-include = ["storage"]
+include = ["storage", "person"]
