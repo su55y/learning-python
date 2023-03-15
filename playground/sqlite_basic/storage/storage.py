@@ -1,8 +1,6 @@
 from contextlib import contextmanager
-import logging
 import sqlite3
 from typing import List, Tuple
-
 
 from pypika import SQLLiteQuery as Query
 from pypika.dialects import Term
@@ -18,7 +16,7 @@ class Storage:
         try:
             yield conn.cursor()
         except Exception as e:
-            logging.error(e)
+            raise e
         finally:
             conn.commit()
             conn.close()
@@ -51,7 +49,6 @@ class Storage:
                 cur.execute(query.get_sql())
                 return cur.fetchall(), None
         except Exception as e:
-            logging.error(e)
             return [], e
 
     def insert(
@@ -63,6 +60,7 @@ class Storage:
         query = Query.into(tb_name)
         if cols:
             query = query.columns(*cols)
+
         query = query.insert(*vals)
 
         try:
@@ -70,5 +68,4 @@ class Storage:
                 cur.execute(query.get_sql())
                 return cur.rowcount, None
         except Exception as e:
-            logging.error(e)
             return 0, e

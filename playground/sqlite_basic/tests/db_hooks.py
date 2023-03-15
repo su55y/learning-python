@@ -3,7 +3,7 @@ import logging
 import os
 
 DB_FILE = "test.db"
-CREATE_TABLE = "CREATE TABLE tb_persons (name VARCHAR, age SMALLINT CHECK (age >= 0))"
+CREATE_TABLE = "CREATE TABLE tb_persons (name VARCHAR, age SMALLINT CHECK (age > 0))"
 DROP_TABLE = "DROP TABLE tb_persons"
 
 
