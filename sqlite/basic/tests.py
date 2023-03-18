@@ -3,9 +3,9 @@ import math
 import sqlite3
 import unittest
 
-from hooks import DBHooks
-from queries import *
-from utils import City
+from db.hooks import DBHooks
+from db.queries import *
+from models import City
 
 
 class BasicTest(unittest.TestCase):

@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+
 from math import asin, cos, radians, sin, sqrt
 
 EARTH_RADIUS = 6371
@@ -10,7 +11,7 @@ class City:
     lat: float = 0.0
     lon: float = 0.0
 
-    # source https://realpython.com/python-data-classes/#adding-methods
+    # method source https://realpython.com/python-data-classes/#adding-methods
     def distance_to(self, other) -> int:
         if not isinstance(other, City):
             raise TypeError("should be type City")
