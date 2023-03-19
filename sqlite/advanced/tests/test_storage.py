@@ -1,25 +1,31 @@
 import unittest
 
-from . import db_hooks
+from .db_hooks import DBHooks
 from storage import storage
+
+DB_FILE = "test_storage.db"
+CREATE_TABLE = """
+    CREATE TABLE tb_persons (
+        name VARCHAR  NOT NULL,
+        age  SMALLINT NOT NULL CHECK (age > 0)
+)"""
 
 
 class StorageTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        if not db_hooks.init_db():
-            raise Exception("create database failed")
-        cls.stor = storage.Storage("test.db")
+        cls.db_hooks = DBHooks(DB_FILE)
+        if not cls.db_hooks.init_db([CREATE_TABLE]):
+            raise Exception("init db failed")
+        cls.stor = storage.Storage(DB_FILE)
         cls.tb_persons = "tb_persons"
         cls.insert_data = [("A", 1), ("B", 2)]
         cls.invalid_data = [("A", 0)]
 
     @classmethod
     def tearDownClass(cls):
-        if not db_hooks.drop_table():
-            raise Exception("drop table failed")
-        if not db_hooks.drop_database():
-            raise Exception("remove database failed")
+        if not cls.db_hooks.drop_db():
+            raise Exception("drop db failed")
 
     def test1_insert(self):
         count, err = self.stor.insert(self.tb_persons, self.insert_data)

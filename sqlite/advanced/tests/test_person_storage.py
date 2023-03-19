@@ -2,26 +2,32 @@ import unittest
 
 from pypika import Table
 
-from . import db_hooks
 from person import Person, PersonStorage
+from .db_hooks import DBHooks
+
+DB_FILE = "test_person_storage.db"
+CREATE_TABLE = """
+    CREATE TABLE tb_persons (
+        name VARCHAR  NOT NULL,
+        age  SMALLINT NOT NULL CHECK (age > 0)
+)"""
 
 
 class PersonStorageTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.db_file = "person.db"
-        if not db_hooks.init_db(cls.db_file):
-            raise Exception("create database failed")
-        cls.stor = PersonStorage(cls.db_file)
+        cls.db_hooks = DBHooks(DB_FILE)
+        if not cls.db_hooks.init_db([CREATE_TABLE]):
+            raise Exception("init db failed")
+
+        cls.stor = PersonStorage(DB_FILE)
         cls.t = Table("tb_persons")
         cls.insert_persons = [Person("A", 1), Person("B", 2)]
 
     @classmethod
     def tearDownClass(cls):
-        if not db_hooks.drop_table(cls.db_file):
-            raise Exception("drop table failed")
-        if not db_hooks.drop_database(cls.db_file):
-            raise Exception("remove database failed")
+        if not cls.db_hooks.drop_db():
+            raise Exception("drop db failed")
 
     def test1_insert(self):
         count, err = self.stor.insert(self.insert_persons)
