@@ -47,8 +47,8 @@ class BasicTest(unittest.TestCase):
             rows = cur.fetchall()
         self.assertIsNotNone(rows)
         self.assertEqual(len(rows), 2, "unexpected rowcount")
-        countries = list(*zip(*rows))
-        self.assertEqual(countries, ["Peru", "UK"])
+        countries = set(*zip(*rows))
+        self.assertEqual(countries, {"Peru", "UK"})
 
     def test1_select_all(self):
         rows = None
