@@ -1,6 +1,6 @@
 TB_COUNTRIES_SQL = """
     CREATE TABLE countries (
-        name    VARCHAR  NOT NULL,
+        name    VARCHAR NOT NULL,
         capital VARCHAR NOT NULL
     )"""
 
@@ -11,7 +11,7 @@ TB_CAPITALS_SQL = """
         lon  REAL     NULL
     )"""
 
-AFTER_COUNTRY_INSERT = """
+AFTER_COUNTRY_INSERT_TRIGGER_SQL = """
     CREATE TRIGGER add_capital
         AFTER INSERT ON countries  
     BEGIN  

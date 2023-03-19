@@ -16,7 +16,7 @@ class BasicTest(unittest.TestCase):
             [
                 TB_COUNTRIES_SQL,
                 TB_CAPITALS_SQL,
-                AFTER_COUNTRY_INSERT,
+                AFTER_COUNTRY_INSERT_TRIGGER_SQL,
                 COUNTIES_INSERT_SQL,
             ]
         ):
