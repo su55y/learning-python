@@ -41,11 +41,32 @@ class PersonStorageTest(unittest.TestCase):
             persons, self.insert_persons, f"unexpected select result: {persons}"
         )
 
-    def test3_select_one(self):
+    def test2_select_one(self):
         person, err = self.stor.select_one(self.t.rowid == 1)
         self.assertIs(err, None, f"unexpected error: {err}")
         self.assertIsInstance(person, Person, f"unexpected person type: {person}")
         self.assertEqual(person, self.insert_persons[0], f"should be equal")
+
+    def test3_update1(self):
+        count, err = self.stor.update(
+            Person("C", 30),
+            where=(self.t.name == "A"),
+        )
+        self.assertIsNone(err)
+        self.assertEqual(count, 1)
+
+    def test4_update2(self):
+        new_person = Person("D", 40)
+        count, err = self.stor.update(
+            new_person, where=[self.t.name == "B", self.t.age == 2]
+        )
+        self.assertIsNone(err)
+        self.assertEqual(count, 1)
+
+    def test5_select_all(self):
+        persons, err = self.stor.select()
+        self.assertIsNone(err)
+        self.assertEqual(persons, [Person("C", 30), Person("D", 40)])
 
 
 if __name__ == "__main__":

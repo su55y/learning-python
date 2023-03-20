@@ -1,5 +1,7 @@
 import unittest
 
+from pypika import Table
+
 from .db_hooks import DBHooks
 from storage import storage
 
@@ -18,9 +20,10 @@ class StorageTest(unittest.TestCase):
         if not cls.db_hooks.init_db([CREATE_TABLE]):
             raise Exception("init db failed")
         cls.stor = storage.Storage(DB_FILE)
-        cls.tb_persons = "tb_persons"
+        cls.tb_persons = Table("tb_persons")
         cls.insert_data = [("A", 1), ("B", 2)]
-        cls.invalid_data = [("A", 0)]
+        cls.update_data = ("C", 3)
+        cls.invalid_data = ("A", 0)
 
     @classmethod
     def tearDownClass(cls):
@@ -42,9 +45,30 @@ class StorageTest(unittest.TestCase):
         )
 
     def test3_invalid_insert(self):
-        count, err = self.stor.insert(self.tb_persons, self.invalid_data)
+        count, err = self.stor.insert(self.tb_persons, [self.invalid_data])
         self.assertEqual(count, 0, "should be 0")
-        self.assertIsInstance(err, Exception, f"unexpected error type: {repr(err)}")
+        self.assertIsInstance(
+            err, Exception, f"unexpected error type: {type(err).__name__}"
+        )
+
+    def test3_update(self):
+        name, age = self.update_data
+        count, err = self.stor.update(
+            self.tb_persons,
+            vals=[(self.tb_persons.name, name), (self.tb_persons.age, age)],
+            where=(self.tb_persons.rowid == 1),
+        )
+        self.assertIsNone(err)
+        self.assertEqual(count, 1)
+
+    def test4_delete(self):
+        name, _ = self.update_data
+        count, err = self.stor.delete(
+            self.tb_persons,
+            where=(self.tb_persons.name == name),
+        )
+        self.assertIsNone(err)
+        self.assertEqual(count, 1)
 
 
 if __name__ == "__main__":

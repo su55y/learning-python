@@ -18,7 +18,7 @@ class PersonStorage:
             persons = [persons]
 
         return self.stor.insert(
-            self.tb_persons.get_table_name(),
+            self.tb_persons,
             vals=[(p.name, p.age) for p in persons],
         )
 
@@ -34,7 +34,7 @@ class PersonStorage:
         limit: int | None = None,
     ) -> Tuple[List[Person], Exception | None]:
         rows, err = self.stor.select(
-            self.tb_persons.get_table_name(),
+            self.tb_persons,
             where=where,
             limit=limit,
         )
@@ -51,3 +51,20 @@ class PersonStorage:
             return [], e
         else:
             return persons, None
+
+    def update(
+        self,
+        person: Person,
+        where: Term | List[Term],
+    ) -> Tuple[int, Exception | None]:
+        if not isinstance(person, Person):
+            raise TypeError("person should be Person type")
+
+        return self.stor.update(
+            self.tb_persons,
+            vals=[
+                (self.tb_persons.name, person.name),
+                (self.tb_persons.age, person.age),
+            ],
+            where=where,
+        )
