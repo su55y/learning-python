@@ -1,10 +1,9 @@
 from os import getenv
 
-from sqlalchemy import DDL, text, create_engine
+from sqlalchemy import text, create_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm.mapper import event
 
-from .models import Base, Country
+from .models import Base
 
 engine = create_engine(getenv("DB_CONN_STR", "sqlite:///test.db"), echo=True)
 after_insert_country = text(
@@ -25,8 +24,6 @@ BEGIN
 END;
 """
 )
-
-# ... it's removed like this
 
 Base.metadata.create_all(engine)
 
