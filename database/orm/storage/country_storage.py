@@ -6,7 +6,7 @@ from database.models import Country
 from .storage import get_session
 
 
-class CountyStorage:
+class CountryStorage:
     def select(self, *args) -> List[Country]:
         with get_session(commit=False) as s:
             if not args:
