@@ -7,11 +7,10 @@ def get_session(commit=True):
     s = Session()
     try:
         yield s
-    except:
-        s.rollback()
-        raise
-    else:
         if commit:
             s.commit()
+    except Exception as e:
+        s.rollback()
+        raise e
     finally:
         s.close()

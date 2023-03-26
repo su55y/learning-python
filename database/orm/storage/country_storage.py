@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple
 
 from sqlalchemy import update
 
@@ -7,29 +7,66 @@ from .storage import get_session
 
 
 class CountryStorage:
-    def select(self, *args) -> List[Country]:
+    @staticmethod
+    def select_one(*args) -> Tuple[Country, Exception | None]:
         with get_session(commit=False) as s:
-            if not args:
-                return s.query(Country).all()
-            return s.query(Country).filter(*args).all()
+            try:
+                if not args:
+                    return s.query(Country).one(), None
+                else:
+                    return s.query(Country).filter(*args).one(), None
+            except Exception as e:
+                return Country(), e
 
-    def insert_many(self, countries: List[Country]):
-        with get_session() as s:
-            s.add_all(countries)
+    @staticmethod
+    def select(*args) -> Tuple[List[Country], Exception | None]:
+        with get_session(commit=False) as s:
+            try:
+                if not args:
+                    countries = s.query(Country).all()
+                else:
+                    countries = s.query(Country).filter(*args).all()
+            except Exception as e:
+                return [], e
+            return countries, None
 
-    def insert_one(self, country: Country):
+    @staticmethod
+    def insert_many(countries: List[Country]) -> Exception | None:
         with get_session() as s:
-            s.add(country)
+            try:
+                s.add_all(countries)
+            except Exception as e:
+                return e
+            else:
+                return None
 
-    def update(self, country: Country):
+    @staticmethod
+    def insert_one(country: Country) -> Exception | None:
         with get_session() as s:
-            s.merge(country)
+            try:
+                s.add(country)
+            except Exception as e:
+                return e
+            else:
+                return None
 
-    def update_by_id(self, id: int, **kwargs):
+    @staticmethod
+    def update(id: int, **kwargs) -> Exception | None:
         with get_session() as s:
-            query = update(Country).filter(Country.id == id).values(**kwargs)
-            s.execute(query)
+            try:
+                query = update(Country).filter(Country.id == id).values(**kwargs)
+                s.execute(query)
+            except Exception as e:
+                return e
+            else:
+                return None
 
-    def delete(self, id: int):
+    @staticmethod
+    def delete(id: int) -> Exception | None:
         with get_session() as s:
-            s.query(Country).filter(Country.id == id).delete()
+            try:
+                s.query(Country).filter(Country.id == id).delete()
+            except Exception as e:
+                return e
+            else:
+                return None
