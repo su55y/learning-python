@@ -10,7 +10,7 @@ class Country(Base):
     capital: orm.Mapped[str] = orm.mapped_column(unique=True)
 
     def __repr__(self) -> str:
-        return f"Country(name={self.name!r}, name={self.capital!r})"
+        return f"Country(name={self.name!r}, capital={self.capital!r})"
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, Country):
