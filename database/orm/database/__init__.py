@@ -10,7 +10,7 @@ after_insert_country = text(
 CREATE TRIGGER IF NOT EXISTS after_insert_country
 AFTER INSERT ON tb_countries FOR EACH ROW
 BEGIN
-    INSERT INTO tb_capitals (name, country_id) VALUES (NEW.capital, NEW.id);
+	INSERT INTO tb_capitals (name, country_id) VALUES (NEW.capital, NEW.id);
 END;
 """
 )
@@ -19,7 +19,17 @@ after_update_country = text(
 CREATE TRIGGER IF NOT EXISTS after_update_country
 AFTER UPDATE ON tb_countries FOR EACH ROW
 BEGIN
-    UPDATE tb_capitals SET name=NEW.capital WHERE country_id = NEW.id;
+	UPDATE tb_capitals SET name=NEW.capital WHERE country_id = NEW.id;
+END;
+"""
+)
+
+after_delete_country = text(
+    """
+CREATE TRIGGER IF NOT EXISTS after_delete_country
+AFTER DELETE ON tb_countries FOR EACH ROW
+BEGIN
+	DELETE FROM tb_capitals WHERE country_id = OLD.id;
 END;
 """
 )
@@ -38,6 +48,7 @@ def init_db() -> Exception | None:
         with Session() as s:
             s.execute(after_insert_country)
             s.execute(after_update_country)
+            s.execute(after_delete_country)
             s.commit()
     except Exception as e:
         return e
