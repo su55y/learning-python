@@ -1,0 +1,8 @@
+[database]
+host = "localhost"
+port = 3306
+
+[server]
+host = "https://test.example.com"
+ports = [1337, 443]
+timeout = 5.5
