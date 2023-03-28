@@ -1,7 +1,7 @@
 from typing import Dict
 import toml
 
-from consts import VALID_DB_CONFIG, raw_config, invalid_raw_config
+from consts import VALID_CONFIG_TEMPLATE, raw_config, invalid_raw_config
 
 
 def from_file(path: str) -> Dict:
@@ -34,8 +34,8 @@ def validate_section(config_section: Dict | None, valid_section: Dict) -> bool:
 def valitate_config(config: Dict) -> bool:
     try:
         return all(
-            validate_section(config.get(key), VALID_DB_CONFIG[key])
-            for key in VALID_DB_CONFIG.keys()
+            validate_section(config.get(key), VALID_CONFIG_TEMPLATE[key])
+            for key in VALID_CONFIG_TEMPLATE.keys()
         )
     except:
         return False

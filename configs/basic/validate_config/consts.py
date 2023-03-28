@@ -1,4 +1,4 @@
-VALID_DB_CONFIG = {
+VALID_CONFIG_TEMPLATE = {
     "database": {
         "host": str,
         "port": int,
