@@ -28,7 +28,7 @@ class DictLikeConfig(ConfigLoader):
 
 class ConfigINI(ConfigLoader):
     _PREFIX_SERVER_PROD = "server_prod_"
-    _PREFIX_SERVER_TEXT_EXAMPLE = "server_test_example_"
+    _PREFIX_SERVER_TEST_EXAMPLE = "server_test_example_"
     _PREFIX_SERVER_TEST_LOCALHOST = "server_test_localhost_"
 
     def __init__(self, path: str, section: str):
@@ -73,9 +73,9 @@ class ConfigINI(ConfigLoader):
                     test={
                         "example.com": entities.Server(
                             **{
-                                k[len(self._PREFIX_SERVER_TEXT_EXAMPLE) :]: v
+                                k[len(self._PREFIX_SERVER_TEST_EXAMPLE) :]: v
                                 for k, v in config_dict.items()
-                                if k.startswith(self._PREFIX_SERVER_TEXT_EXAMPLE)
+                                if k.startswith(self._PREFIX_SERVER_TEST_EXAMPLE)
                             }
                         ),
                         "localhost": entities.Server(
