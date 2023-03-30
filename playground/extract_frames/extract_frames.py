@@ -79,9 +79,8 @@ def get_interval(file: str, framecount: int) -> float | bool:
             case {"streams": [{"r_frame_rate": str(), "duration": str()}]}:
                 fps_str = probe["streams"][0]["r_frame_rate"]
                 duration_str = probe["streams"][0]["duration"]
-                if (
-                    (duration := rx_duration.findall(duration_str).pop()) and
-                    (fps := rx_fps.findall(fps_str).pop())
+                if (duration := rx_duration.findall(duration_str).pop()) and (
+                    fps := rx_fps.findall(fps_str).pop()
                 ):
                     return round((float(fps) * float(duration)) / framecount, 2)
     except Exception as e:
@@ -92,7 +91,31 @@ def get_interval(file: str, framecount: int) -> float | bool:
     return False
 
 
+def check_executable(name) -> bool:
+    try:
+        subprocess.check_output(["which", name])
+    except subprocess.CalledProcessError:
+        return False
+    else:
+        return True
+
+
 if __name__ == "__main__":
+    if not check_executable("ffmpeg"):
+        exit("ffmpeg executable is not available")
+    if not check_executable("ffprobe"):
+        exit("ffprobe executable is not available")
+
     args = parse_args()
     if interval := get_interval(args.file, args.count):
-        subprocess.run((EXTRACT_CMD % (args.file, interval, args.count, args.format,)).split())
+        subprocess.run(
+            (
+                EXTRACT_CMD
+                % (
+                    args.file,
+                    interval,
+                    args.count,
+                    args.format,
+                )
+            ).split()
+        )
