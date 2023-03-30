@@ -5,7 +5,8 @@ import subprocess
 import os.path
 from pathlib import Path
 
-EXTRACT_CMD = "ffmpeg -i %s -vf thumbnail=%s,setpts=N/TB -r 1 -vframes %d %s"
+EXTRACT_CMD = "ffmpeg %s -i %s -vf thumbnail=%s,setpts=N/TB -r 1 -vframes %d %s"
+SILENCE_OPTS = "-hide_banner -loglevel warning -stats"
 PROBE_CMD = "ffprobe -v quiet -show_streams -select_streams v:0 -of json %s"
 
 
@@ -63,6 +64,7 @@ def parse_args():
         metavar="STRING",
         help="output format (default: %(default)s), should include %%d format specifier",
     )
+    parser.add_argument("-v", "--verbose", action="store_true", help="verbose output")
 
     return parser.parse_args()
 
@@ -112,6 +114,7 @@ if __name__ == "__main__":
             (
                 EXTRACT_CMD
                 % (
+                    "" if args.verbose else SILENCE_OPTS,
                     args.file,
                     interval,
                     args.count,
