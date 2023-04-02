@@ -4,14 +4,15 @@ import textwrap
 from typing import Callable, List, Tuple
 import sys
 
-
-def validate_number(input: str):
-    if not re.match(r"(^(0x)?[a-fA-F0-9]+$)|(^\d+$)", input):
-        raise argparse.ArgumentTypeError(f"invalid number '{input}'")
-    return input
+rx_number = re.compile(r"^((?:0[xob])?[a-fA-F0-9]+$)|(^\d+$)")
 
 
 def parse_args() -> Tuple[argparse.Namespace, Callable]:
+    def validate_number(input: str):
+        if not rx_number.match(input):
+            raise argparse.ArgumentTypeError(f"invalid number '{input}'")
+        return input
+
     parser = argparse.ArgumentParser(
         prog="numconverter",
         description="Shows input number in {dec}, {hex}, {oct} and {bin} bases".format(
@@ -37,9 +38,6 @@ def parse_args() -> Tuple[argparse.Namespace, Callable]:
 
 
 def parse_numbers(args: argparse.Namespace) -> Tuple[List[int], Exception | None]:
-    if not args.numbers or not isinstance(args.numbers, List):
-        return [], Exception("invalid input numbers")
-
     base = 10
     match True:
         case args.hex:
