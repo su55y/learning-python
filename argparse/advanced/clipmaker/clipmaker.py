@@ -2,11 +2,12 @@ import argparse
 import logging
 import re
 import subprocess
-from typing import Tuple
-
-from config import LOG_LEVEL, LOG_FMT, RESOLUTION
+from typing import Tuple, Dict
 
 
+LOG_LEVEL = logging.INFO
+LOG_FMT = "[%(asctime)-.19s %(levelname)-.4s] %(message)s (%(filename)s:%(funcName)s:%(lineno)d)"
+RESOLUTION = "1280x720"
 log: logging.Logger
 
 
@@ -75,6 +76,8 @@ def get_va(url: str) -> Tuple[str, str]:
     audio, video = None, None
     with YoutubeDL({"format": "best[ext=mp4]+bestaudio"}) as ydl:
         info = ydl.extract_info(url, download=False)
+        if not info or not isinstance(info, Dict):
+            die(f"can't extract '{url}' info")
         for format in info["formats"]:
             if (
                 format.get("resolution") == "audio only" and format.get("ext") == "m4a"
