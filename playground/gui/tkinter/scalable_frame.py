@@ -1,3 +1,5 @@
+import itertools as itr
+
 import tkinter as tk
 
 
@@ -42,25 +44,19 @@ class ScalableFrame(tk.Frame):
 def chessboard_canvas(parent: ScalableFrame, **kwargs):
     canvas = tk.Canvas(parent, **kwargs)
     if height := kwargs.get("height"):
-        color_switch = False
-        col = 0
         rect_size = height / BOARD_LENGTH
-        for x, y in [
-            (x, y)
-            for x in range(0, height, int(rect_size))
-            for y in range(0, height, int(rect_size))
-        ]:
-            if col != x:
-                color_switch = not color_switch
-            color_switch = not color_switch
-            col = x
 
+        for i, (x, y) in enumerate(
+            itr.product(
+                itr.takewhile(lambda n: n < height, itr.count(step=rect_size)), repeat=2
+            )
+        ):
             canvas.create_rectangle(
                 x,
                 y,
                 x + rect_size,
                 y + rect_size,
-                fill=["#000", "#fff"][color_switch],
+                fill=["#000", "#fff"][(i // BOARD_LENGTH + i % BOARD_LENGTH) % 2 == 0],
                 width=0,
             )
     return canvas
