@@ -12,16 +12,20 @@ def create_logger(**kwargs):
     if level := kwargs.get("level"):
         logger.setLevel(level)
 
-    match kwargs.get("handler_type", HandlerType.Stream):
-        case HandlerType.Stream:
-            handler = logging.StreamHandler()
-        case HandlerType.File:
-            path = kwargs.get("path")
-            if not path:
-                path = f"{__name__}.log"
-            handler = logging.FileHandler(path)
-        case _:
-            raise NotImplemented(f"this handler type not implemented yet")
+    def setup_handler():
+        match kwargs.get("handler_type", HandlerType.Stream):
+            case HandlerType.Stream:
+                handler = logging.StreamHandler()
+            case HandlerType.File:
+                filename = kwargs.get("filename")
+                if not filename:
+                    filename = f"{__name__}.log"
+                handler = logging.FileHandler(filename)
+            case _:
+                raise NotImplemented(f"this handler type not implemented yet")
+        return handler
+
+    handler = kwargs.get("handler", setup_handler())
 
     if format := kwargs.get("format"):
         handler.setFormatter(logging.Formatter(format))
