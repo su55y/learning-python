@@ -17,10 +17,7 @@ def create_logger(**kwargs):
             case HandlerType.Stream:
                 handler = logging.StreamHandler()
             case HandlerType.File:
-                filename = kwargs.get("filename")
-                if not filename:
-                    filename = f"{__name__}.log"
-                handler = logging.FileHandler(filename)
+                handler = logging.FileHandler(kwargs.get("filename", f"{__name__}.log"))
             case _:
                 raise NotImplemented(f"this handler type not implemented yet")
         return handler
