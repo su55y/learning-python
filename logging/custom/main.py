@@ -1,7 +1,17 @@
-from sys import exit
-from utils.custom_logger import CustomLogger
+import logging
+from custom_formatter import CustomFormatter
 
-log = CustomLogger(__name__, 0)
+log: logging.Logger
+
+
+def init_logger(**kwargs):
+    global log
+    log = logging.getLogger(kwargs.get("name", __name__))
+    log.setLevel(kwargs.get("level", logging.WARNING))
+    handler = logging.StreamHandler()
+    formatter = CustomFormatter(datefmt=kwargs.get("datefmt", "%H:%M:%S %d/%m/%y"))
+    handler.setFormatter(formatter)
+    log.addHandler(handler)
 
 
 def div(x, y):
@@ -10,7 +20,7 @@ def div(x, y):
 
     log.debug(f"try {x} / {y}")
     try:
-        print(f"{x} / {y} = {x / y}")
+        log.info(f"{x} / {y} = {x / y}")
     except TypeError as e:
         log.error(f"can't divide {x} by {y}: {e}")
     except ZeroDivisionError as e:
@@ -19,11 +29,12 @@ def div(x, y):
 
 
 def main():
+    div(1, 2)
     div(0, "\U0001F43C")
     div(1, 0)
     log.info("done")
-    exit(0)
 
 
 if __name__ == "__main__":
+    init_logger(level=logging.DEBUG)
     main()

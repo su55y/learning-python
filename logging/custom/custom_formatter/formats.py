@@ -1,0 +1,18 @@
+_PINK_BOLD = "\x1b[38;5;204;1m"
+_PINK_UNDERLINE_BOLD = "\x1b[38;5;204;4;1m"
+_WHITE_BOLD = "\x1b[1m"
+_WHITE_BOLD_ITALIC = "\x1b[1;3m"
+_YELLOW_BOLD = "\x1b[38;5;11;1m"
+_YELLOW_BOLD_ITALIC = "\x1b[38;5;11;1;3m"
+_RED_BOLD = "\x1b[31;1m"
+_RED_BG_BOLD = "\x1b[48;5;88;1m"
+_DARK_PINK_ITALIC_BOLD = "\x1b[38;5;197;1;3m"
+
+_RESET = "\x1b[0m"
+
+_PREFIX = "%(asctime)s [%(levelname)s]: "
+DEBUG_FMT = f"{_PINK_BOLD}{_PREFIX}{_RESET}{_PINK_UNDERLINE_BOLD}%(message)s{_RESET} {_DARK_PINK_ITALIC_BOLD}(%(filename)s:%(funcName)s:%(lineno)d){_RESET}"
+INFO_FMT = f"{_WHITE_BOLD}{_PREFIX}{_WHITE_BOLD_ITALIC}%(message)s{_RESET}"
+WARNING_FMT = f"{_YELLOW_BOLD}{_PREFIX}{_YELLOW_BOLD_ITALIC}%(message)s (%(filename)s:%(lineno)d){_RESET}"
+ERROR_FMT = f"{_RED_BOLD}{_PREFIX}%(message)s (%(filename)s:%(funcName)s:%(lineno)d){_RESET}"
+CRITICAL_FMT = f"{_RED_BG_BOLD}{_PREFIX}%(message)s (%(filename)s:%(funcName)s:%(lineno)d){_RESET}"
