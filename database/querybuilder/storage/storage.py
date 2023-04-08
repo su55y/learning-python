@@ -12,9 +12,9 @@ LOG_FMT = "[%(asctime)-.19s %(levelname)-.4s] %(message)s (%(filename)s:%(funcNa
 def default_logger():
     log = logging.Logger(__name__)
     log.setLevel(logging.DEBUG)
-    sh = logging.FileHandler("storage.log")
-    sh.setFormatter(logging.Formatter(LOG_FMT))
-    log.addHandler(sh)
+    fh = logging.FileHandler("storage.log")
+    fh.setFormatter(logging.Formatter(LOG_FMT))
+    log.addHandler(fh)
     return log
 
 
