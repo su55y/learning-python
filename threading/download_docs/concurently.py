@@ -1,74 +1,36 @@
-from typing import IO, List, Tuple
-from requests import get
-from io import BytesIO
-from zipfile import ZipFile
+from os import path
+import time
 from threading import Thread
-from re import match
-from os.path import join
-from logging import basicConfig, INFO, info, error
 
 
-PATH_TO_EXTRACT = "python-docs"
-
-
-def extract(b: IO[bytes], path: str) -> Exception | None:
-    info(f"extracting file to {path}")
-    try:
-        ZipFile(b).extractall(path)
-    except Exception as e:
-        return e
-
-
-def download_file(url: str) -> IO[bytes] | None:
-    info(f"donwloading file by {url}")
-    r = get(url)
-    if r.status_code == 200:
-        return BytesIO(r.content)
+from utils.utils import (
+    log,
+    extract,
+    download_file,
+    get_filename,
+    DOCS_URLS,
+    PATH_TO_EXTRACT,
+)
 
 
 def process_file(name: str, url: str):
-    file = download_file(url)
-    if not file:
-        error(f"can't download file by {url}")
-        return
-    if e := extract(file, join(PATH_TO_EXTRACT, name)):
-        error(f"can't extract '{name}' due to error: {repr(e)}")
-
-
-def init_logger():
-    basicConfig(
-        level=INFO,
-        format="\x1b[38;5;44m%(asctime)s [%(levelname)s]:\x1b[0m %(message)s",
-        datefmt="%H:%M:%S %d/%m/%y",
-    )
-
-
-def parse_url(u: str) -> Tuple[str, bool]:
-    if m := match(r"^https.+(docs\-.+)\.zip$", u):
-        if (g := m.groups()) and len(g) == 1:
-            return g[0], True
-    return "", False
+    if file := download_file(url):
+        extract(file, path.join(PATH_TO_EXTRACT, name))
 
 
 def main():
-    init_logger()
-    docs_urls: List[str] = list(
-        [
-            "https://docs.python.org/3/archives/python-3.11.1-docs-html.zip",
-            "https://docs.python.org/3/archives/python-3.11.1-docs-pdf-a4.zip",
-            "https://docs.python.org/3/archives/python-3.11.1-docs-pdf-letter.zip",
-            "https://docs.python.org/3/archives/python-3.11.1-docs-text.zip",
-        ]
-    )
-    for url in docs_urls:
-        name, ok = parse_url(url)
-        if not ok:
-            continue
-
-        t = Thread(target=process_file, args=(name, url), name=f"process_file({name})")
-        info(f"starting new thread {t.name}")
-        t.start()
+    for url in DOCS_URLS:
+        if name := get_filename(url):
+            t = Thread(
+                target=process_file,
+                args=(name, url),
+                name=f"process_file({name})",
+            )
+            log.info(f"starting new thread {t.name}")
+            t.start()
 
 
 if __name__ == "__main__":
+    start = time.perf_counter()
     main()
+    log.info(f"done in {time.perf_counter() - start:.2f}s")
