@@ -2,15 +2,7 @@ from os import path
 import time
 import threading
 
-
-from utils.utils import (
-    log,
-    extract,
-    download_file,
-    get_filename,
-    DOCS_URLS,
-    PATH_TO_EXTRACT,
-)
+from utils import *
 
 
 def process_file(name: str, url: str):

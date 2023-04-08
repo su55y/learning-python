@@ -5,14 +5,7 @@ from typing import IO
 
 import asyncio
 
-from utils.utils import (
-    log,
-    extract,
-    get_filename,
-    download_file,
-    DOCS_URLS,
-    PATH_TO_EXTRACT,
-)
+from utils import *
 
 
 async def async_download(url: str) -> IO[bytes] | None:
@@ -21,8 +14,7 @@ async def async_download(url: str) -> IO[bytes] | None:
 
 async def process_file(name: str, url: str):
     if file := await async_download(url):
-        t = Thread(target=extract, args=(file, path.join(PATH_TO_EXTRACT, name)))
-        t.start()
+        Thread(target=extract, args=(file, path.join(PATH_TO_EXTRACT, name))).start()
 
 
 async def main():
