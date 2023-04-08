@@ -19,6 +19,7 @@ def process_file(name: str, url: str):
 
 
 def main():
+    thread_list = list()
     for url in DOCS_URLS:
         if name := get_filename(url):
             t = Thread(
@@ -27,7 +28,10 @@ def main():
                 name=f"process_file({name})",
             )
             log.info(f"starting new thread {t.name}")
+            thread_list.append(t)
             t.start()
+    for t in thread_list:
+        t.join()
 
 
 if __name__ == "__main__":
