@@ -1,6 +1,6 @@
 from os import path
 import time
-from threading import Thread
+import threading
 
 
 from utils.utils import (
@@ -19,19 +19,25 @@ def process_file(name: str, url: str):
 
 
 def main():
-    thread_list = list()
     for url in DOCS_URLS:
         if name := get_filename(url):
-            t = Thread(
+            t = threading.Thread(
                 target=process_file,
                 args=(name, url),
                 name=f"process_file({name})",
             )
             log.info(f"starting new thread {t.name}")
-            thread_list.append(t)
             t.start()
-    for t in thread_list:
-        t.join()
+
+    while True:
+        if any(
+            t.is_alive()
+            for t in threading.enumerate()
+            if t.name.startswith("process_file")
+        ):
+            time.sleep(0.1)
+            continue
+        break
 
 
 if __name__ == "__main__":
