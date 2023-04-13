@@ -1,6 +1,5 @@
 import http.server
 import signal
-import socketserver
 import sys
 import time
 import threading
@@ -44,7 +43,7 @@ def raiser():
 
 if __name__ == "__main__":
     signal.signal(signal.SIGINT, lambda *_: raiser())
-    with socketserver.TCPServer(("", PORT), BasicRequestHandler) as httpd:
+    with http.server.HTTPServer(("", PORT), BasicRequestHandler) as httpd:
         shutdown = threading.Thread(target=httpd.shutdown, daemon=True)
         try:
             httpd.serve_forever()
