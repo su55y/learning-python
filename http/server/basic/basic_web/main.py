@@ -1,6 +1,5 @@
 import http.server
 import os
-import signal
 import sys
 import time
 import threading
@@ -47,7 +46,7 @@ class BasicRequestHandler(http.server.BaseHTTPRequestHandler):
     def handle_page(self):
         if page := get_static_file(self.filter_path(self.path)):
             self.send_response(200)
-            self.send_header("Content-type", "text/html; charset=utf-8")
+            self.send_header("Content-Type", "text/html; charset=utf-8")
             self.send_header("Content-Length", f"{len(page)}")
             self.end_headers()
             self.wfile.write(page)
@@ -70,17 +69,19 @@ class BasicRequestHandler(http.server.BaseHTTPRequestHandler):
         self.handle_request()
 
     def handle_get_time(self):
+        time_str = time.strftime("%H:%M:%S").encode()
         self.send_response(200)
-        self.send_header("Content-type", "text/plain")
+        self.send_header("Content-Type", "text/plain")
+        self.send_header("Content-Length", f"{len(time_str)}")
         self.end_headers()
-        self.wfile.write(time.strftime("%H:%M:%S").encode())
+        self.wfile.write(time_str)
 
     def handle_not_found(self):
         self.send_error(404)
 
     def send_error(self, code, message=None):
         self.send_response(code, message)
-        self.send_header("Content-type", "text/plain")
+        self.send_header("Content-Type", "text/plain")
         self.send_header("Content-Length", "0")
         self.end_headers()
 
@@ -89,9 +90,17 @@ class BasicRequestHandler(http.server.BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
+    if len(sys.argv[1:]) == 1 and (port := sys.argv[1]):
+        try:
+            PORT = int(port)
+        except:
+            pass
+
     with http.server.HTTPServer(("", PORT), BasicRequestHandler) as httpd:
         shutdown = threading.Thread(target=httpd.shutdown, daemon=True)
         try:
+            host, port = httpd.server_address
+            print(f"start listening on {host}:{port}...")
             httpd.serve_forever()
         except:
             print("shutting down...")
