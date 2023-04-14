@@ -22,22 +22,18 @@ class BasicRequestHandler(http.server.BaseHTTPRequestHandler):
     protocol_version = "HTTP/1.1"
 
     def handle_request(self):
-        print(self.path, self.command)
         if self.command == "GET":
             self.routing().get(self.path, self.handle_not_found)()
         else:
-            self.send_error(402, "Method not alowwed you dingus")
+            self.send_error(405)
 
     def filter_path(self, path):
-        print(f"mathc '{path}'")
         match path:
             case "/":
-                print("return an index")
                 return "index.html"
             case "/about":
                 return "pages/about.html"
             case _:
-                print("return an nothing")
                 return ""
 
     def routing(self):
@@ -52,6 +48,7 @@ class BasicRequestHandler(http.server.BaseHTTPRequestHandler):
         if page := get_static_file(self.filter_path(self.path)):
             self.send_response(200)
             self.send_header("Content-type", "text/html; charset=utf-8")
+            self.send_header("Content-Length", f"{len(page)}")
             self.end_headers()
             self.wfile.write(page)
         else:
@@ -91,12 +88,7 @@ class BasicRequestHandler(http.server.BaseHTTPRequestHandler):
         self.server.socket.close()
 
 
-def raiser():
-    raise
-
-
 if __name__ == "__main__":
-    signal.signal(signal.SIGINT, lambda *_: raiser())
     with http.server.HTTPServer(("", PORT), BasicRequestHandler) as httpd:
         shutdown = threading.Thread(target=httpd.shutdown, daemon=True)
         try:
