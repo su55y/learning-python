@@ -13,11 +13,9 @@ PROBE_CMD = "ffprobe -v quiet -show_streams -select_streams v:0 -of json %s"
 def parse_args():
     def check_num(arg: str) -> int | None:
         try:
-            num = int(arg)
+            return int(arg)
         except:
             raise argparse.ArgumentTypeError(f"invalid number '{arg}'")
-        else:
-            return num
 
     def check_file(arg: str) -> str | None:
         if not os.path.exists(arg) or not os.path.isfile(arg):
@@ -69,7 +67,7 @@ def parse_args():
     return parser.parse_args()
 
 
-def get_interval(file: str, framecount: int) -> float | bool:
+def get_interval(file: str, framecount: int) -> float | None:
     rx_fps = re.compile(r"(\d+(?:\.\d+)?)\/1")
     rx_duration = re.compile(r"(\d+(?:\.\d+)?)")
 
@@ -87,10 +85,9 @@ def get_interval(file: str, framecount: int) -> float | bool:
                     return round((float(fps) * float(duration)) / framecount, 2)
     except Exception as e:
         if isinstance(e, IndexError):
-            print(f"unexpected probe format")
+            exit("unexpected probe format")
         else:
-            print(repr(e))
-    return False
+            exit(repr(e))
 
 
 def check_executable(name) -> bool:
