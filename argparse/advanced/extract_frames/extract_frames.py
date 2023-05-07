@@ -1,7 +1,7 @@
 import argparse
 import json
 import re
-import subprocess
+import subprocess as sp
 import os.path
 from pathlib import Path
 
@@ -72,9 +72,7 @@ def get_interval(file: str, framecount: int) -> float | None:
     rx_duration = re.compile(r"(\d+(?:\.\d+)?)")
 
     try:
-        probe = json.loads(
-            subprocess.check_output(PROBE_CMD % file, shell=True).decode()
-        )
+        probe = json.loads(sp.check_output(PROBE_CMD % file, shell=True).decode())
         match probe:
             case {"streams": [{"r_frame_rate": str(), "duration": str()}]}:
                 fps_str = probe["streams"][0]["r_frame_rate"]
@@ -92,8 +90,8 @@ def get_interval(file: str, framecount: int) -> float | None:
 
 def check_executable(name) -> bool:
     try:
-        subprocess.check_output(["which", name])
-    except subprocess.CalledProcessError:
+        sp.check_output(["which", name])
+    except sp.CalledProcessError:
         return False
     else:
         return True
@@ -107,7 +105,7 @@ if __name__ == "__main__":
 
     args = parse_args()
     if interval := get_interval(args.file, args.count):
-        subprocess.run(
+        sp.run(
             (
                 EXTRACT_CMD
                 % (
