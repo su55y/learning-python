@@ -12,11 +12,14 @@ user_schema = UserSchema()
 users_schema = UserSchema(many=True)
 
 
-@bp.route("/")
-def index():
-    posts = Post.query.all()
-    res = posts_schema.dump(posts)
-    return jsonify(res)
+@bp.route("/users")
+def fetch_users():
+    return jsonify(users_schema.dump(User.query.all()))
+
+
+@bp.route("/user/<int:id>")
+def get_user(id: int):
+    return user_schema.dump(User.query.get_or_404(id))
 
 
 @bp.route("/user", methods=["POST"])
@@ -31,9 +34,35 @@ def add_user():
     return resp
 
 
-@bp.route("/user/<int:id>")
-def get_user(id: int):
-    return user_schema.dump(User.query.get_or_404(id))
+@bp.route("/user/<int:id>", methods=["PUT"])
+def update_user(id: int):
+    resp = make_response()
+    new_user = validate_user(request.json)
+    print(new_user)
+    print(type(new_user))
+    if not new_user:
+        resp.status_code = 400
+        return resp
+    user = User.query.get(id)
+    if not user:
+        resp.status_code = 404
+    else:
+        db.session.merge(User(id=user.id, **new_user))
+        db.session.commit()
+        resp.status_code = 204
+    return resp
+
+
+@bp.route("/user/<int:id>", methods=["DELETE"])
+def delete_user(id: int):
+    resp = make_response()
+    if user := User.query.get(id):
+        db.session.delete(user)
+        db.session.commit()
+        resp.status_code = 204
+    else:
+        resp.status_code = 404
+    return resp
 
 
 @bp.route("/post", methods=["POST"])
