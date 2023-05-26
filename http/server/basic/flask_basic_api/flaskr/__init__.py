@@ -16,8 +16,3 @@ stor = Storage(db)
 from flaskr.routes import bp
 
 app.register_blueprint(bp)
-
-
-@app.route("/")
-def index():
-    return ""
