@@ -1,8 +1,8 @@
-from argparse import ArgumentParser
-import argparse
+from argparse import ArgumentParser, ArgumentTypeError, RawDescriptionHelpFormatter
+from dataclasses import dataclass
 import sys
 from textwrap import dedent
-from typing import IO, Type
+from typing import IO, Optional
 
 MULTILINE_HELP_TEXT = """
 enviroment variables:
@@ -11,19 +11,35 @@ enviroment variables:
 """
 
 
-class MyArgumentParser(ArgumentParser):
+class MainArgType:
+    def __init__(self, value: str) -> None:
+        self._validate(value)
+        self.value = value
+
+    def __str__(self) -> str:
+        return f"{self.value}"
+
+    def _validate(self, value: str) -> None:
+        if not value:
+            raise ArgumentTypeError("invalid main argument")
+
+
+@dataclass
+class ArgsModel:
+    main: MainArgType
+    optional: int
+
+
+class MyArgsParser(ArgumentParser):
     def __init__(self, *args, **kwargs) -> None:
         self.additional_help_text = kwargs.pop("additional_help_text", "")
         super().__init__(*args, **kwargs)
-        self.add_argument(
-            "argument",
-            type=MainArgumentType.validate,
-            help="the main argument",
-        )
-        self.args = self.parse_args()
-        self.argument: MainArgumentType = self.args.argument
 
-    def print_help(self, file: IO[str] | None = None) -> None:
+    @property
+    def args(self) -> ArgsModel:
+        return ArgsModel(**vars(super().parse_args()))
+
+    def print_help(self, file: Optional[IO[str]] = None) -> None:
         super().print_help(file)
         if self.additional_help_text:
             if not file:
@@ -31,31 +47,29 @@ class MyArgumentParser(ArgumentParser):
             file.write(self.additional_help_text)
 
 
-class MainArgumentType:
-    def __init__(self, value) -> None:
-        self.value = value
-
-    def __str__(self) -> str:
-        return f"{self.value}"
-
-    @classmethod
-    def validate(cls: Type["MainArgumentType"], arg: str) -> "MainArgumentType":
-        if not arg:
-            raise argparse.ArgumentTypeError("invalid main argument")
-        return cls(arg)
+def ascii_art() -> Optional[str]:
+    try:
+        with open("ascii_art.txt") as f:
+            return f.read()
+    except:
+        pass
 
 
-def parse_args() -> MyArgumentParser:
-    with open("ascii_art.txt") as f:
-        ascii_art = f.read()
-    return MyArgumentParser(
+def parse_args() -> ArgsModel:
+    parser = MyArgsParser(
         prog="progname",
-        description=ascii_art or "",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description=ascii_art() or "",
+        formatter_class=RawDescriptionHelpFormatter,
         additional_help_text=dedent(MULTILINE_HELP_TEXT),
     )
+    parser.add_argument(
+        "main",
+        type=MainArgType,
+        help="main argument",
+    )
+    parser.add_argument("--optional", type=int, help="optional argument")
+    return parser.args
 
 
 if __name__ == "__main__":
-    args = parse_args()
-    print(args.argument)
+    print(parse_args())
