@@ -4,7 +4,7 @@ import sys
 from textwrap import dedent
 from typing import IO, Type
 
-ADDITIONAL_HELP_TEXT = """
+MULTILINE_HELP_TEXT = """
 enviroment variables:
     FOO: to provide `foo`
     BAR: to provide `bar`
@@ -46,7 +46,14 @@ class MainArgumentType:
 
 
 def parse_args() -> MyArgumentParser:
-    return MyArgumentParser(additional_help_text=dedent(ADDITIONAL_HELP_TEXT))
+    with open("ascii_art.txt") as f:
+        ascii_art = f.read()
+    return MyArgumentParser(
+        prog="progname",
+        description=ascii_art or "",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        additional_help_text=dedent(MULTILINE_HELP_TEXT),
+    )
 
 
 if __name__ == "__main__":
