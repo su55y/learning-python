@@ -1,3 +1,4 @@
+import logging
 from typing import List, Optional
 import xml.etree.ElementTree as ET
 
@@ -11,6 +12,8 @@ class YTFeedParser:
         self.__tree = ET.fromstring(raw)
         self.__title = ""
         self.__entries: List[Entry] = []
+        self.log = logging.getLogger()
+
         self._read_title()
         self.__read_entries()
 
@@ -37,6 +40,8 @@ class YTFeedParser:
         tag = self.__tree.find(name) if not el else el.find(name)
         if tag is not None:
             return tag.text
+        else:
+            self.log.error(f"can't read {name} tag")
 
     def _read_yt_tag(self, name: str, el: Optional[ET.Element] = None) -> Optional[str]:
         tag = (
@@ -46,3 +51,5 @@ class YTFeedParser:
         )
         if tag is not None:
             return tag.text
+        else:
+            self.log.error(f"can't read {name} tag")

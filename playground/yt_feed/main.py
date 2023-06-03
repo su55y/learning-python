@@ -1,32 +1,38 @@
+import logging
 from pathlib import Path
 from sys import argv
-from typing import Optional
-import urllib.request
 
 from storage import DBHooks, Storage
 from parser import YTFeedParser
+from utils import fetch_feed
 
-BASE_FEED_URL = "https://www.youtube.com/feeds/videos.xml?channel_id=%s"
 DB_FILE = "test.db"
 
 
-def fetch_feed(url: str) -> Optional[str]:
-    try:
-        with urllib.request.urlopen(url) as resp:
-            if resp.status == 200:
-                return resp.read()
-    except:
-        pass
+def init_logger(**kwargs):
+    LOG_FMT = "[%(asctime)-.19s %(levelname)s] %(message)s (%(funcName)s:%(lineno)d)"
+    logger = logging.getLogger()
+    logger.setLevel(kwargs.get("level", logging.INFO))
+
+    if file := kwargs.get("file"):
+        handler = logging.FileHandler(file)
+    else:
+        handler = logging.StreamHandler()
+
+    handler.setFormatter(logging.Formatter(kwargs.get("format", LOG_FMT)))
+    logger.addHandler(handler)
 
 
 if __name__ == "__main__":
     if len(argv[1:]) != 1:
         exit("provide channel id")
 
+    init_logger()
+    log = logging.getLogger()
     channel_id = argv[1]
-    raw_feed = fetch_feed(BASE_FEED_URL % channel_id)
+    raw_feed = fetch_feed(channel_id)
     if not raw_feed:
-        exit(f"can't fetch feed from {BASE_FEED_URL % channel_id}")
+        exit(f"can't fetch feed from {channel_id}")
 
     parser = YTFeedParser(raw_feed)
 
@@ -36,4 +42,4 @@ if __name__ == "__main__":
 
     storage = Storage(db_file)
     count = storage.add_entries(parser.entries)
-    print(f"{count} new entries just added")
+    log.info(f"{count} new entries just added")
