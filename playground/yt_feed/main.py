@@ -35,11 +35,12 @@ if __name__ == "__main__":
         exit(f"can't fetch feed from {channel_id}")
 
     parser = YTFeedParser(raw_feed)
+    feed = parser.parse_feed()
 
     db_file = Path(DB_FILE)
     if err := DBHooks(db_file).init_db():
         exit(repr(err))
 
     storage = Storage(db_file)
-    count = storage.add_entries(parser.entries)
+    count = storage.add_entries(feed.entries)
     log.info(f"{count} new entries just added")

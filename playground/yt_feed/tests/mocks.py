@@ -16,7 +16,6 @@ feed_fmt = """
 </feed>
 """
 
-TEST_FEED = Feed(title="Sample Channel", channel_id="sample_channdel_id123456")
 TEST_ENTRIES = [
     Entry(
         id=f"video_id_{n:02d}",
@@ -25,6 +24,12 @@ TEST_ENTRIES = [
     )
     for n in range(1, 4)
 ]
+
+TEST_FEED = Feed(
+    channel_id="sample_channel_id1234567",
+    title="Sample Channel",
+    entries=TEST_ENTRIES,
+)
 
 
 def raw_test_feed() -> str:
