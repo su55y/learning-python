@@ -33,3 +33,12 @@ class StorageTest(unittest.TestCase):
     def test2_select_entries(self):
         entries = self.stor.fetch_feed_entries(TEST_FEED.channel_id)
         self.assertEqual(entries, TEST_ENTRIES)
+
+    def test2_select_not_found(self):
+        self.assertIsNone(self.stor.fetch_feed(""))
+        entries = self.stor.fetch_feed_entries("")
+        self.assertEqual(len(entries), 0)
+
+    def test3_insert_duplicate(self):
+        count = self.stor.add_entries(TEST_FEED)
+        self.assertEqual(count, 0)
