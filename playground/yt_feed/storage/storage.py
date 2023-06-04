@@ -28,7 +28,7 @@ class Storage:
         with self.get_cursor() as cursor:
             query = "SELECT channel_id, title FROM tb_feeds WHERE channel_id = ?"
             self.log.debug(query)
-            if feed_row := cursor.execute(query, channel_id).fetchone():
+            if feed_row := cursor.execute(query, (channel_id,)).fetchone():
                 _channel_id, title = feed_row
                 return Feed(
                     channel_id=_channel_id,
@@ -41,7 +41,7 @@ class Storage:
         with self.get_cursor() as cursor:
             query = "SELECT id, title, updated FROM tb_entries WHERE channel_id = ?"
             self.log.debug(query)
-            rows = cursor.execute(query, channel_id).fetchall()
+            rows = cursor.execute(query, (channel_id,)).fetchall()
             for _id, title, updated in rows:
                 entries.append(Entry(id=_id, title=title, updated=updated))
         return entries
