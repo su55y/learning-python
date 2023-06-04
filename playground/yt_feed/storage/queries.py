@@ -3,7 +3,7 @@ QUERIES = [
     """
     CREATE TABLE if not exists tb_feeds(
         channel_id VARCHAR(24) NOT NULL PRIMARY KEY,
-        title VARCHAR NOT NULL,
+        title VARCHAR NOT NULL
     );""",
     """
     CREATE TABLE IF NOT EXISTS tb_entries(
