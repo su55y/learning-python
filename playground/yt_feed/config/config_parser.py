@@ -14,7 +14,11 @@ class ConfigParser:
         self._path = path
         self._set_default_config_path()
 
-    def get_config(self):
+    @property
+    def default_config_path(self) -> Path:
+        return self.__default_config_path
+
+    def get_config(self) -> Optional[Config]:
         if path := self._get_path():
             try:
                 with open(path) as f:
@@ -33,10 +37,6 @@ class ConfigParser:
             return path
         else:
             self.log.error(f"invalid config path '{path}'")
-
-    @property
-    def default_config_path(self) -> Path:
-        return self.__default_config_path
 
     def _set_default_config_path(self, config_name="config.yaml"):
         config_home = None
