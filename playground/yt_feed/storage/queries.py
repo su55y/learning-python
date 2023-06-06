@@ -1,7 +1,7 @@
 QUERIES = [
     "PRAGMA foreign_keys = ON;",
     """
-    CREATE TABLE if not exists tb_feeds(
+    CREATE TABLE IF NOT EXISTS tb_feeds(
         channel_id TEXT NOT NULL CHECK(length(channel_id) == 24) PRIMARY KEY,
         title TEXT NOT NULL,
         is_active TINYINT NOT NULL DEFAULT 1
