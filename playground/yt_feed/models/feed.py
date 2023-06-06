@@ -8,4 +8,5 @@ from models.entry import Entry
 class Feed:
     channel_id: str
     title: str
+    is_active: bool
     entries: List[Entry]
