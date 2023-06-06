@@ -2,14 +2,15 @@ QUERIES = [
     "PRAGMA foreign_keys = ON;",
     """
     CREATE TABLE if not exists tb_feeds(
-        channel_id VARCHAR(24) NOT NULL PRIMARY KEY,
-        title VARCHAR NOT NULL
+        channel_id TEXT NOT NULL CHECK(length(channel_id) == 24) PRIMARY KEY,
+        title TEXT NOT NULL,
+        is_active TINYINT NOT NULL DEFAULT 1
     );""",
     """
     CREATE TABLE IF NOT EXISTS tb_entries(
-        id VARCHAR(11) NOT NULL PRIMARY KEY,
-        title VARCHAR NOT NULL,
+        id TEXT NOT NULL CHECK(length(id) == 11) PRIMARY KEY,
+        title TEXT NOT NULL,
         updated DATETIME NOT NULL,
-        channel_id VARCHAR(24) NOT NULL REFERENCES tb_feeds(channel_id) ON DELETE CASCADE
+        channel_id TEXT NOT NULL REFERENCES tb_feeds(channel_id) ON DELETE CASCADE
     );""",
 ]
