@@ -1,9 +1,10 @@
 import logging
 from typing import Optional
-import urllib.request
 
+import asyncio
+from aiohttp import ClientSession
 
-from models import Config, Entry, Feed
+from models import Config, Feed, Channel
 from parser import YTFeedParser
 from storage import Storage
 
@@ -14,7 +15,7 @@ class Feeder:
         self.config = config
         self.log = logging.getLogger()
 
-    def sync_channels(self):
+    def sync_channels(self) -> None:
         new_channels = self.stor.add_channels(self.config.channels)
         if new_channels:
             self.log.info(f"{new_channels} added")
@@ -26,29 +27,38 @@ class Feeder:
                 % (active_count, len(active_channels_ids)),
             )
 
-    def sync_entries(self):
-        for channel in self.config.channels:
-            raw_feed = self._fetch_feed(channel.channel_id)
-            if not raw_feed:
-                self.log.warning("can't fetch feed for '%s'" % channel.title)
-                continue
-            parser = YTFeedParser(raw_feed)
-            feed = Feed(
-                channel_id=channel.channel_id,
-                title=channel.title,
-                is_active=True,
-                entries=parser.entries,
+    async def sync_entries(self) -> None:
+        async with ClientSession() as session:
+            await asyncio.gather(
+                *[
+                    asyncio.create_task(self._fetch_and_sync_entries(session, channel))
+                    for channel in self.config.channels
+                ]
             )
-            count = self.stor.add_entries(feed)
-            if count:
-                self.log.info("%d new entries for '%s'" % (count, feed.title))
 
-    def _fetch_feed(self, channel_id: str) -> Optional[str]:
+    async def _fetch_and_sync_entries(
+        self, session: ClientSession, channel: Channel
+    ) -> None:
+        raw_feed = await self._fetch_feed(session, channel.channel_id)
+        if not raw_feed:
+            self.log.error("can't fetch feed for '%s'" % channel.title)
+            return
+        parser = YTFeedParser(raw_feed)
+        feed = Feed(
+            channel_id=channel.channel_id,
+            title=channel.title,
+            is_active=True,
+            entries=parser.entries,
+        )
+        count = self.stor.add_entries(feed)
+        if count:
+            self.log.info("%d new entries for '%s'" % (count, feed.title))
+
+    async def _fetch_feed(
+        self, session: ClientSession, channel_id: str
+    ) -> Optional[str]:
         url = "https://www.youtube.com/feeds/videos.xml?channel_id=%s" % channel_id
-        try:
-            with urllib.request.urlopen(url) as resp:
-                logging.debug(f"{resp.status} {resp.reason} {url}")
-                if resp.status == 200:
-                    return resp.read()
-        except Exception as e:
-            self.log.error("error: %s, url: %s" % (e, url))
+        async with session.get(url) as resp:
+            self.log.debug(f"{resp.status} {resp.reason} {resp.url}")
+            if resp.status == 200:
+                return await resp.text()
