@@ -1,4 +1,4 @@
-from models import Entry, Feed
+from models import Entry, Channel
 
 entry_fmt = """
 \t<entry>
@@ -25,7 +25,7 @@ TEST_ENTRIES = [
     for n in range(1, 4)
 ]
 
-TEST_FEED = Feed(
+TEST_FEED = Channel(
     channel_id="sample_channel_id1234567",
     title="Sample Channel",
     entries=TEST_ENTRIES,

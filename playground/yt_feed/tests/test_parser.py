@@ -10,7 +10,4 @@ class ParserTest(unittest.TestCase):
         cls.parser = YTFeedParser(raw_test_feed())
 
     def test_parser(self):
-        feed = self.parser.parse_feed()
-        self.assertEqual(feed.title, TEST_FEED.title)
-        self.assertEqual(feed.channel_id, TEST_FEED.channel_id)
-        self.assertListEqual(feed.entries, TEST_FEED.entries)
+        self.assertListEqual(self.parser.entries, TEST_FEED.entries)

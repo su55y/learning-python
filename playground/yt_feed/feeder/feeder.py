@@ -4,7 +4,7 @@ from typing import Optional
 import asyncio
 from aiohttp import ClientSession
 
-from models import Config, Feed, Channel
+from models import Config, Channel
 from parser import YTFeedParser
 from storage import Storage
 
@@ -44,10 +44,9 @@ class Feeder:
             self.log.error("can't fetch feed for '%s'" % channel.title)
             return
         parser = YTFeedParser(raw_feed)
-        feed = Feed(
+        feed = Channel(
             channel_id=channel.channel_id,
             title=channel.title,
-            is_active=True,
             entries=parser.entries,
         )
         count = self.stor.add_entries(feed)

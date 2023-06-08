@@ -11,21 +11,13 @@ class YTFeedParser:
         self.__namespace = {"yt": "http://www.youtube.com/xml/schemas/2015"}
         self.__tree = ET.fromstring(raw)
 
-        self.__title = "-"
         self.__entries: List[Entry] = []
         self.log = logging.getLogger()
         self._read_entries()
 
     @property
-    def title(self) -> str:
-        return self.__title
-
-    @property
     def entries(self) -> List[Entry]:
         return self.__entries
-
-    def _read_title(self):
-        self.__title = self._read_tag(self.__schema % "title") or "-"
 
     def _read_entries(self):
         for entry in self.__tree.findall(self.__schema % "entry"):
