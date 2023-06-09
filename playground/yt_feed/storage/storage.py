@@ -27,14 +27,16 @@ class Storage:
     def update_active_channels(self, active_channels: List[Tuple[str]]):
         with self.get_cursor() as cursor:
             reset_query = "UPDATE tb_feeds SET is_active = 0"
+            self.log.debug(reset_query)
             cursor.execute(reset_query)
             set_query = "UPDATE tb_feeds SET is_active = 1 WHERE channel_id = ?"
+            self.log.debug(f"{set_query}, active count: {len(active_channels)}")
             return cursor.executemany(set_query, active_channels).rowcount
 
     def channel(self, channel_id: str) -> Optional[Channel]:
         with self.get_cursor() as cursor:
             query = "SELECT channel_id, title FROM tb_feeds WHERE channel_id = ?"
-            self.log.debug(query)
+            self.log.debug(f"{query}, channel_id: {channel_id}")
             if feed_row := cursor.execute(query, (channel_id,)).fetchone():
                 return Channel(*feed_row, entries=self.channel_entries(channel_id))
 
