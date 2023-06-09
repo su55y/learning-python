@@ -20,7 +20,7 @@ class Feeder:
         if new_channels:
             self.log.info(f"{new_channels} added")
         active_channels_ids = [(c.channel_id,) for c in self.config.channels]
-        active_count = self.stor.sync_feeds(active_channels_ids)
+        active_count = self.stor.update_active_channels(active_channels_ids)
         if active_count != len(self.config.channels):
             self.log.warning(
                 "mismatch storage with config active channels: %d != %d"

@@ -22,21 +22,21 @@ class StorageTest(unittest.TestCase):
             raise err
 
     def test1_insert(self):
-        self.assertEqual(self.stor.add_feed(TEST_FEED), 1)
+        self.assertEqual(self.stor.add_channels([TEST_FEED]), 1)
         self.assertEqual(self.stor.add_entries(TEST_FEED), len(TEST_ENTRIES))
 
     def test2_select(self):
-        feed = self.stor.fetch_feed(TEST_FEED.channel_id)
+        feed = self.stor.channel(TEST_FEED.channel_id)
         self.assertIsNotNone(feed)
         self.assertEqual(feed, TEST_FEED)
 
     def test2_select_entries(self):
-        entries = self.stor.fetch_feed_entries(TEST_FEED.channel_id)
+        entries = self.stor.channel_entries(TEST_FEED.channel_id)
         self.assertEqual(entries, TEST_ENTRIES)
 
     def test2_select_not_found(self):
-        self.assertIsNone(self.stor.fetch_feed(""))
-        entries = self.stor.fetch_feed_entries("")
+        self.assertIsNone(self.stor.channel(""))
+        entries = self.stor.channel_entries("")
         self.assertEqual(len(entries), 0)
 
     def test3_insert_duplicate(self):
