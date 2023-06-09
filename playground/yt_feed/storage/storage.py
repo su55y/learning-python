@@ -37,8 +37,13 @@ class Storage:
         with self.get_cursor() as cursor:
             query = "SELECT channel_id, title FROM tb_feeds WHERE channel_id = ?"
             self.log.debug(f"{query}, channel_id: {channel_id}")
-            if feed_row := cursor.execute(query, (channel_id,)).fetchone():
-                return Channel(*feed_row, entries=self.channel_entries(channel_id))
+            if row := cursor.execute(query, (channel_id,)).fetchone():
+                id, title = row
+                return Channel(
+                    channel_id=id,
+                    title=title,
+                    entries=self.channel_entries(channel_id),
+                )
 
     def common_feed(self, limit: int = 15) -> List[Entry]:
         entries: List[Entry] = []
