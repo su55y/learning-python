@@ -1,3 +1,5 @@
+from functools import lru_cache
+from typing import List
 from models import Entry, Channel
 
 entry_fmt = """
@@ -16,28 +18,35 @@ feed_fmt = """
 </feed>
 """
 
-TEST_ENTRIES = [
-    Entry(
-        id=f"video_id_{n:02d}",
-        title=f"Video #{n}",
-        updated=f"2023-01-{n:02d}T00:00:00+00:00",
+
+@lru_cache(maxsize=1)
+def sample_entries() -> List[Entry]:
+    return [
+        Entry(
+            id=f"video_id_{n:02d}",
+            title=f"Video #{n}",
+            updated=f"2023-01-{n:02d}T00:00:00+00:00",
+        )
+        for n in range(1, 4)
+    ]
+
+
+@lru_cache(maxsize=1)
+def sample_channel() -> Channel:
+    return Channel(
+        channel_id="sample_channel_id1234567",
+        title="Sample Channel",
+        entries=sample_entries(),
     )
-    for n in range(1, 4)
-]
-
-TEST_FEED = Channel(
-    channel_id="sample_channel_id1234567",
-    title="Sample Channel",
-    entries=TEST_ENTRIES,
-)
 
 
-def raw_test_feed() -> str:
+def raw_feed() -> str:
+    channel = sample_channel()
     return feed_fmt.format(
-        channel_title=TEST_FEED.title,
-        channel_id=TEST_FEED.channel_id,
+        channel_title=channel.title,
+        channel_id=channel.channel_id,
         entries="".join(
             entry_fmt.format(id=e.id, title=e.title, updated=e.updated).strip()
-            for e in TEST_ENTRIES
+            for e in channel.entries
         ),
     ).strip()

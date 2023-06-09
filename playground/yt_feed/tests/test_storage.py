@@ -2,7 +2,7 @@ from pathlib import Path
 import unittest
 
 from storage import DBHooks, Storage
-from .mocks import TEST_FEED, TEST_ENTRIES
+from .mocks import sample_channel, sample_entries
 
 
 class StorageTest(unittest.TestCase):
@@ -22,17 +22,17 @@ class StorageTest(unittest.TestCase):
             raise err
 
     def test1_insert(self):
-        self.assertEqual(self.stor.add_channels([TEST_FEED]), 1)
-        self.assertEqual(self.stor.add_entries(TEST_FEED), len(TEST_ENTRIES))
+        self.assertEqual(self.stor.add_channels([sample_channel()]), 1)
+        self.assertEqual(self.stor.add_entries(sample_channel()), len(sample_entries()))
 
     def test2_select(self):
-        feed = self.stor.channel(TEST_FEED.channel_id)
-        self.assertIsNotNone(feed)
-        self.assertEqual(feed, TEST_FEED)
+        channel = self.stor.channel(sample_channel().channel_id)
+        self.assertIsNotNone(channel)
+        self.assertEqual(channel, sample_channel())
 
     def test2_select_entries(self):
-        entries = self.stor.channel_entries(TEST_FEED.channel_id)
-        self.assertEqual(entries, TEST_ENTRIES)
+        entries = self.stor.channel_entries(sample_channel().channel_id)
+        self.assertEqual(entries, sample_entries())
 
     def test2_select_not_found(self):
         self.assertIsNone(self.stor.channel(""))
@@ -40,5 +40,5 @@ class StorageTest(unittest.TestCase):
         self.assertEqual(len(entries), 0)
 
     def test3_insert_duplicate(self):
-        count = self.stor.add_entries(TEST_FEED)
+        count = self.stor.add_entries(sample_channel())
         self.assertEqual(count, 0)
