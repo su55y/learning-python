@@ -1,0 +1,22 @@
+* {
+    font: "NotoSans Nerd Font 18";
+}
+window {
+    padding: 5;
+    width: 800px ;
+}
+mainbox {
+    padding: 0;
+    children: [ "inputbar","listview" ];
+}
+listview {
+    lines: 0;
+}
+inputbar {
+    children: [ "entry" ];
+}
+entry {
+    cursor: text;
+    placeholder: "";
+    padding: 0 0.3em;
+}
