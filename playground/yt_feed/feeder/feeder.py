@@ -16,9 +16,8 @@ class Feeder:
         self.log = logging.getLogger()
 
     def sync_channels(self) -> None:
-        new_channels = self.stor.add_channels(self.config.channels)
-        if new_channels:
-            self.log.info(f"{new_channels} added")
+        if new_channels_count := self.stor.add_channels(self.config.channels):
+            self.log.info("%d new channels added" % new_channels_count)
         active_channels_ids = [(c.channel_id,) for c in self.config.channels]
         active_count = self.stor.update_active_channels(active_channels_ids)
         if active_count != len(self.config.channels):
@@ -43,14 +42,12 @@ class Feeder:
         if not raw_feed:
             self.log.error("can't fetch feed for '%s'" % channel.title)
             return
-        parser = YTFeedParser(raw_feed)
         feed = Channel(
             channel_id=channel.channel_id,
             title=channel.title,
-            entries=parser.entries,
+            entries=YTFeedParser(raw_feed).entries,
         )
-        count = self.stor.add_entries(feed)
-        if count:
+        if count := self.stor.add_entries(feed):
             self.log.info("%d new entries for '%s'" % (count, feed.title))
 
     async def _fetch_feed(
