@@ -24,7 +24,9 @@ class Storage:
         finally:
             conn.close()
 
-    def update_active_channels(self, active_channels: List[Tuple[str]]):
+    def update_active_channels(
+        self, active_channels: List[Tuple[str]]
+    ) -> Optional[int]:
         with self.get_cursor() as cursor:
             reset_query = "UPDATE tb_feeds SET is_active = 0"
             self.log.debug(reset_query)
@@ -33,7 +35,7 @@ class Storage:
             self.log.debug(f"{set_query}, active count: {len(active_channels)}")
             return cursor.executemany(set_query, active_channels).rowcount
 
-    def channel(self, channel_id: str) -> Optional[Channel]:
+    def channel(self, channel_id: str, limit: int) -> Optional[Channel]:
         with self.get_cursor() as cursor:
             query = "SELECT channel_id, title FROM tb_feeds WHERE channel_id = ?"
             self.log.debug(f"{query}, channel_id: {channel_id}")
@@ -42,28 +44,46 @@ class Storage:
                 return Channel(
                     channel_id=id,
                     title=title,
-                    entries=self.channel_entries(channel_id),
+                    entries=self.select_entries(channel_id, limit),
                 )
 
-    def common_feed(self, limit: int = 15) -> List[Entry]:
+    def select_entries(
+        self,
+        channel_id: Optional[str] = None,
+        limit: Optional[int] = None,
+    ) -> List[Entry]:
         entries: List[Entry] = []
         with self.get_cursor() as cursor:
-            query = "SELECT id, title, updated FROM tb_entries ORDER BY UPDATED DESC LIMIT ?"
-            self.log.debug(f"{query}, limit: {limit}")
-            rows = cursor.execute(query, (limit,)).fetchall()
-            for id, title, updated in rows:
-                entries.append(Entry(id=id, title=title, updated=updated))
+            query = "SELECT id, title, updated, is_viewed FROM tb_entries {where} ORDER BY updated DESC {limit}".format(
+                where=f"WHERE channel_id = '{channel_id}'" if channel_id else "",
+                limit=f"LIMIT {limit}" if limit else "",
+            )
+            self.log.debug(query)
+            rows = cursor.execute(query).fetchall()
+            self.log.debug("selected %d entries" % len(rows))
+            for id, title, updated, is_viewed in rows:
+                entries.append(
+                    Entry(
+                        id=id,
+                        title=title,
+                        updated=updated,
+                        is_viewed=is_viewed,
+                    )
+                )
+            self.mark_entries_as_viewed(entries)
         return entries
 
-    def channel_entries(self, channel_id: str) -> List[Entry]:
-        entries: List[Entry] = []
+    def mark_entries_as_viewed(self, entries: List[Entry]):
         with self.get_cursor() as cursor:
-            query = "SELECT id, title, updated FROM tb_entries WHERE channel_id = ?"
-            self.log.debug(f"{query}, channel_id: {channel_id}")
-            rows = cursor.execute(query, (channel_id,)).fetchall()
-            for _id, title, updated in rows:
-                entries.append(Entry(id=_id, title=title, updated=updated))
-        return entries
+            update_query = "UPDATE tb_entries SET is_viewed = 1 WHERE id = ?"
+            count = cursor.executemany(
+                update_query, [(e.id,) for e in entries]
+            ).rowcount
+            if len(entries) != cursor.rowcount:
+                self.log.warning(
+                    "can't mark all selected entries as viewed (%d of %d)"
+                    % (count, len(entries))
+                )
 
     def add_channels(self, channels: List[Channel]) -> int:
         with self.get_cursor() as cursor:
