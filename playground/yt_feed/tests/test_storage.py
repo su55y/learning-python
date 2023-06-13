@@ -1,3 +1,4 @@
+from datetime import datetime
 from pathlib import Path
 import unittest
 
@@ -26,17 +27,16 @@ class StorageTest(unittest.TestCase):
         self.assertEqual(self.stor.add_entries(sample_channel()), len(sample_entries()))
 
     def test2_select(self):
-        channel = self.stor.channel(sample_channel().channel_id)
+        channel = self.stor.channel(sample_channel().channel_id, -1)
         self.assertIsNotNone(channel)
+        channel.entries = sorted(
+            channel.entries, key=lambda e: datetime.fromisoformat(e.updated)
+        )
         self.assertEqual(channel, sample_channel())
 
-    def test2_select_entries(self):
-        entries = self.stor.channel_entries(sample_channel().channel_id)
-        self.assertEqual(entries, sample_entries())
-
     def test2_select_not_found(self):
-        self.assertIsNone(self.stor.channel(""))
-        entries = self.stor.channel_entries("")
+        self.assertIsNone(self.stor.channel("-", -1))
+        entries = self.stor.select_entries("-", -1)
         self.assertEqual(len(entries), 0)
 
     def test3_insert_duplicate(self):
