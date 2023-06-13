@@ -67,7 +67,7 @@ class Storage:
                         id=id,
                         title=title,
                         updated=updated,
-                        is_viewed=is_viewed,
+                        is_viewed=bool(is_viewed),
                     )
                 )
             self.mark_entries_as_viewed(entries)
