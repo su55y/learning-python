@@ -35,17 +35,13 @@ class Storage:
             self.log.debug(f"{set_query}, active count: {len(active_channels)}")
             return cursor.executemany(set_query, active_channels).rowcount
 
-    def channel(self, channel_id: str, limit: int) -> Optional[Channel]:
+    def select_channel(self, channel_id: str) -> Optional[Channel]:
         with self.get_cursor() as cursor:
             query = "SELECT channel_id, title FROM tb_feeds WHERE channel_id = ?"
             self.log.debug(f"{query}, channel_id: {channel_id}")
             if row := cursor.execute(query, (channel_id,)).fetchone():
                 id, title = row
-                return Channel(
-                    channel_id=id,
-                    title=title,
-                    entries=self.select_entries(channel_id, limit),
-                )
+                return Channel(channel_id=id, title=title)
 
     def select_entries(
         self,
@@ -92,14 +88,13 @@ class Storage:
             self.log.debug(f"{query}, channels count: {len(new_channels)}")
             return cursor.executemany(query, new_channels).rowcount
 
-    def add_entries(self, channel: Channel) -> int:
-        if not channel.entries:
+    def add_entries(self, entries: List[Entry], channel_id: str) -> int:
+        if not entries:
             return 0
         with self.get_cursor() as cursor:
             query = "INSERT OR IGNORE INTO tb_entries (id, title, updated, channel_id) VALUES (?, ?, ?, ?)"
-            entries = [
-                (entry.id, entry.title, entry.updated, channel.channel_id)
-                for entry in channel.entries
+            new_entries = [
+                (entry.id, entry.title, entry.updated, channel_id) for entry in entries
             ]
-            self.log.debug(f"{query}, entries count: {len(entries)}")
-            return cursor.executemany(query, entries).rowcount
+            self.log.debug(f"{query}, entries count: {len(new_entries)}")
+            return cursor.executemany(query, new_entries).rowcount

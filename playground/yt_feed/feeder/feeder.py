@@ -42,13 +42,10 @@ class Feeder:
         if not raw_feed:
             self.log.error("can't fetch feed for '%s'" % channel.title)
             return
-        feed = Channel(
-            channel_id=channel.channel_id,
-            title=channel.title,
-            entries=YTFeedParser(raw_feed).entries,
-        )
-        if count := self.stor.add_entries(feed):
-            self.log.info("%d new entries for '%s'" % (count, feed.title))
+        if count := self.stor.add_entries(
+            YTFeedParser(raw_feed).entries, channel.channel_id
+        ):
+            self.log.info("%d new entries for '%s'" % (count, channel.title))
 
     async def _fetch_feed(
         self, session: ClientSession, channel_id: str

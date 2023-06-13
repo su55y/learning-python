@@ -1,4 +1,3 @@
-from datetime import datetime
 from pathlib import Path
 import unittest
 
@@ -23,22 +22,26 @@ class StorageTest(unittest.TestCase):
             raise err
 
     def test1_insert(self):
-        self.assertEqual(self.stor.add_channels([sample_channel()]), 1)
-        self.assertEqual(self.stor.add_entries(sample_channel()), len(sample_entries()))
-
-    def test2_select(self):
-        channel = self.stor.channel(sample_channel().channel_id, -1)
-        self.assertIsNotNone(channel)
-        channel.entries = sorted(
-            channel.entries, key=lambda e: datetime.fromisoformat(e.updated)
+        self.assertEqual(self.stor.add_channels([sample_channel]), 1)
+        self.assertEqual(
+            self.stor.add_entries(sample_entries, sample_channel.channel_id),
+            len(sample_entries),
         )
-        self.assertEqual(channel, sample_channel())
+
+    def test2_select_channel(self):
+        channel = self.stor.select_channel(sample_channel.channel_id)
+        self.assertIsNotNone(channel)
+        self.assertEqual(channel, sample_channel)
+
+    def test2_select_entries(self):
+        entries = self.stor.select_entries(sample_channel.channel_id)
+        self.assertEqual(entries, sample_entries)
 
     def test2_select_not_found(self):
-        self.assertIsNone(self.stor.channel("-", -1))
-        entries = self.stor.select_entries("-", -1)
+        self.assertIsNone(self.stor.select_channel(""))
+        entries = self.stor.select_entries(channel_id="-")
         self.assertEqual(len(entries), 0)
 
     def test3_insert_duplicate(self):
-        count = self.stor.add_entries(sample_channel())
+        count = self.stor.add_entries(sample_entries, sample_channel.channel_id)
         self.assertEqual(count, 0)
