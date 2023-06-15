@@ -11,7 +11,10 @@ from models import Channel
 @dataclass
 class Config:
     channels: List[Channel]
+    common_feed_limit: Optional[int] = None
+    channel_feed_limit: Optional[int] = None
     log_file: Optional[Path] = None
+    storage_path: Optional[Path] = None
 
     def __init__(self, path_str: str) -> None:
         path = self._check_path(path_str)
@@ -23,6 +26,12 @@ class Config:
                 self.channels = [Channel(**c) for c in config.pop("channels", [])]
                 if log_file := config.get("log_file"):
                     self.log_file = Path(log_file)
+                if common_feed_limit := config.get("common_feed_limit"):
+                    self.common_feed_limit = common_feed_limit
+                if channel_feed_limit := config.get("channel_feed_limit"):
+                    self.channel_feed_limit = channel_feed_limit
+                if storage_path := config.get("storage_path"):
+                    self.storage_path = Path(storage_path)
         except Exception as e:
             exit(str(e))
 

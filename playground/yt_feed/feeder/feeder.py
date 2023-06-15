@@ -1,10 +1,11 @@
+from functools import cached_property
 import logging
-from typing import Optional
+from typing import List, Optional
 
 import asyncio
 from aiohttp import ClientSession
 
-from models import Config, Channel
+from models import Config, Channel, Entry
 from parser import YTFeedParser
 from storage import Storage
 
@@ -14,6 +15,20 @@ class Feeder:
         self.stor = storage
         self.config = config
         self.log = logging.getLogger()
+
+    @cached_property
+    def channels(self) -> List[Channel]:
+        self.sync_channels()
+        return self.config.channels
+
+    def channel_feed(self, channel_id: str, limit: Optional[int] = None) -> List[Entry]:
+        return self.stor.select_entries(
+            channel_id=channel_id,
+            limit=limit or self.config.channel_feed_limit,
+        )
+
+    def common_feed(self, limit: Optional[int] = None) -> List[Entry]:
+        return self.stor.select_entries(limit=limit or self.config.common_feed_limit)
 
     def sync_channels(self) -> None:
         if new_channels_count := self.stor.add_channels(self.config.channels):
