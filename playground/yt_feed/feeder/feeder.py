@@ -5,7 +5,8 @@ from typing import List, Optional
 import asyncio
 from aiohttp import ClientSession
 
-from models import Config, Channel, Entry
+from config import Config
+from models import Channel, Entry
 from parser import YTFeedParser
 from storage import Storage
 
