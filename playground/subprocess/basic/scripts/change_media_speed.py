@@ -1,8 +1,8 @@
 import argparse
 from enum import Enum, auto
 import json
+from pathlib import Path
 import subprocess as sp
-from sys import argv
 from typing import Optional
 
 FFMPEG_CMD = "ffmpeg %s -i %s %s %s"
@@ -46,7 +46,7 @@ def get_filter(file: str, ratio: float) -> Optional[str]:
                             else MediaType.AudioOnly
                         )
 
-            if not filter_type:
+            if filter_type is None:
                 raise Exception("can't find video or audio stream")
 
             match filter_type:
@@ -61,7 +61,7 @@ def get_filter(file: str, ratio: float) -> Optional[str]:
 
 
 def parse_args() -> Optional[argparse.Namespace]:
-    def validate_ratio(v) -> float:
+    def validate_ratio(v: str) -> float:
         try:
             if (r := float(v)) and (r < 0.5 or r > 2.0):
                 raise argparse.ArgumentTypeError("ratio should be in range 0.5 - 2.0")
@@ -70,8 +70,13 @@ def parse_args() -> Optional[argparse.Namespace]:
         else:
             return r
 
+    def check_input(v: str) -> str:
+        if not Path(v).exists():
+            raise argparse.ArgumentTypeError("%s not exists" % v)
+        return v
+
     parser = argparse.ArgumentParser()
-    parser.add_argument("input", help="input file")
+    parser.add_argument("input", type=check_input, help="input file")
     parser.add_argument("-o", "--output", required=True, help="output file")
     parser.add_argument(
         "-r",
@@ -94,7 +99,7 @@ if __name__ == "__main__":
 
     cmd = FFMPEG_CMD % (
         "" if args.verbose else SILENCE_OPTS,
-        argv[1],
+        args.input,
         filter,
         args.output,
     )
