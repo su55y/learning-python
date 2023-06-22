@@ -13,6 +13,7 @@ FFPROBE = "ffprobe"
 MONTAGE = "montage"
 
 EXTRACT_CMD = f"{FFMPEG} %s -i %s -vf thumbnail=%s,setpts=N/TB -r 1 -vframes %d %s"
+EXTRACT_ALL_CMD = f"{FFMPEG} %s -i %s -vframes %d %s"
 SILENCE_OPTS = "-hide_banner -loglevel warning -stats"
 PROBE_CMD = f"{FFPROBE} -v quiet -show_streams -select_streams v:0 -of json %s"
 MOTAGE_CMD = f"{MONTAGE} -geometry +0+0 -tile %s %s %s"
@@ -29,7 +30,7 @@ class Probe:
     duration: float
     r_frame_rate: float
 
-    def get_interval(self, framecount: int) -> float:
+    def calc_interval(self, framecount: int) -> float:
         return round((self.r_frame_rate * self.duration) / framecount, 2)
 
 
@@ -210,13 +211,12 @@ if __name__ == "__main__":
 
     args = parse_args()
     probe = get_probe(args.file)
-    cmd = EXTRACT_CMD % (
-        "" if args.verbose else SILENCE_OPTS,
-        args.file,
-        probe.get_interval(args.count),
-        args.count,
-        args.format,
-    )
+    interval = probe.calc_interval(args.count)
+    verbosity = "" if args.verbose else SILENCE_OPTS
+    if interval >= 2:
+        cmd = EXTRACT_CMD % (verbosity, args.file, interval, args.count, args.format)
+    else:
+        cmd = EXTRACT_ALL_CMD % (verbosity, args.file, args.count, args.format)
     print(cmd)
     if sp.run(cmd.split()).returncode == 0 and args.preview:
         if not check_executable(MONTAGE):
