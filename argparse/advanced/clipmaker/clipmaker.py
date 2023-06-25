@@ -111,7 +111,7 @@ def build_cmd(args: argparse.Namespace) -> List[str]:
 
     return (
         f"""ffmpeg -hide_banner -loglevel warning -stats {y} 
-            {start} -i {stream} {to} {end} -c copy -avoid_negative_ts make_zero {args.output}"""
+            {start} {to} -i {stream} {end} -c copy -avoid_negative_ts make_zero {args.output}"""
     ).split()
 
 
