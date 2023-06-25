@@ -1,23 +1,7 @@
 import argparse
-import logging
 import re
 import subprocess
-from typing import Optional, Tuple, Dict
-
-
-LOG_LEVEL = logging.INFO
-LOG_FMT = "[%(asctime)-.19s %(levelname)-.4s] %(message)s (%(filename)s:%(funcName)s:%(lineno)d)"
-RESOLUTION = "1280x720"
-log: logging.Logger
-
-
-def init_logger():
-    global log
-    log = logging.getLogger(__name__)
-    log.setLevel(LOG_LEVEL)
-    sh = logging.StreamHandler()
-    sh.setFormatter(logging.Formatter(LOG_FMT))
-    log.addHandler(sh)
+from typing import Optional, List, Dict
 
 
 def parse_agrs() -> argparse.Namespace:
@@ -34,8 +18,13 @@ def parse_agrs() -> argparse.Namespace:
             r"(^[0-9]\:[0-5][0-9]$)|(^[0-5]?[0-9]\:[0-5][0-9]$)|(^[0-9]{1,2}\:[0-5][0-9]\:[0-5][0-9]$)|(^[0-5]?[0-9]$)",
             timestamp,
         ):
-            raise argparse.ArgumentTypeError("invalid url")
+            raise argparse.ArgumentTypeError(f"invalid timestamp '{timestamp}'")
         return timestamp
+
+    def validate_resolution(resolution: str) -> Optional[str]:
+        if not re.match(r"^\d{3,4}x\d{3,4}$", resolution):
+            raise argparse.ArgumentTypeError(f"invalid resolution '{resolution}'")
+        return resolution
 
     parser = argparse.ArgumentParser(
         prog="clipmaker",
@@ -64,6 +53,13 @@ def parse_agrs() -> argparse.Namespace:
         help="clip stop time (59/9:59/9:59:59)",
     )
     parser.add_argument(
+        "-r",
+        "--resolution",
+        type=validate_resolution,
+        default="1280x720",
+        help="resolution of clip to download (default %(default)s)",
+    )
+    parser.add_argument(
         "-o",
         "--output",
         metavar="PATH",
@@ -79,69 +75,45 @@ def parse_agrs() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def get_va(url: str) -> Tuple[str, str]:
-    if not re.match(r"^\d{3,4}x\d{3,4}$", RESOLUTION):
-        exit(f"invalid resolution: '{RESOLUTION}'")
+def get_stream_url(url: str, resolution: str) -> Optional[str]:
     try:
         from yt_dlp import YoutubeDL
     except ImportError as e:
-        exit(f"{repr(e)}\nhttps://github.com/yt-dlp/yt-dlp#installation")
+        exit(f"{e}\nhttps://github.com/yt-dlp/yt-dlp#installation")
 
-    audio, video = None, None
-    with YoutubeDL({"format": "best[ext=mp4]+bestaudio"}) as ydl:
+    with YoutubeDL() as ydl:
         info = ydl.extract_info(url, download=False)
         if not info or not isinstance(info, Dict):
-            exit(f"can't extract '{url}' info")
-        for format in info["formats"]:
+            exit(f"can't extract info by '{url}'")
+
+        for format in info.get("formats", []):
             if (
-                format.get("resolution") == "audio only" and format.get("ext") == "m4a"
-            ) or (
-                format.get("resolution") == "audio only" and format.get("ext") == "mp4"
+                format.get("vcodec", "none") == "none"
+                or format.get("acodec", "none") == "none"
             ):
-                audio = format
-            if (
-                (format.get("resolution") == RESOLUTION and format.get("ext") == "mp4")
-                or (format.get("resolution") == RESOLUTION.split("x").pop() + "p60")
-                or (format.get("resolution") == RESOLUTION.split("x").pop() + "p")
-            ):
-                video = format
-
-    if not video or not audio:
-        exit(f"video or audio object is None: ('{video}', '{audio}')")
-
-    v, a = video.get("url"), audio.get("url")
-    if not all(re.match(r"^https.+$", u) for u in [v, a]):
-        exit(f"invalid stream url: ('{v}', {a})")
-
-    return v, a
+                continue
+            if format.get("resolution") == resolution:
+                url = format.get("url", "")
+                if not re.match(r"^https.+", url):
+                    exit("can't get valid stream url")
+                return url
+        print("can't find stream, try other resolution")
 
 
-def build_cmd(args: argparse.Namespace) -> list[str]:
+def build_cmd(args: argparse.Namespace) -> List[str]:
     start = "-ss %s" % (args.start or 0)
     y = "-y" if args.force else ""
     to = f"-to {args.to}" if args.to else ""
     end = f"-t {args.duration}" if args.duration else ""
-    v, a = get_va(args.url)
+    stream = get_stream_url(args.url, args.resolution)
+    if not stream:
+        exit(1)
 
     return (
-        f"""ffmpeg -hide_banner -loglevel warning -stats {y} {start} {to} -i {v}
-            {start} {to} -i {a} {end}
-            -map 0:v -map 1:a -c:v libx264 -c:a aac {args.output}"""
+        f"""ffmpeg -hide_banner -loglevel warning -stats {y} 
+            {start} -i {stream} {to} {end} -c copy -avoid_negative_ts make_zero {args.output}"""
     ).split()
 
 
-def main():
-    args = parse_agrs()
-
-    log.info(
-        ", ".join(
-            [f"{k}={v}" for k, v in vars(args).items() if not k.startswith("__")],
-        )
-    )
-    p = subprocess.Popen(build_cmd(args))
-    log.info(f"status: {p.wait()}")
-
-
 if __name__ == "__main__":
-    init_logger()
-    main()
+    subprocess.run(build_cmd(parse_agrs()))
