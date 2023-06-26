@@ -66,7 +66,6 @@ def parse_args(test_args: Optional[List[str]] = None) -> ArgsModel:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         additional_help_text=dedent(MULTILINE_HELP_TEXT),
         epilog="Text at the bottom of help and above the additional_help_text",
-        exit_on_error=False,
     )
     parser.add_argument("main", type=MainArgType, help="main argument")
     parser.add_argument("-o", "--optional", help="optional argument")
