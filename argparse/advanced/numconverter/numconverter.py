@@ -1,15 +1,12 @@
 import argparse
 import re
 import textwrap
-from typing import Callable, List, Tuple
-import sys
-
-rx_number = re.compile(r"^((?:0[xob])?[a-fA-F0-9]+$)|(^\d+$)")
+from typing import Callable, List, Tuple, Optional
 
 
 def parse_args() -> Tuple[argparse.Namespace, Callable]:
-    def validate_number(input: str):
-        if not rx_number.match(input):
+    def validate_number(input: str) -> str:
+        if not re.match(r"^((?:0[xob])?[a-fA-F0-9]+$)|(^\d+$)", input):
             raise argparse.ArgumentTypeError(f"invalid number '{input}'")
         return input
 
@@ -22,7 +19,6 @@ def parse_args() -> Tuple[argparse.Namespace, Callable]:
             bin="\x1b[1mbin\x1b[0m",
         ),
     )
-
     parser.add_argument(
         "numbers",
         nargs="+",
@@ -37,7 +33,7 @@ def parse_args() -> Tuple[argparse.Namespace, Callable]:
     return parser.parse_args(), parser.print_help
 
 
-def parse_numbers(args: argparse.Namespace) -> Tuple[List[int], Exception | None]:
+def parse_numbers(args: argparse.Namespace) -> Tuple[List[int], Optional[Exception]]:
     base = 10
     match True:
         case args.hex:
@@ -53,7 +49,14 @@ def parse_numbers(args: argparse.Namespace) -> Tuple[List[int], Exception | None
         return [], e
 
 
-def print_numbers(nums: list[int]):
+if __name__ == "__main__":
+    args, print_help = parse_args()
+    nums, err = parse_numbers(args)
+    if err:
+        print(f"\x1b[31;1m{err}\x1b[0m\n")
+        print_help()
+        exit(1)
+
     print(
         textwrap.dedent(
             """
@@ -69,18 +72,3 @@ def print_numbers(nums: list[int]):
             )
         ).strip()
     )
-
-
-def main():
-    args, print_help = parse_args()
-    nums, err = parse_numbers(args)
-    if err:
-        print(f"\x1b[31;1m{repr(err)}\x1b[0m\n")
-        print_help(sys.stdout)
-        exit(1)
-
-    print_numbers(nums)
-
-
-if __name__ == "__main__":
-    main()
