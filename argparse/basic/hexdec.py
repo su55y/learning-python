@@ -1,38 +1,27 @@
-#!/usr/bin/env -S python3 -u
-
 import argparse
+from sys import argv
 
 
 def parse_agrs() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(prog="hexdec")
-    parser.add_argument("default", metavar="NUM", help="input number")
-    parser.add_argument("-x", "--hex", action="store_true", help="accept input as hex")
-    parser.add_argument(
-        "-V",
-        "--version",
-        action="version",
-        version=f"%(prog)s {__vesion__}",
+    parser = argparse.ArgumentParser(
+        description="converts decimal numbers to hexadecimal and vice versa"
     )
+    parser.add_argument("number", metavar="NUM", help="input number")
+    parser.add_argument("-x", "--hex", action="store_true", help="accept input as hex")
+    if not argv[1:]:
+        parser.print_help()
+        exit(1)
     return parser.parse_args()
 
 
-def parse_num(v: str, base=10):
+def parse_num(v: str, hexbase: bool = False) -> str:
     try:
-        return int(v, base)
+        fmt = "%d" if hexbase else "0x%02x"
+        return fmt % int(v, 16 if hexbase else 10)
     except ValueError as e:
-        exit(e)
+        return str(e)
 
-
-def main():
-    args = parse_agrs()
-
-    if args.hex:
-        print(f"dec: {parse_num(args.default, 16)}")
-    else:
-        print(f"hex: {parse_num(args.default):x}")
-
-
-__vesion__ = "1.3.37"
 
 if __name__ == "__main__":
-    main()
+    args = parse_agrs()
+    print(parse_num(args.number, args.hex))
