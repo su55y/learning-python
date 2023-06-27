@@ -1,73 +1,66 @@
-#!/usr/bin/env -S python3 -u
-
-from os.path import isfile
+from dataclasses import dataclass
 import re
-from sys import exit, argv
-from typing import Tuple
+import sys
+from typing import Optional
 
+HELP_MSG = """ytdl.py [-h] [-o PATH] [-f] URL
 
-HELP_MSG = """dlvid URL OUTPUT [-h] [-f]
-arguments:
-    URL             : youtube video url
-    OUTPUT          : /path/to/file (without extension)
-    -f, --force     : overwrite file if exists
-    -h, --help, -?  : show this message
+positional arguments:
+    URL                 youtube video url
+
+options:
+    -o, --output PATH   output path (default: %(title)s.%(ext)s)
+    -f, --force         overwrite file if exists
+    -h, --help          show this message
 """
 
-rx_help = re.compile(r"^(-h|--help)$")
-rx_force = re.compile(r"^(-f|--force)$")
-rx_path = re.compile(r"^[\w\d\-_\s\/]+$")
-rx_url = re.compile(
-    r".*youtube\.com\/watch\?v=([\w\d_\-]{11})|.*youtu\.be\/([\w\d_\-]{11})"
-)
+
+@dataclass
+class Args:
+    url: str
+    output: Optional[str] = None
+    force: bool = False
 
 
-def parse_agrs() -> Tuple[str, str, bool]:
-    url, output, force = None, None, False
+def parse_agrs():
+    args = sys.argv[1:]
+    if not args or "-h" in args or "--help" in args:
+        print(HELP_MSG)
+        exit(0)
 
-    for v in argv[1:]:
-        if rx_help.match(v):
-            print(HELP_MSG)
-            exit(0)
-        if rx_url.match(v) and not url:
-            url = v
-        if rx_path.match(v) and not output:
-            output = v
-        if re.match(r"^(-f|--force)$", v):
-            force = True
-
+    output = url = None
+    for i, arg in enumerate(args):
+        match arg:
+            case "-o" | "--output":
+                if len(args) < i + 2:
+                    exit("can't reach output value")
+                output = args.pop(i + 1)
+            case _:
+                if not re.match(
+                    r".*youtube\.com\/watch\?v=([\w\d_\-]{11})|.*youtu\.be\/([\w\d_\-]{11})",
+                    arg,
+                ):
+                    exit("invalid url '%s'" % arg)
+                url = arg
     if not url:
-        print("invalid url")
-        exit(1)
-    if not output:
-        print("invalid output")
-        exit(1)
-
-    return url, output, force
-
-
-def main():
-    url, output, force = parse_agrs()
-
-    if isfile(f"{output}.mp4") and not force:
-        print(f"file '{output}.mp4' already exists")
-        exit(1)
-
-    try:
-        from yt_dlp import YoutubeDL
-    except ImportError as e:
-        print(f"{repr(e)}\nhttps://github.com/yt-dlp/yt-dlp#installation")
-        exit(1)
-
-    with YoutubeDL(
-        {
-            "outtmpl": f"{output}.%(ext)s",
-            "format": "best[ext=mp4]/best",
-            "overwrites": force,
-        }
-    ) as ydl:
-        ydl.download([url])
+        exit("URL is reguired")
+    force = "-f" in args or "--force" in args
+    return Args(url=url, output=output, force=force)
 
 
 if __name__ == "__main__":
-    main()
+    args = parse_agrs()
+    params = {
+        "format": "best[ext=mp4]/best",
+        "outtmpl": args.output or "%(title)s.%(ext)s",
+        "overwrites": args.force,
+    }
+    try:
+        from yt_dlp import YoutubeDL
+
+        with YoutubeDL(params) as ydl:
+            ydl.download([args.url])
+    except ImportError as e:
+        exit(f"{e}\nhttps://github.com/yt-dlp/yt-dlp#installation")
+    except Exception as e:
+        exit(str(e))
