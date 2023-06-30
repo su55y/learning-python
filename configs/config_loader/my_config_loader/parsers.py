@@ -1,22 +1,24 @@
 import configparser
 import logging as log
-from typing import Dict, Tuple
-from entities import entities, config
-from my_config_loader.loader import ConfigLoader
+from pathlib import Path
+from typing import Dict, Tuple, Optional
+
+from entities import Config, Database, Server, Servers
+from my_config_loader import ConfigLoader
 
 
 class DictLikeConfig(ConfigLoader):
-    def __init__(self, path: str):
+    def __init__(self, path: Path) -> None:
         super().__init__(path)
 
-    def _parse(self, config_dict: Dict) -> config.Config | None:
+    def _parse(self, config_dict: Dict) -> Optional[Config]:
         try:
-            return config.Config(
-                database=entities.Database(**config_dict["database"]),
-                servers=entities.Servers(
-                    prod=entities.Server(**config_dict["servers"]["prod"]),
+            return Config(
+                database=Database(**config_dict["database"]),
+                servers=Servers(
+                    prod=Server(**config_dict["servers"]["prod"]),
                     test={
-                        k: entities.Server(**s)
+                        k: Server(**s)
                         for k, s in config_dict["servers"]["test"].items()
                     },
                 ),
@@ -31,10 +33,10 @@ class ConfigINI(ConfigLoader):
     _PREFIX_SERVER_TEST_EXAMPLE = "server_test_example_"
     _PREFIX_SERVER_TEST_LOCALHOST = "server_test_localhost_"
 
-    def __init__(self, path: str, section: str):
+    def __init__(self, path: Path, section: str) -> None:
         super().__init__(path, section)
 
-    def _read(self) -> Tuple[Dict, Exception | None]:
+    def _read(self) -> Tuple[Dict, Optional[Exception]]:
         try:
             if not self.section:
                 raise Exception("section must be set")
@@ -48,22 +50,22 @@ class ConfigINI(ConfigLoader):
         except Exception as e:
             return {}, e
 
-    def _parse(self, config_dict: Dict) -> config.Config | None:
+    def _parse(self, config_dict: Dict) -> Optional[Config]:
         try:
             if db_tables := config_dict.get("db_tables"):
                 db_tables = db_tables.split()
             else:
                 db_tables = []
 
-            return config.Config(
-                database=entities.Database(
+            return Config(
+                database=Database(
                     host=config_dict["db_host"],
                     port=config_dict["db_port"],
                     name=config_dict["db_name"],
                     tables=db_tables,
                 ),
-                servers=entities.Servers(
-                    prod=entities.Server(
+                servers=Servers(
+                    prod=Server(
                         **{
                             k[len(self._PREFIX_SERVER_PROD) :]: v
                             for k, v in config_dict.items()
@@ -71,14 +73,14 @@ class ConfigINI(ConfigLoader):
                         }
                     ),
                     test={
-                        "example.com": entities.Server(
+                        "example.com": Server(
                             **{
                                 k[len(self._PREFIX_SERVER_TEST_EXAMPLE) :]: v
                                 for k, v in config_dict.items()
                                 if k.startswith(self._PREFIX_SERVER_TEST_EXAMPLE)
                             }
                         ),
-                        "localhost": entities.Server(
+                        "localhost": Server(
                             **{
                                 k[len(self._PREFIX_SERVER_TEST_LOCALHOST) :]: v
                                 for k, v in config_dict.items()
