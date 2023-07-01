@@ -1,0 +1,17 @@
+database:
+  host: localhost
+  name: test_db
+  port: '3306'
+  tables:
+    - tb_countries
+    - tb_continents
+
+servers:
+  - {
+      host: 31.33.77.77,
+      name: 'test example.com',
+      port: '1337',
+      url: https://test.example.com/,
+    }
+  - { host: 127.0.0.1, name: 'test localhost', port: '1337' }
+  - { host: 77.77.77.77, name: 'prod', port: '80', url: https://example.com/ }
