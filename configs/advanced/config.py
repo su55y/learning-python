@@ -9,20 +9,36 @@ import yaml
 from entities import Database, Server
 
 
+class UnknownFileExtException(Exception):
+    pass
+
+
+class InvalidConfigException(Exception):
+    pass
+
+
 @dataclass(eq=True)
 class Config:
-    database: Optional[Database] = None
+    database: Database
     servers: List[Server] = field(default_factory=list)
 
-    def __init__(self, path: Optional[Path] = None, **kwargs) -> None:
+    def __init__(
+        self,
+        database: Optional[Database] = None,
+        servers: Optional[List[Server]] = None,
+        path: Optional[Path] = None,
+    ) -> None:
         if path:
-            if not path.exists():
-                raise Exception("%s not found" % path)
-            if _dict := self._read(path):
-                self._parse(_dict)
+            if not path.exists() or path.is_dir():
+                raise FileNotFoundError("%s not found" % path)
+            if not (config_dict := self._read(path)):
+                raise InvalidConfigException("")
+            self._parse(config_dict)
+        elif servers is not None and database is not None:
+            self.database = database
+            self.servers = servers
         else:
-            self.database = kwargs.get("database")
-            self.servers = kwargs.get("servers", [])
+            raise InvalidConfigException("path or config properties are missing")
 
     def _read(self, path: Path) -> Optional[Dict]:
         try:
@@ -35,18 +51,23 @@ class Config:
                     case ".yaml":
                         return yaml.safe_load(f)
                     case _:
-                        raise Exception("unknown extension '%s'" % path.suffix)
+                        raise UnknownFileExtException(
+                            "unknown extension '%s'" % path.suffix
+                        )
         except Exception as e:
             raise e
 
-    def _parse(self, _dict: Dict) -> None:
+    def _parse(self, config_dict: Dict) -> None:
         try:
-            if database := _dict.get("database"):
-                self.database = Database(**database)
+            database = config_dict.get("database")
+            if not database or not isinstance(database, Dict):
+                raise InvalidConfigException("database are required")
+            servers = config_dict.get("servers")
+            if servers is None or not isinstance(servers, List):
+                raise InvalidConfigException("servers are required")
+            self.database = Database(**database)
             self.servers = [
-                Server(**server)
-                for server in _dict.get("servers", [])
-                if isinstance(server, Dict)
+                Server(**server) for server in servers if isinstance(server, Dict)
             ]
         except Exception as e:
             raise e
