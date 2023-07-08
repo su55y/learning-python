@@ -1,8 +1,8 @@
 from http import HTTPMethod, HTTPStatus
-from pydantic import ValidationError
-
-import unittest
 import json
+import unittest
+
+from pydantic import ValidationError
 
 from models import HTTPRequest, HTTPResponse
 
@@ -49,9 +49,9 @@ class RequestTests(unittest.TestCase):
 
 class ResponseTests(unittest.TestCase):
     def test_dict_response(self):
-        request_get = HTTPResponse(**{"status": 204})
-        self.assertIsInstance(request_get.status, HTTPStatus)
-        self.assertEqual(request_get.status, HTTPStatus.NO_CONTENT)
+        resp = HTTPResponse(**{"status": 204})
+        self.assertIsInstance(resp.status, HTTPStatus)
+        self.assertEqual(resp.status, HTTPStatus.NO_CONTENT)
 
         HTTPResponse(
             **{
