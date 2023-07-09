@@ -12,8 +12,6 @@ import subprocess as sp
 import sqlite3
 from threading import Thread
 
-# from multiprocessing import Process
-
 
 def select_count() -> int:
     try:
@@ -21,7 +19,6 @@ def select_count() -> int:
             cur = conn.cursor()
             cur.execute("SELECT COUNT(*) FROM rss_item WHERE unread = 1")
             count, *_ = cur.fetchone()
-            print(count)
             return count
     except:
         return -1
