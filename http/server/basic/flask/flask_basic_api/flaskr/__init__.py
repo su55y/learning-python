@@ -1,10 +1,9 @@
-from flask import Flask
-
+from flask import Flask, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_marshmallow import Marshmallow
 
-from flaskr.storage import Storage
+from .storage import Storage
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///app.db"
@@ -18,3 +17,10 @@ stor = Storage(db)
 from flaskr.routes import bp
 
 app.register_blueprint(bp)
+
+
+@app.errorhandler(404)
+def handle_not_found(_):
+    response = jsonify({"error": "Not Found"})
+    response.status_code = 404
+    return response
