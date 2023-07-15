@@ -1,39 +1,52 @@
+import argparse
+from contextlib import contextmanager
+from pathlib import Path
 import socket
+from time import sleep
 from typing import Tuple
 
-SOCKET_FILE = "/tmp/test.sock"
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-f",
+        "--file",
+        default=Path("/tmp/test.sock"),
+        type=Path,
+        metavar="PATH",
+        help="socket file (default: %(default)s)",
+    )
+    return parser.parse_args()
 
 
-def send_cmd(cmd: str, length=1024) -> Tuple[bytes, Exception | None]:
+@contextmanager
+def connect(file: Path):
+    s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    try:
+        s.connect(str(file))
+        yield s
+    except Exception as e:
+        print(e)
+    finally:
+        s.close()
 
+
+def send_cmd(cmd: str, file: Path, length=1024) -> Tuple[bytes, Exception | None]:
     try:
         with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
-            s.connect(SOCKET_FILE)
+            s.connect(str(file))
             s.sendall(cmd.encode())
             return s.recv(length), None
     except Exception as e:
         return b"", e
 
 
-def main():
-    time, err = send_cmd("time")
-    if not err:
-        print(f"time: {time.decode()}")
-    else:
-        print(err)
-
-    server_copy = "server_copy.py"
-    file, err = send_cmd("file", 2048)
-    if not err:
-        try:
-            with open(server_copy, "wb") as f:
-                length = f.write(file)
-                print(f"{length} bytes written to {server_copy}")
-        except Exception as e:
-            print(f"can't write {server_copy}: {e}")
-    else:
-        print(err)
-
-
 if __name__ == "__main__":
-    main()
+    args = parse_args()
+    for _ in range(3):
+        with connect(args.file) as sock:
+            print("requesting time")
+            sock.sendall(b"time")
+            time = sock.recv(1024)
+        print("time recieved: %r" % time.decode())
+        sleep(1)
