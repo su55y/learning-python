@@ -32,6 +32,8 @@ def connect(file: Path):
 
 if __name__ == "__main__":
     args = parse_args()
+    if not args.file.exists():
+        exit("%s not found" % args.file)
     for _ in range(3):
         with connect(args.file) as sock:
             print("requesting time")
