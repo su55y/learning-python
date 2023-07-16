@@ -3,7 +3,6 @@ from contextlib import contextmanager
 from pathlib import Path
 import socket
 from time import sleep
-from typing import Tuple
 
 
 def parse_args() -> argparse.Namespace:
@@ -29,16 +28,6 @@ def connect(file: Path):
         print(e)
     finally:
         s.close()
-
-
-def send_cmd(cmd: str, file: Path, length=1024) -> Tuple[bytes, Exception | None]:
-    try:
-        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
-            s.connect(str(file))
-            s.sendall(cmd.encode())
-            return s.recv(length), None
-    except Exception as e:
-        return b"", e
 
 
 if __name__ == "__main__":
