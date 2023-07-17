@@ -3,16 +3,15 @@ import datetime as dt
 import logging
 import json
 from pathlib import Path
-import queue
 import re
 import socket
 import time
 import threading
-from typing import Dict, Optional
+from typing import Dict
 import urllib.request
 
 
-download_queue = queue.Queue()
+download_queue = []
 shutdown_event = threading.Event()
 log: logging.Logger
 
@@ -88,14 +87,14 @@ def handle_command(request_data: Dict) -> Dict:
     global download_queue
     match command := request_data.get("command"):
         case "queue":
-            return {"queue_size": download_queue.qsize()}
+            return {"queue_size": len(download_queue)}
         case "append":
             if url := request_data.get("url"):
                 if not re.match(r"^https.+$", url):
                     return {"error": "invalid url"}
                 else:
-                    download_queue.put(url)
-                    return {"queue_size": download_queue.qsize()}
+                    download_queue.append(url)
+                    return {"queue_size": len(download_queue)}
             else:
                 return {"error": "url should be present for append command"}
         case _:
@@ -173,17 +172,17 @@ if __name__ == "__main__":
     server_thread.start()
     try:
         while not shutdown_event.is_set():
-            if download_queue.empty():
+            if len(download_queue) == 0:
                 time.sleep(1)
             else:
-                url = download_queue.get()
+                url = download_queue.pop()
                 download_thread = threading.Thread(
                     target=download_file, args=(url, args.download_dir)
                 )
                 download_thread.start()
                 download_thread.join()
     except KeyboardInterrupt:
-        if size := download_queue.qsize():
+        if size := len(download_queue):
             log.info("%d jobs in queue" % size)
     except Exception as e:
         log.error(e)

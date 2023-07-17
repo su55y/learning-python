@@ -14,7 +14,7 @@ for url in "${urls[@]}"; do
     fi
     sleep .1
 done
-sleep 2
+sleep 1
 while :; do
     resp="$(printf '{"command":"queue"}' | nc -N localhost 8000)"
     if echo "$resp" | jq -e .error >/dev/null; then
@@ -27,5 +27,5 @@ while :; do
             *) echo "$queue left..." ;;
         esac
     fi
-    sleep 2
+    sleep 1
 done
