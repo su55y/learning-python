@@ -1,11 +1,14 @@
 import argparse
 import datetime as dt
 import logging
+import json
 from pathlib import Path
 import queue
 import re
 import socket
+import time
 import threading
+from typing import Dict, Optional
 import urllib.request
 
 
@@ -62,21 +65,69 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def handle_connection(conn):
-    global log, download_queue, shutdown_event
-    data = conn.recv(1024).decode().strip()
-    log.info(f"received data: {data!r}")
-    match data:
-        case "stop":
-            log.info("shutting down...")
-            shutdown_event.set()
+def read_data(conn: socket.socket, limit: int = 1024 * 10) -> bytes:
+    global log
+    received_data = b""
+    try:
+        while len(received_data) < limit:
+            chunk = conn.recv(1024)
+            received_data += chunk
+            if len(chunk) < 1024:
+                break
+        else:
+            log.error("data size limit exceeded")
+            return b'{"error":"data size limit exceeded"}'
+    except Exception as e:
+        log.error(e)
+        return b'{"error":"error while reading data"}'
+    else:
+        return received_data
+
+
+def handle_command(request_data: Dict) -> Dict:
+    global download_queue
+    match command := request_data.get("command"):
         case "queue":
-            conn.sendall(b"%d" % download_queue.qsize())
+            return {"queue_size": download_queue.qsize()}
+        case "append":
+            if url := request_data.get("url"):
+                if not re.match(r"^https.+$", url):
+                    return {"error": "invalid url"}
+                else:
+                    download_queue.put(url)
+                    return {"queue_size": download_queue.qsize()}
+            else:
+                return {"error": "url should be present for append command"}
         case _:
-            if re.match(r"^https.+$", data):
-                download_queue.put(data)
-                conn.sendall(b"%d" % download_queue.qsize())
-    conn.close()
+            return {"error": "unkown command %r" % command}
+
+
+def handle_request(conn: socket.socket) -> Dict:
+    global log
+    raw_data = read_data(conn)
+    try:
+        request_data = json.loads(raw_data)
+        if request_data.get("error"):
+            return request_data
+        if request_data.get("command"):
+            return handle_command(request_data)
+    except json.JSONDecodeError as e:
+        log.error("decode error: %s" % e)
+        return {"error": "invalid json"}
+    except Exception as e:
+        log.error("decode data error: %s" % e)
+    return {"error": "invalid request"}
+
+
+def handle_connection(conn: socket.socket):
+    global log
+    try:
+        resp = handle_request(conn)
+        conn.sendall(json.dumps(resp).encode())
+    except Exception as e:
+        log.error(e)
+    finally:
+        conn.close()
 
 
 def download_file(url: str, dir: Path):
@@ -122,7 +173,9 @@ if __name__ == "__main__":
     server_thread.start()
     try:
         while not shutdown_event.is_set():
-            if not download_queue.empty():
+            if download_queue.empty():
+                time.sleep(1)
+            else:
                 url = download_queue.get()
                 download_thread = threading.Thread(
                     target=download_file, args=(url, args.download_dir)
@@ -130,11 +183,11 @@ if __name__ == "__main__":
                 download_thread.start()
                 download_thread.join()
     except KeyboardInterrupt:
-        log.info("shutting down...")
-        if not download_queue.empty():
-            log.info("%d jobs in queue" % download_queue.qsize())
+        if size := download_queue.qsize():
+            log.info("%d jobs in queue" % size)
     except Exception as e:
         log.error(e)
 
+    log.info("shutting down...")
     shutdown_event.set()
     server_thread.join()
