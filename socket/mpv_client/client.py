@@ -109,7 +109,11 @@ class MpvClient:
                 if chunk[-1] == 10 or len(chunk) < 1024:
                     break
             logging.debug("received data: %r" % data)
-            return json.loads(data)
+            for raw_part in data.decode().split():
+                part = json.loads(raw_part)
+                if "event" in part.keys():
+                    continue
+                return part
         except Exception as e:
             logging.error(e)
 
@@ -121,22 +125,22 @@ def check_mpv_process(file: Path):
         stderr=sp.DEVNULL,
     ).returncode
     try:
-        if process_exists() != 0:
-            cmd = "setsid -f mpv --idle --no-terminal --input-ipc-server=%s" % file
-            logging.debug(cmd)
-            p = sp.Popen(cmd.split(), stdout=sp.PIPE, stderr=sp.PIPE)
-            _, err = p.communicate()
-            if p.wait() != 0:
-                raise Exception(err.decode())
-            for _ in range(5):
-                time.sleep(1)
-                if process_exists():
-                    break
-            else:
-                raise Exception("can't start mpv")
+        if process_exists() == 0:
+            return
+        cmd = "setsid -f mpv --idle --no-terminal --input-ipc-server=%s" % file
+        logging.debug(cmd)
+        p = sp.Popen(cmd.split(), stdout=sp.DEVNULL, stderr=sp.DEVNULL)
+        if (code := p.wait()) != 0:
+            raise Exception("setsid return status code: %d" % code)
+        for _ in range(10):
+            time.sleep(0.5)
+            if process_exists() == 0:
+                break
+        else:
+            raise Exception("waiting process timeout")
     except Exception as e:
         logging.error(e)
-        exit("can't restart mpv")
+        exit("can't start mpv")
 
 
 if __name__ == "__main__":
