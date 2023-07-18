@@ -68,14 +68,11 @@ def read_data(conn: socket.socket, limit: int = 1024 * 10) -> bytes:
     global log
     received_data = b""
     try:
-        while len(received_data) < limit:
-            chunk = conn.recv(1024)
+        while chunk := conn.recv(1024):
             received_data += chunk
-            if len(chunk) < 1024:
-                break
-        else:
-            log.error("data size limit exceeded")
-            return b'{"error":"data size limit exceeded"}'
+            if len(received_data) > limit:
+                log.error("data size limit exceeded")
+                return b'{"error":"data size limit exceeded"}'
     except Exception as e:
         log.error(e)
         return b'{"error":"error while reading data"}'
