@@ -26,31 +26,29 @@ def init_logger(file: Optional[Path] = None):
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="mpv playlist-ctl concept script")
+    parser.add_argument("url", metavar="URL", help="append a video to the playlist")
     parser.add_argument(
-        "-f",
-        "--file",
-        default=Path("/tmp/mpv.sock"),
-        type=Path,
-        metavar="PATH",
-        help="socket file (default: %(default)s)",
-    )
-    parser.add_argument(
-        "-a", "--append", metavar="FILE", help="append file to the playlist"
-    )
-    parser.add_argument("-l", "--playlist", action="store_true", help="print playlist")
-    parser.add_argument(
+        "-l",
         "--log-file",
         type=Path,
         metavar="PATH",
         help="log file location for debugging purposes",
     )
     parser.add_argument(
-        "-p",
+        "-s",
+        "--socket-file",
+        default=Path("/tmp/mpv.sock"),
+        type=Path,
+        metavar="PATH",
+        help="socket file (default: %(default)s)",
+    )
+    parser.add_argument(
+        "-f",
         "--playlist-file",
         default=Path("/tmp/mpv_playlist.json"),
         type=Path,
         metavar="PATH",
-        help="playlist state file (%(default)s)",
+        help="mpv playlist state file (default: %(default)s)",
     )
     return parser.parse_args()
 
@@ -93,19 +91,6 @@ class MpvClient:
         self.socket_file = socket_file
         self.playlist_file = playlist_file
 
-    def playlist(self) -> List[Dict]:
-        with connect(self.socket_file) as sock:
-            cmd = '{"command": ["get_property", "playlist"]}\n'
-            logging.debug(cmd)
-            sock.sendall(cmd.encode())
-            if not (resp := self._read(sock)):
-                exit("can't read response")
-            if (err := resp.get("error")) != "success":
-                exit(err)
-            if (data := resp.get("data")) is None:
-                exit("data not found in resp: %r" % resp)
-            return data
-
     def append(self, file: str) -> None:
         with connect(self.socket_file) as sock:
             cmd = '{ "command": ["loadfile", "%s", "append-play"] }\n' % file
@@ -124,11 +109,14 @@ class MpvClient:
             self.update_playlist()
 
     def update_playlist(self) -> None:
-        mpv_playlist = self.playlist()
+        mpv_playlist = self._playlist()
         playlist_storage = {}
-        if self.playlist_file.exists():
-            with open(self.playlist_file) as f:
-                playlist_storage = json.load(f)
+        try:
+            if self.playlist_file.exists():
+                with open(self.playlist_file) as f:
+                    playlist_storage = json.load(f)
+        except Exception as e:
+            logging.error("can't parse %r: %s" % (self.playlist_file, e))
         for vid in mpv_playlist:
             if (url := vid.get("filename")) not in playlist_storage.keys():
                 if not url:
@@ -140,8 +128,27 @@ class MpvClient:
                 vid["title"] = fetch_title(url)
                 logging.debug("new entry in playlist file: %r" % vid)
                 playlist_storage[url] = vid
-        with open(self.playlist_file, "w") as f:
-            json.dump(playlist_storage, f)
+        try:
+            with open(self.playlist_file, "w") as f:
+                json.dump(playlist_storage, f)
+        except Exception as e:
+            logging.error("can't write to %r: %s" % (self.playlist_file, e))
+
+    def _playlist(self) -> List[Dict]:
+        with connect(self.socket_file) as sock:
+            cmd = '{"command": ["get_property", "playlist"]}\n'
+            logging.debug(cmd)
+            sock.sendall(cmd.encode())
+            if not (resp := self._read(sock)):
+                logging.fatal(msg := "can't read response")
+                exit(msg)
+            if (err := resp.get("error")) != "success":
+                logging.fatal(err)
+                exit(err)
+            if (data := resp.get("data")) is None:
+                logging.fatal(msg := "data not found in resp: %r" % resp)
+                exit(msg)
+            return data
 
     def _read(self, conn: socket.socket) -> Optional[Dict]:
         data = b""
@@ -188,14 +195,12 @@ def check_mpv_process(file: Path):
 if __name__ == "__main__":
     args = parse_args()
     init_logger(args.log_file)
-    check_mpv_process(args.file)
-    if not args.file.exists():
-        exit("%s not found" % args.file)
-    if not args.file.is_socket():
-        exit("%s is not a socket file" % args.file)
-    client = MpvClient(args.file, args.playlist_file)
-    if args.append:
-        client.append(args.append)
-    # TODO: print formatted for rofi playlist
-    elif args.playlist:
-        client.playlist()
+    socket_file = args.socket_file or exit("socket file are required")
+    playlist_file = args.playlist_file or exit("playlist file are required")
+    check_mpv_process(socket_file)
+    if not socket_file.exists():
+        exit("%s not found" % socket_file)
+    if not socket_file.is_socket():
+        exit("%s is not a socket file" % socket_file)
+    client = MpvClient(socket_file, playlist_file)
+    client.append(args.url)
