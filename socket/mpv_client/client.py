@@ -9,7 +9,7 @@ import time
 from typing import Dict, List, Optional
 
 
-def init_logger(file: Optional[Path] = None):
+def init_logger(file: Optional[Path] = None) -> None:
     if not file:
         file = Path(__file__).resolve().parent.joinpath("client.log")
     log = logging.getLogger()
@@ -60,15 +60,13 @@ def connect(file: Path):
         s.connect(str(file))
         yield s
     except Exception as e:
-        logging.fatal(repr(e))
+        logging.critical(repr(e))
         exit(1)
     finally:
         s.close()
 
 
 def notify(msg: str) -> None:
-    if not msg:
-        return
     try:
         p = sp.run(
             ["notify-send", "-i", "mpv", "-a", "mpv-client", msg],
@@ -100,14 +98,18 @@ class MpvClient:
             logging.debug("send %r" % cmd)
             sock.sendall(cmd.encode())
             if not (resp := self._read(sock)):
-                exit("can't read response")
+                logging.critical(msg := "can't read response")
+                exit(msg)
             elif (err := resp.get("error")) != "success":
+                logging.critical(err)
                 exit(err)
             elif not (data := resp.get("data")):
-                exit("invalid response: %r" % resp)
+                logging.critical(msg := "invalid response: %r" % resp)
+                exit(msg)
 
-            msg = "entry with id %d just added" % data.get("playlist_entry_id", -1)
-            logging.info(msg)
+            logging.info(
+                msg := "entry with id %d just added" % data.get("playlist_entry_id", -1)
+            )
             notify(msg)
             self.update_playlist()
 
@@ -143,13 +145,13 @@ class MpvClient:
             logging.debug(cmd)
             sock.sendall(cmd.encode())
             if not (resp := self._read(sock)):
-                logging.fatal(msg := "can't read response")
+                logging.critical(msg := "can't read response")
                 exit(msg)
             if (err := resp.get("error")) != "success":
-                logging.fatal(err)
+                logging.critical(err)
                 exit(err)
             if (data := resp.get("data")) is None:
-                logging.fatal(msg := "data not found in resp: %r" % resp)
+                logging.critical(msg := "data not found in resp: %r" % resp)
                 exit(msg)
             return data
 
@@ -194,12 +196,9 @@ def check_mpv_process(file: Path):
 if __name__ == "__main__":
     args = parse_args()
     init_logger(args.log_file)
-    socket_file = args.socket_file or exit("socket file are required")
-    playlist_file = args.playlist_file or exit("playlist file are required")
-    check_mpv_process(socket_file)
-    if not socket_file.exists():
-        exit("%s not found" % socket_file)
-    if not socket_file.is_socket():
-        exit("%s is not a socket file" % socket_file)
-    client = MpvClient(socket_file, playlist_file)
-    client.append(args.url)
+    check_mpv_process(args.socket_file)
+    if not args.socket_file.exists():
+        exit("%s not found" % args.socket_file)
+    if not args.socket_file.is_socket():
+        exit("%s is not a socket file" % args.socket_file)
+    MpvClient(args.socket_file, args.playlist_file).append(args.url)
