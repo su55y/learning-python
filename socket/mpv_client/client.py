@@ -70,8 +70,11 @@ def notify(msg: str) -> None:
     if not msg:
         return
     try:
-        cmd = ["notify-send", "-i", "mpv", "-a", "mpv-client", msg]
-        p = sp.run(cmd, stdout=sp.DEVNULL, stderr=sp.PIPE)
+        p = sp.run(
+            ["notify-send", "-i", "mpv", "-a", "mpv-client", msg],
+            stdout=sp.DEVNULL,
+            stderr=sp.PIPE,
+        )
         if err := p.stderr.strip():
             logging.error("notify cmd return error: %r" % err)
     except Exception as e:
@@ -168,11 +171,7 @@ class MpvClient:
 
 
 def check_mpv_process(file: Path):
-    process_exists = lambda: sp.run(
-        ["pidof", "mpv"],
-        stdout=sp.DEVNULL,
-        stderr=sp.DEVNULL,
-    ).returncode
+    process_exists = lambda: sp.run(["pidof", "-q", "mpv"]).returncode
     try:
         if process_exists() == 0:
             return
