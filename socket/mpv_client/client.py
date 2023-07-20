@@ -115,29 +115,27 @@ class MpvClient:
 
     def update_playlist(self) -> None:
         mpv_playlist = self._playlist()
-        playlist_storage = {}
-        try:
-            if self.playlist_file.exists():
-                with open(self.playlist_file) as f:
-                    playlist_storage = json.load(f)
-        except Exception as e:
-            logging.error("can't parse %r: %s" % (self.playlist_file, e))
+        playlist_storage = self._read_playlist() or {}
         for vid in mpv_playlist:
-            if (url := vid.get("filename")) not in playlist_storage.keys():
-                if not url:
-                    logging.error(
-                        "invalid playlist %r, filename missing for %r"
-                        % (mpv_playlist, vid)
-                    )
-                    continue
+            url = vid.get("filename")
+            if not url:
+                logging.critical(
+                    msg := "invalid playlist %r, filename missing for %r"
+                    % (mpv_playlist, vid)
+                )
+                exit(msg)
+            if url not in playlist_storage.keys():
                 vid["title"] = fetch_title(url)
                 logging.debug("new entry in playlist file: %r" % vid)
+                if vid.get("playing"):
+                    del vid["playing"]
                 playlist_storage[url] = vid
-        try:
-            with open(self.playlist_file, "w") as f:
-                json.dump(playlist_storage, f)
-        except Exception as e:
-            logging.error("can't write to %r: %s" % (self.playlist_file, e))
+            if vid.get("current") and not playlist_storage[url].get("current"):
+                playlist_storage[url]["current"] = True
+            elif not vid.get("current") and playlist_storage[url].get("current"):
+                del playlist_storage[url]["current"]
+
+        self._write_playlist(playlist_storage)
 
     def _playlist(self) -> List[Dict]:
         with connect(self.socket_file) as sock:
@@ -170,6 +168,26 @@ class MpvClient:
                 return part
         except Exception as e:
             logging.error(e)
+
+    def _read_playlist(self):
+        if not self.playlist_file.exists():
+            logging.info("creating new playlist file")
+            return
+        try:
+            with open(self.playlist_file) as f:
+                return json.load(f)
+        except Exception as e:
+            logging.critical(msg := "can't parse %r: %s" % (self.playlist_file, e))
+            exit(msg)
+
+    def _write_playlist(self, playlist: Dict):
+        try:
+            with open(self.playlist_file, "w") as f:
+                logging.debug("updating %s" % self.playlist_file)
+                json.dump(playlist, f)
+        except Exception as e:
+            logging.error(msg := "can't write to %r: %s" % (self.playlist_file, e))
+            exit(msg)
 
 
 def check_mpv_process(file: Path):
