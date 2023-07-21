@@ -8,6 +8,8 @@ import subprocess as sp
 import time
 from typing import Dict, List, Optional
 
+import requests
+
 
 def init_logger(file: Optional[Path] = None) -> None:
     if not file:
@@ -79,9 +81,12 @@ def notify(msg: str) -> None:
         logging.error(e)
 
 
-def fetch_title(url: str) -> str:
+def fetch_title(url: str) -> Optional[str]:
     try:
-        return sp.getoutput("yt-dlp -e %s" % url)
+        resp = requests.get("https://youtube.com/oembed?url=%s&format=json" % url)
+        logging.debug("%d %s %s" % (resp.status_code, resp.reason, resp.url))
+        if resp.status_code == 200:
+            return resp.json().get("title")
     except Exception as e:
         logging.error("can't fetch title for %r: %s" % (url, e))
         return url
