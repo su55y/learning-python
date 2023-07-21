@@ -130,7 +130,7 @@ class MpvClient:
                 )
                 exit(msg)
             if url not in playlist_storage.keys():
-                vid["title"] = fetch_title(url)
+                vid["title"] = fetch_title(url) or url
                 logging.debug("new entry in playlist file: %r" % vid)
                 if vid.get("playing"):
                     del vid["playing"]
@@ -195,31 +195,33 @@ class MpvClient:
             exit(msg)
 
 
-def check_mpv_process(file: Path):
+def check_mpv_process(socket_file: Path, playlist_file: Path, timeout: float = 5):
     process_exists = lambda: sp.run(["pidof", "-q", "mpv"]).returncode
     try:
         if process_exists() == 0:
             return
-        cmd = "setsid -f mpv --idle --no-terminal --input-ipc-server=%s" % file
+        if playlist_file.exists():
+            playlist_file.unlink()
+        cmd = "setsid -f mpv --idle --no-terminal --input-ipc-server=%s" % socket_file
         logging.debug(cmd)
         p = sp.Popen(cmd.split(), stdout=sp.DEVNULL, stderr=sp.DEVNULL)
         if (code := p.wait()) != 0:
             raise Exception("setsid return status code: %d" % code)
-        for _ in range(10):
+        for _ in range(int(timeout * 2)):
             time.sleep(0.5)
             if process_exists() == 0:
                 break
         else:
             raise Exception("waiting process timeout")
     except Exception as e:
-        logging.error(e)
-        exit("can't start mpv")
+        logging.critical(msg := "can't start mpv: %s" % e)
+        exit(msg)
 
 
 if __name__ == "__main__":
     args = parse_args()
     init_logger(args.log_file)
-    check_mpv_process(args.socket_file)
+    check_mpv_process(args.socket_file, args.playlist_file)
     if not args.socket_file.exists():
         exit("%s not found" % args.socket_file)
     if not args.socket_file.is_socket():
