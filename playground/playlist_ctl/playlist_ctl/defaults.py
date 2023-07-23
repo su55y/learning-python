@@ -22,13 +22,3 @@ def default_cachedir_path() -> Path:
     else:
         cache_home = Path.joinpath(Path.home(), ".cache")
     return Path.joinpath(cache_home, __package__)
-
-
-@cache
-def default_logfile_path() -> Path:
-    return default_cachedir_path().joinpath("%s.log" % __package__)
-
-
-@cache
-def default_storage_path() -> Path:
-    return default_cachedir_path().joinpath("%s.db" % __package__)

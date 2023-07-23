@@ -46,18 +46,19 @@ def init_logger(level: int, file: Path) -> None:
 def main():
     args = parse_args()
     config = Config(config_file=args.config, socket_file=args.socket)
-    logging.debug("config initialized %r" % config)
+    if config.cache_dir.exists() and not config.cache_dir.is_dir():
+        exit("%s is ivalid cache directory" % config.cache_dir)
+    if not config.cache_dir.exists():
+        config.cache_dir.mkdir(parents=True)
     if config.log_level > 0:
         init_logger(config.log_level, config.log_file)
 
-    stor = Storage(Path("cache.db"))
+    stor = Storage(config.storage_file)
     if err := stor.init_db():
         exit("can't create table: %s" % err)
 
     ctl = PlaylistCtl(stor, MpvClient(args.socket))
     if args.add:
-        if stor.select_title(args.add) is not None:
-            exit(0)
         ctl.add_title(args.add)
     else:
         ctl.print_playlist()

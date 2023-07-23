@@ -10,6 +10,7 @@ class Storage:
         self.file = file
         if isinstance(self.file, Path) and not self.file.parent.exists():
             self.file.parent.mkdir(parents=True)
+        self.log = logging.getLogger()
 
     @contextmanager
     def get_cursor(self):
@@ -18,7 +19,7 @@ class Storage:
             cursor = conn.cursor()
             yield cursor
         except Exception as e:
-            logging.critical(e)
+            self.log.critical(e)
         else:
             conn.commit()
         finally:
@@ -39,10 +40,10 @@ class Storage:
         query = "INSERT OR IGNORE INTO titles (url, title, created) VALUES (?, ?, ?)"
         try:
             with self.get_cursor() as cur:
-                logging.debug("%s: %s" % (query, title))
+                self.log.debug("%s: %s" % (query, title))
                 cur.execute(query, title)
         except Exception as e:
-            logging.error(e)
+            self.log.error(e)
             return e
 
     def select_title(self, url: str) -> Optional[str]:
@@ -52,15 +53,15 @@ class Storage:
                 title, *_ = row if (row := cur.fetchone()) else (None,)
                 return title
         except Exception as e:
-            logging.error(e)
+            self.log.error(e)
 
     def select_titles(self, urls: str) -> Dict[str, str]:
         try:
             with self.get_cursor() as cur:
                 q = "SELECT url, title FROM titles WHERE url in (%s)" % urls
-                logging.debug(q)
+                self.log.debug(q)
                 cur.execute(q)
                 return {url: title for url, title in cur.fetchall()}
         except Exception as e:
-            logging.error("can't select titles: %s" % e)
+            self.log.error("can't select titles: %s" % e)
             return {}

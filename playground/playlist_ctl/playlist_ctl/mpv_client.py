@@ -9,6 +9,7 @@ from typing import Dict, List
 class MpvClient:
     def __init__(self, file: Path) -> None:
         self.file = file
+        self.log = logging.getLogger()
 
     @contextmanager
     def connect(self):
@@ -19,7 +20,7 @@ class MpvClient:
             s.connect(str(self.file))
             yield s
         except Exception as e:
-            logging.critical(repr(e))
+            self.log.critical(repr(e))
             exit(1)
         finally:
             s.close()
@@ -28,7 +29,7 @@ class MpvClient:
         try:
             with self.connect() as sock:
                 cmd = '{"command": ["get_property", "playlist"]}\n'
-                logging.debug(cmd)
+                self.log.debug(cmd)
                 sock.sendall(cmd.encode())
                 data = b""
                 while chunk := sock.recv(1024):
@@ -43,15 +44,15 @@ class MpvClient:
                         continue
                     resp = part
                 if not resp:
-                    logging.critical(msg := "can't read response")
+                    self.log.critical(msg := "can't read response")
                     exit(msg)
                 if (err := resp.get("error")) != "success":
-                    logging.critical(msg := "mpv error: %s" % err)
+                    self.log.critical(msg := "mpv error: %s" % err)
                     exit(msg)
                 if (data := resp.get("data")) is None:
-                    logging.critical(msg := "data not found in resp: %r" % resp)
+                    self.log.critical(msg := "data not found in resp: %r" % resp)
                     exit(msg)
                 return data
         except Exception as e:
-            logging.critical(e)
+            self.log.critical(e)
             exit(str(e))
