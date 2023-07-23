@@ -1,0 +1,63 @@
+import argparse
+import logging
+from pathlib import Path
+
+from playlist_ctl.config import Config
+from playlist_ctl.defaults import default_config_path
+from playlist_ctl.mpv_client import MpvClient
+from playlist_ctl.playlist_ctl import PlaylistCtl
+from playlist_ctl.storage import Storage
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-a", "--add", metavar="URL", help="add new title")
+    parser.add_argument(
+        "-c",
+        "--config",
+        default=default_config_path(),
+        metavar="PATH",
+        type=Path,
+        help="config file path (default: %(default)s)",
+    )
+    parser.add_argument(
+        "-s",
+        "--socket",
+        default=Path("/tmp/mpv.sock"),
+        metavar="PATH",
+        help="socket file (default: %(default)s)",
+    )
+    return parser.parse_args()
+
+
+def init_logger(level: int, file: Path) -> None:
+    log = logging.getLogger()
+    log.setLevel(level)
+    fh = logging.FileHandler(file)
+    fh.setFormatter(
+        logging.Formatter(
+            fmt="[%(asctime)s %(levelname)s] %(message)s (%(funcName)s:%(lineno)d)",
+            datefmt="%H:%M:%S %d/%m/%y",
+        )
+    )
+    log.addHandler(fh)
+
+
+def main():
+    args = parse_args()
+    config = Config(config_file=args.config, socket_file=args.socket)
+    logging.debug("config initialized %r" % config)
+    if config.log_level > 0:
+        init_logger(config.log_level, config.log_file)
+
+    stor = Storage(Path("cache.db"))
+    if err := stor.init_db():
+        exit("can't create table: %s" % err)
+
+    ctl = PlaylistCtl(stor, MpvClient(args.socket))
+    if args.add:
+        if stor.select_title(args.add) is not None:
+            exit(0)
+        ctl.add_title(args.add)
+    else:
+        ctl.print_playlist()
