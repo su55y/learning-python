@@ -9,7 +9,7 @@ setup(
     url="---",
     description="---",
     long_description="---",
-    packages=find_packages("playlist_ctl", exclude=["tests", "tests.*", "examples"]),
+    packages=find_packages(".", exclude=["tests", "tests.*", "examples"]),
     install_requires=[],
     python_requires=">=3.8",
     classifiers=[
