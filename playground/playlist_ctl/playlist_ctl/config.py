@@ -2,10 +2,11 @@ from dataclasses import dataclass
 import logging
 from os.path import expandvars
 from pathlib import Path
-import tomllib
 from typing import Dict, Optional
 
 from playlist_ctl import defaults
+
+import yaml
 
 
 @dataclass
@@ -46,8 +47,8 @@ class Config:
 
     def _read_from_file(self, file: Path) -> Dict:
         try:
-            with open(file, "rb") as f:
-                return tomllib.load(f)
+            with open(file) as f:
+                return yaml.safe_load(f)
         except Exception as e:
             exit("can't read config %s: %s" % (file, e))
 

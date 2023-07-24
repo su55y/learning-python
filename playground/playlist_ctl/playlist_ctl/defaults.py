@@ -12,7 +12,7 @@ def default_config_path() -> Path:
         config_home = Path(xdg_config_home)
     else:
         config_home = Path.joinpath(Path.home(), ".config")
-    return Path.joinpath(config_home, __package__, "config.toml")
+    return Path.joinpath(config_home, __package__, "config.yaml")
 
 
 @cache
