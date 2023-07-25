@@ -32,14 +32,13 @@ class PlaylistCtl:
                 current = i
         print("\000active\037%d" % current)
 
-    def add_title(self, url: str) -> None:
+    def add_title(self, url: str) -> Optional[Exception]:
         if self.stor.select_title(url) is not None:
             return
         if (title := self._fetch_title(url)) is None:
-            exit(1)
+            return Exception("can't fetch title for %r" % url)
         created = str(dt.datetime.now(dt.timezone.utc))
-        err = self.stor.insert_title((url, title, created))
-        exit(0 if err is None else "can't insert title %s: %s" % (title, err))
+        return self.stor.insert_title((url, title, created))
 
     def _fetch_title(self, vid_url: str) -> Optional[str]:
         try:
@@ -47,7 +46,7 @@ class PlaylistCtl:
             resp = requests.get(url)
             self.log.debug("%d %s %s" % (resp.status_code, resp.reason, resp.url))
             if resp.status_code != 200:
-                raise Exception(str(resp))
+                raise Exception("%d %s" % (resp.status_code, resp.reason))
             return resp.json().get("title")
         except Exception as e:
             self.log.error("can't fetch title for %r: %s" % (vid_url, e))

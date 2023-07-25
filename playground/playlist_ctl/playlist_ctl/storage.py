@@ -2,11 +2,11 @@ from contextlib import contextmanager
 import logging
 from pathlib import Path
 import sqlite3
-from typing import Dict, Literal, Optional, Tuple, Union
+from typing import Dict, Optional, Tuple
 
 
 class Storage:
-    def __init__(self, file: Union[Path, Literal[":memory:"]] = ":memory:") -> None:
+    def __init__(self, file: Path) -> None:
         self.file = file
         self.log = logging.getLogger()
 
