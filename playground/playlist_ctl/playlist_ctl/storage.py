@@ -8,8 +8,6 @@ from typing import Dict, Literal, Optional, Tuple, Union
 class Storage:
     def __init__(self, file: Union[Path, Literal[":memory:"]] = ":memory:") -> None:
         self.file = file
-        if isinstance(self.file, Path) and not self.file.parent.exists():
-            self.file.parent.mkdir(parents=True)
         self.log = logging.getLogger()
 
     @contextmanager
@@ -47,21 +45,33 @@ class Storage:
             return e
 
     def select_title(self, url: str) -> Optional[str]:
+        query = "SELECT title FROM titles WHERE url = ? LIMIT 1"
         try:
             with self.get_cursor() as cur:
-                cur.execute("SELECT title FROM titles WHERE url = ? LIMIT 1", (url,))
+                self.log.debug("%s, url: %r" % (query, url))
+                cur.execute(query, (url,))
                 title, *_ = row if (row := cur.fetchone()) else (None,)
                 return title
         except Exception as e:
             self.log.error(e)
 
     def select_titles(self, urls: str) -> Dict[str, str]:
+        query = "SELECT url, title FROM titles WHERE url in (%s)" % urls
         try:
             with self.get_cursor() as cur:
-                q = "SELECT url, title FROM titles WHERE url in (%s)" % urls
-                self.log.debug(q)
-                cur.execute(q)
+                self.log.debug(query)
+                cur.execute(query)
                 return {url: title for url, title in cur.fetchall()}
         except Exception as e:
             self.log.error("can't select titles: %s" % e)
             return {}
+
+    def delete_all(self) -> int:
+        query = "DELETE FROM titles"
+        try:
+            with self.get_cursor() as cur:
+                self.log.debug(query)
+                return cur.execute(query).rowcount
+        except Exception as e:
+            self.log.error(e)
+            return -1

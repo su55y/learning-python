@@ -33,24 +33,26 @@ class Config:
         self.storage_file = storage_file or self.cache_dir.joinpath("playlist_ctl.db")
         if config_file:
             config_file = Path(expandvars(config_file.expanduser()))
-            if not config_file.exists():
-                return
-            config = self._read_from_file(config_file)
-            if log_level_ := config.get("log_level"):
-                self.log_level = self._choose_log_level(log_level_)
-            if cache_dir_ := config.get("cache_dir"):
-                self.cache_dir = Path(cache_dir_)
-                self.log_file = self.cache_dir.joinpath("playlist_ctl.log")
-                self.storage_file = self.cache_dir.joinpath("playlist_ctl.db")
-            if socket_file_ := config.get("socket_file"):
-                self.socket_file = Path(socket_file_)
+            if config_file.exists():
+                self._override_defaults(config_file)
+
+    def _override_defaults(self, file: Path) -> None:
+        config = self._read_from_file(file)
+        if log_level_ := config.get("log_level"):
+            self.log_level = self._choose_log_level(log_level_)
+        if cache_dir_ := config.get("cache_dir"):
+            self.cache_dir = Path(cache_dir_)
+            self.log_file = self.cache_dir.joinpath("playlist_ctl.log")
+            self.storage_file = self.cache_dir.joinpath("playlist_ctl.db")
+        if socket_file_ := config.get("socket_file"):
+            self.socket_file = Path(socket_file_)
 
     def _read_from_file(self, file: Path) -> Dict:
         try:
             with open(file) as f:
                 return yaml.safe_load(f)
         except Exception as e:
-            exit("can't read config %s: %s" % (file, e))
+            exit("invalid config %s: %s" % (file, e))
 
     def _choose_log_level(self, lvl: str) -> int:
         match lvl:
