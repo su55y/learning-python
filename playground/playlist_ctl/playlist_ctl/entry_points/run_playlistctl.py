@@ -59,6 +59,7 @@ def main():
 
     ctl = PlaylistCtl(stor, MpvClient(args.socket))
     if args.add:
-        ctl.add_title(args.add)
+        if err := ctl.add_title(args.add):
+            exit(str(err))
     else:
         ctl.print_playlist()
