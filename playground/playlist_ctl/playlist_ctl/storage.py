@@ -1,8 +1,11 @@
 from contextlib import contextmanager
+import datetime as dt
 import logging
 from pathlib import Path
 import sqlite3
 from typing import Dict, Optional, Tuple
+
+from playlist_ctl.utils import fetch_title
 
 
 class Storage:
@@ -33,6 +36,14 @@ class Storage:
                 cur.execute(titles_schema)
         except Exception as e:
             return e
+
+    def add_title(self, url: str) -> Optional[Exception]:
+        if self.select_title(url) is not None:
+            return
+        if (title := fetch_title(self.log, url)) is None:
+            return Exception("can't fetch title for %r" % url)
+        created = str(dt.datetime.now(dt.timezone.utc))
+        return self.insert_title((url, title, created))
 
     def insert_title(self, title: Tuple[str, str, str]) -> Optional[Exception]:
         query = "INSERT OR IGNORE INTO titles (url, title, created) VALUES (?, ?, ?)"

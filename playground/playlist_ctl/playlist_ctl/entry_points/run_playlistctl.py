@@ -5,7 +5,7 @@ from pathlib import Path
 from playlist_ctl.config import Config
 from playlist_ctl.defaults import default_config_path
 from playlist_ctl.mpv_client import MpvClient
-from playlist_ctl.playlist_ctl import PlaylistCtl
+from playlist_ctl.rofi_client import RofiClient
 from playlist_ctl.storage import Storage
 
 
@@ -57,9 +57,8 @@ def main():
     if err := stor.init_db():
         exit("can't create table: %s" % err)
 
-    ctl = PlaylistCtl(stor, MpvClient(args.socket))
     if args.add:
-        if err := ctl.add_title(args.add):
+        if err := stor.add_title(args.add):
             exit(str(err))
     else:
-        ctl.print_playlist()
+        RofiClient(stor, MpvClient(args.socket)).print_playlist()
