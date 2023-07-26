@@ -70,7 +70,8 @@ class MpvClient:
                 if chunk[-1] == 10 or len(chunk) < 1024:
                     break
 
-            for raw_part in data.decode().split():
+            self.log.debug("received response: %r" % data)
+            for raw_part in data.split(b"\n"):
                 part = json.loads(raw_part)
                 if "event" in part.keys():
                     continue

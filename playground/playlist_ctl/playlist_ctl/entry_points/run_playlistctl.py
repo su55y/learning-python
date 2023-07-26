@@ -57,8 +57,11 @@ def main():
     if err := stor.init_db():
         exit("can't create table: %s" % err)
 
+    mpv = MpvClient(args.socket)
     if args.add:
+        if err := mpv.append(args.add):
+            exit(str(err))
         if err := stor.add_title(args.add):
             exit(str(err))
     else:
-        RofiClient(stor, MpvClient(args.socket)).print_playlist()
+        RofiClient(stor, mpv).print_playlist()
