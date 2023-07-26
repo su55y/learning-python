@@ -19,7 +19,7 @@ class TestAll(unittest.TestCase):
             raise err
 
     @classmethod
-    def tearDownClass(cls) -> None:
+    def tearDownClass(cls):
         cls.db_file.unlink(True)
 
     def test1_add_new(self):
