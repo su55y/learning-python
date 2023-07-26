@@ -3,7 +3,7 @@ import logging
 import json
 from pathlib import Path
 import socket
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 
 class MpvClient:
@@ -25,21 +25,42 @@ class MpvClient:
         finally:
             s.close()
 
-    def mpv_playlist(self) -> List[Dict]:
+    def mpv_playlist(self) -> Tuple[List[Dict], Optional[Exception]]:
         with self.connect() as sock:
             cmd = '{"command": ["get_property", "playlist"]}\n'
             self.log.debug(cmd)
             sock.sendall(cmd.encode())
-            if not (resp := self._read_resp(sock)):
-                self.log.critical(msg := "can't read response")
-                exit(msg)
-            if (err := resp.get("error")) != "success":
-                self.log.critical(msg := "mpv error: %s" % err)
-                exit(msg)
-            if (data := resp.get("data")) is None:
-                self.log.critical(msg := "data not found in resp: %r" % resp)
-                exit(msg)
-            return data
+            data, err = self._read_data(self._read_resp(sock))
+            if err:
+                self.log.error(err)
+                return [], err
+            if not isinstance(data, List):
+                err = Exception("unexpected data type: %s (%r)" % (type(data), data))
+                self.log.error(err)
+                return [], err
+            self.log.info("%d playlist items received" % len(data))
+            return data, None
+
+    def append(self, url: str) -> Optional[Exception]:
+        with self.connect() as sock:
+            cmd = '{ "command": ["loadfile", "%s", "append-play"] }\n' % url
+            self.log.debug(cmd)
+            sock.sendall(cmd.encode())
+            _, err = self._read_data(self._read_resp(sock))
+            if err:
+                self.log.error(err)
+                return err
+
+    def _read_data(
+        self, resp: Optional[Dict] = None
+    ) -> Tuple[Any, Optional[Exception]]:
+        if not resp:
+            return None, Exception("can't read response")
+        if (err := resp.get("error")) != "success":
+            return None, Exception("mpv error: %s" % err)
+        if (data := resp.get("data")) is None:
+            return None, Exception("data not found in resp: %r" % resp)
+        return data, None
 
     def _read_resp(self, sock: socket.socket) -> Optional[Dict]:
         data = b""
