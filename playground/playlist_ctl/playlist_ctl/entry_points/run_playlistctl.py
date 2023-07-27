@@ -11,7 +11,9 @@ from playlist_ctl.storage import Storage
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("-a", "--add", metavar="URL", help="add new title")
+    parser.add_argument(
+        "-a", "--append", metavar="URL", help="'append-play' and update titles cache"
+    )
     parser.add_argument(
         "-c",
         "--config",
@@ -19,13 +21,6 @@ def parse_args() -> argparse.Namespace:
         metavar="PATH",
         type=Path,
         help="config file path (default: %(default)s)",
-    )
-    parser.add_argument(
-        "-s",
-        "--socket",
-        default=Path("/tmp/mpv.sock"),
-        metavar="PATH",
-        help="socket file (default: %(default)s)",
     )
     return parser.parse_args()
 
@@ -45,7 +40,7 @@ def init_logger(level: int, file: Path) -> None:
 
 def main():
     args = parse_args()
-    config = Config(config_file=args.config, socket_file=args.socket)
+    config = Config(config_file=args.config)
     if config.cache_dir.exists() and not config.cache_dir.is_dir():
         exit("%s is ivalid cache directory" % config.cache_dir)
     if not config.cache_dir.exists():
@@ -57,11 +52,11 @@ def main():
     if err := stor.init_db():
         exit("can't create table: %s" % err)
 
-    mpv = MpvClient(args.socket)
-    if args.add:
-        if err := mpv.append(args.add):
+    mpv = MpvClient(config.socket_file)
+    if args.append:
+        if err := mpv.append(args.append):
             exit(str(err))
-        if err := stor.add_title(args.add):
+        if err := stor.add_title(args.append):
             exit(str(err))
     else:
         RofiClient(stor, mpv).print_playlist()
