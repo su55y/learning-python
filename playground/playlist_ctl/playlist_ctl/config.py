@@ -2,11 +2,18 @@ from dataclasses import dataclass
 import logging
 from os.path import expandvars
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Optional
 
 from playlist_ctl import defaults
+from playlist_ctl.utils import read_config
 
-import yaml
+
+log_levels_map = {
+    "debug": logging.DEBUG,
+    "info": logging.INFO,
+    "warning": logging.WARNING,
+    "error": logging.ERROR,
+}
 
 
 @dataclass
@@ -37,31 +44,12 @@ class Config:
                 self._override_defaults(config_file)
 
     def _override_defaults(self, file: Path) -> None:
-        config = self._read_from_file(file)
-        if log_level_ := config.get("log_level"):
-            self.log_level = self._choose_log_level(log_level_)
-        if cache_dir_ := config.get("cache_dir"):
-            self.cache_dir = Path(cache_dir_)
+        config = read_config(file)
+        if isinstance((log_level := config.get("log_level")), str):
+            self.log_level = log_levels_map.get(log_level.lower(), logging.NOTSET)
+        if cache_dir := config.get("cache_dir"):
+            self.cache_dir = Path(cache_dir)
             self.log_file = self.cache_dir.joinpath("playlist_ctl.log")
             self.storage_file = self.cache_dir.joinpath("playlist_ctl.db")
-        if socket_file_ := config.get("socket_file"):
-            self.socket_file = Path(socket_file_)
-
-    def _read_from_file(self, file: Path) -> Dict:
-        try:
-            with open(file) as f:
-                return yaml.safe_load(f)
-        except Exception as e:
-            exit("invalid config %s: %s" % (file, e))
-
-    def _choose_log_level(self, lvl: str) -> int:
-        match lvl:
-            case "debug" | "DEBUG":
-                return logging.DEBUG
-            case "info" | "INFO":
-                return logging.INFO
-            case "warning" | "WARNING":
-                return logging.WARNING
-            case "error" | "ERROR":
-                return logging.ERROR
-        return 0
+        if socket_file := config.get("socket_file"):
+            self.socket_file = Path(socket_file)
