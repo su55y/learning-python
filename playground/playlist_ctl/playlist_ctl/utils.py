@@ -1,9 +1,14 @@
 import logging
+from os.path import expandvars
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, Optional, Union
 
 import requests
 import yaml
+
+
+def expand_path(path: Union[Path, str]) -> Path:
+    return Path(expandvars(path)).expanduser()
 
 
 def fetch_title(logger: logging.Logger, vid_url: str) -> Optional[str]:
