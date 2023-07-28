@@ -1,6 +1,8 @@
+from argparse import ArgumentTypeError
 import logging
 from os.path import expandvars
 from pathlib import Path
+from re import match
 from typing import Dict, Optional, Union
 
 import requests
@@ -29,3 +31,14 @@ def read_config(file: Path) -> Dict:
             return yaml.safe_load(f)
     except Exception as e:
         exit("invalid config %s: %s" % (file, e))
+
+
+def validate_url(v: str):
+    if Path(v).exists():
+        return v
+    if match(
+        r"^(?:https:\/\/)?((?:www\.)?youtube\.com\/watch\?v=[\w\d_\-]{11}|youtu\.be\/[\w\d_\-]{11})",
+        v,
+    ):
+        return v
+    raise ArgumentTypeError("invalid url %r" % v)
