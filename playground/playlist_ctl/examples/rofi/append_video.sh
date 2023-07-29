@@ -34,4 +34,9 @@ pidof mpv >/dev/null 2>&1 || {
     }
 }
 
-playlist-ctl -a "$URL"
+title="$(playlist-ctl -a "$URL")"
+if [ $? -eq 0 ]; then
+    notify-send -i mpv -a "playlist-ctl" "append-play $title"
+else
+    notify-send -i mpv -a "playlist-ctl" "append-play error: $title"
+fi
