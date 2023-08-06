@@ -1,5 +1,3 @@
-#!/usr/bin/env -S python3 -u
-
 from itertools import takewhile, count
 from functools import reduce
 
@@ -18,7 +16,7 @@ cache = {0: 0, 1: 1}
 LIMIT = 4_000_000
 
 
-def fibonacci_of(n) -> int:
+def fibonacci_of(n: int) -> int:
     if n in cache:
         return cache[n]
     cache[n] = fibonacci_of(n - 1) + fibonacci_of(n - 2)
@@ -30,6 +28,6 @@ print(
     "result:",
     reduce(
         lambda p, n: p + n if n % 2 == 0 else p,
-        [cache[i] for i in takewhile(lambda n: fibonacci_of(n) < LIMIT, count())],
+        [cache[i] for i in takewhile(lambda x: fibonacci_of(x) < LIMIT, count())],
     ),
 )

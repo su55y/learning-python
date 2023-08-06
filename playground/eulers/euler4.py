@@ -1,5 +1,3 @@
-#!/usr/bin/env -S python3 -u
-
 print(
     """
 A palindromic number reads the same both ways. The largest palindrome made from the product of two 2-digit number
@@ -14,9 +12,9 @@ expected result: 906609
 
 def result() -> int:
     i = j = i_stop = j_stop = 1000
-    while (i := i - 1) and i > 100:
-        while (j := j - 1) and j > 100:
-            if (r := i * j) and str(r) == str(r)[::-1]:
+    while (i := i - 1) > 100:
+        while (j := j - 1) > 100:
+            if str(r := i * j) == str(r)[::-1]:
                 return r
             if j % 10 == 0:
                 break
