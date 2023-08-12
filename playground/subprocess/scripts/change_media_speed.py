@@ -3,9 +3,8 @@ from enum import Enum, auto
 import json
 from pathlib import Path
 import subprocess as sp
-from typing import Optional
 
-FFMPEG_CMD = "ffmpeg %s -i %s %s %s"
+FFMPEG_CMD = "ffmpeg %(silence)s -i %(input)s %(filter)s %(output)s"
 SILENCE_OPTS = "-hide_banner -loglevel warning -stats"
 PROBE_CMD = "ffprobe -v quiet -show_streams -of json %s"
 
@@ -25,42 +24,45 @@ class MediaType(Enum):
 # TODO: adjust aratio to more then 2.0 by concating
 
 
-def get_filter(file: str, ratio: float) -> Optional[str]:
-    probe = json.loads(sp.getoutput(PROBE_CMD % file))
-    match probe:
-        case {"streams": list()}:
-            # TODO: bruh
-            filter_type = None
-            for stream in probe.get("streams"):
-                match stream.get("codec_type"):
-                    case "video":
-                        filter_type = (
-                            MediaType.VideoAudio
-                            if filter_type == MediaType.AudioOnly
-                            else MediaType.VideoOnly
-                        )
-                    case "audio":
-                        filter_type = (
-                            MediaType.VideoAudio
-                            if filter_type == MediaType.VideoOnly
-                            else MediaType.AudioOnly
-                        )
+def get_filter(file: str, ratio: float) -> str:
+    try:
+        probe = json.loads(sp.getoutput(PROBE_CMD % file))
+        if not (streams := probe.get("streams")):
+            raise Exception("can't get streams from probe")
+    except Exception as e:
+        exit("invalid probe: %s" % e)
 
-            if filter_type is None:
-                raise Exception("can't find video or audio stream")
+    filter_type = None
+    for stream in streams:
+        match stream.get("codec_type"):
+            case "video":
+                filter_type = (
+                    MediaType.VideoAudio
+                    if filter_type == MediaType.AudioOnly
+                    else MediaType.VideoOnly
+                )
+            case "audio":
+                filter_type = (
+                    MediaType.VideoAudio
+                    if filter_type == MediaType.VideoOnly
+                    else MediaType.AudioOnly
+                )
 
-            match filter_type:
-                case MediaType.VideoOnly:
-                    return FILTER_V % (SET_PTS % ratio)
-                case MediaType.AudioOnly:
-                    return FILTER_A % (ATEMPO % ratio)
-                case MediaType.VideoAudio:
-                    return COMPLEX_FILTER % (SET_PTS % ratio, ATEMPO % ratio)
+    if filter_type is None:
+        exit("can't find video or audio stream")
 
-            raise Exception("can't choose filter")
+    match filter_type:
+        case MediaType.VideoOnly:
+            return FILTER_V % (SET_PTS % ratio)
+        case MediaType.AudioOnly:
+            return FILTER_A % (ATEMPO % ratio)
+        case MediaType.VideoAudio:
+            return COMPLEX_FILTER % (SET_PTS % ratio, ATEMPO % ratio)
+
+    exit("can't choose filter")
 
 
-def parse_args() -> Optional[argparse.Namespace]:
+def parse_args() -> argparse.Namespace:
     def validate_ratio(v: str) -> float:
         try:
             if (r := float(v)) and (r < 0.5 or r > 2.0):
@@ -90,19 +92,13 @@ def parse_args() -> Optional[argparse.Namespace]:
 
 
 if __name__ == "__main__":
-    args = parse_args() or exit("can't parse args")
-
-    try:
-        filter = get_filter(args.input, args.ratio)
-    except Exception as e:
-        exit(repr(e))
-
-    cmd = FFMPEG_CMD % (
-        "" if args.verbose else SILENCE_OPTS,
-        args.input,
-        filter,
-        args.output,
-    )
+    args = parse_args()
+    cmd = FFMPEG_CMD % {
+        "silence": "" if args.verbose else SILENCE_OPTS,
+        "input": args.input,
+        "filter": get_filter(args.input, args.ratio),
+        "output": args.output,
+    }
     if args.verbose:
-        print(f"run '{cmd}'\n")
+        print("%s" % cmd)
     sp.run(cmd.split())
