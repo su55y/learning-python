@@ -24,7 +24,7 @@ log.basicConfig(
 )
 
 
-def get_static_file(path) -> bytes | None:
+def get_static_file(path) -> Optional[bytes]:
     try:
         log.debug("opening static: %s" % path)
         with open(STATIC_DIR.joinpath(path), "rb") as f:
@@ -35,7 +35,7 @@ def get_static_file(path) -> bytes | None:
         log.error("can't get static file: %s" % e)
 
 
-def get_mimetype(path) -> str | None:
+def get_mimetype(path) -> Optional[str]:
     mimetype, _ = mimetypes.guess_type(STATIC_DIR.joinpath(path))
     return mimetype
 
@@ -127,12 +127,12 @@ class BasicRequestHandler(http.server.BaseHTTPRequestHandler):
 def parse_args():
     parser = argparse.ArgumentParser()
 
-    def validate_port(arg: str) -> int:
+    def validate_port(v: str) -> int:
         try:
-            if (port := int(arg)) and port <= 0:
+            if (port := int(v)) and port <= 0:
                 raise
         except:
-            raise argparse.ArgumentTypeError("invalid port, should be positive number")
+            raise argparse.ArgumentTypeError("invalid port %r, should be positive number" % v)
         else:
             return port
 
