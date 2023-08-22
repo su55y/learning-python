@@ -1,5 +1,5 @@
-from pathlib import Path
 import os
+from pathlib import Path
 
 DATA_HOME = Path(os.environ.get("XDG_DATA_HOME", Path.home().joinpath(".local/share")))
 if not DATA_HOME.exists():
@@ -13,7 +13,7 @@ import sqlite3
 from threading import Thread
 
 
-def select_count() -> int:
+def select_unread_count() -> int:
     try:
         with sqlite3.connect(DB_PATH) as conn:
             cur = conn.cursor()
@@ -30,12 +30,11 @@ if __name__ == "__main__":
     reload_thread = Thread(target=sp.run, args=("newsboat -x reload".split(),))
     reload_thread.start()
 
-    before = select_count()
+    before = select_unread_count()
     reload_thread.join()
-    after = select_count()
+    after = select_unread_count()
 
     if after < 0 or before < 0 or before > after:
-        notify("Something went wrong")
-    else:
-        new = after - before
-        notify("%d new updates" % new) if new else notify("No updates")
+        notify("Something went wrong: before(%s), after(%s)" % (before, after))
+        exit(1)
+    notify("%d new updates" % new if (new := after - before) else "No updates")
