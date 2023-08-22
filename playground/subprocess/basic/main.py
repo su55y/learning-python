@@ -1,10 +1,10 @@
-from os.path import dirname, exists
-import subprocess as sp
 import asyncio
+from pathlib import Path
+import subprocess as sp
 import sys
 
 
-EXE = f"{dirname(__file__)}/print_dates.sh"
+EXE = Path(__file__).parent.joinpath("print_dates.sh")
 
 
 def getoutput_with_pipe() -> str:
@@ -16,7 +16,7 @@ def sp_run() -> int:
 
 
 def popen_wait_check_output() -> int:
-    proc = sp.Popen(EXE, stdout=sp.PIPE, shell=True)
+    proc = sp.Popen(str(EXE), stdout=sp.PIPE, shell=True)
     out = sp.check_output(["grep", "-oP", "\\d{4}"], stdin=proc.stdout)
     sys.stdout.write(out.decode())
     return proc.wait()
@@ -37,7 +37,7 @@ async def async_sp() -> int:
 
 
 def main():
-    if not exists(EXE):
+    if not EXE.exists():
         print("test executable not found")
         exit(1)
 
