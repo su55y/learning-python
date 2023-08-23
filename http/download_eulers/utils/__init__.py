@@ -44,7 +44,23 @@ def init_dir() -> Path:
 
 
 class EulerMinimalParser(HTMLParser):
-    _problem = ""
+    def __init__(self, *, convert_charrefs: bool = True) -> None:
+        super().__init__(convert_charrefs=convert_charrefs)
+        self._problem = ""
+        self._to_remove = re.compile(r"\$|&|\\[a-z]+\{[a-z0-9]+\}|\\mathbf|\\\{|\\}|\\")
+        self._spaces = re.compile(r"\s{2,}")
+        self._replacements = {
+            r"\dots": "... ",
+            r"\cdots": "... ",
+            r"\gt": ">",
+            r"\lt": "<",
+            r"\ge": ">=",
+            r"\le": "<=",
+            r"\ne": "!=",
+            r"\times": "*",
+            r"\to": "->",
+            r"\colon": ":",
+        }
 
     @property
     def problem(self) -> str:
@@ -54,6 +70,10 @@ class EulerMinimalParser(HTMLParser):
         return problem_text
 
     def handle_data(self, data):
+        data = self._to_remove.sub(" ", data)
+        data = self._spaces.sub(" ", data)
+        for old, new in self._replacements.items():
+            data = data.replace(old, new)
         self._problem += f"{data}\n"
 
 
@@ -77,14 +97,18 @@ class ProblemsHandler:
         for i, p in enumerate(raw_problems):
             parser = EulerMinimalParser()
             parser.feed(p)
-            result = "" if (r := self.results.get(i + 1)) is None else "%d\n" % r
+            result = (
+                ""
+                if (r := self.results.get(i + 1)) is None
+                else "\nExpected result: %d\n" % r
+            )
             problems.append(f"Problem #{i+1}\n{parser.problem}\n{result}")
         return problems
 
     def _parse_results(self, raw_results: str) -> Dict[int, int]:
         results: Dict[int, int] = {}
         rx_result = re.compile(r"^0\d{2}\:\s-?\d+$")
-        for line in raw_results.split():
+        for line in raw_results.split("\n"):
             if not rx_result.match(line):
                 continue
             index, result = line.replace(":", "").split()
