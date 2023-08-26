@@ -1,2 +1,0 @@
-[tool.pyright]
-include = ["config", "country", "storage", "tests"]
