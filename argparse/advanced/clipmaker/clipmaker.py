@@ -82,7 +82,7 @@ def parse_agrs() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def choose_format(url: str) -> str:
+def choose_format(url: str, resolution: str, choose: bool) -> str:
     try:
         from yt_dlp import YoutubeDL
     except ImportError as e:
@@ -102,37 +102,23 @@ def choose_format(url: str) -> str:
             exit("can't get formats from info")
         info["formats"] = filter(to_remove, info["formats"])
         formats_map = {f["format_id"]: f for f in info["formats"]}
-        print(ydl.render_formats_table({**info, "formats": formats_map.values()}))
-        while True:
-            choice = input("format id: ")
-            if format := formats_map.get(choice):
-                return format["url"]
-            print("not found format %r" % choice)
-
-
-def get_default_format(url: str, resolution: str) -> str:
-    try:
-        from yt_dlp import YoutubeDL
-    except ImportError as e:
-        exit(f"{e}\nhttps://github.com/yt-dlp/yt-dlp#installation")
-
-    with YoutubeDL() as ydl:
-        info = ydl.extract_info(url, download=False)
-        if not info or not isinstance(info, Dict):
-            exit("can't extract info by url %r" % url)
-
-        if len(streams := info.get("formats", [])) == 0:
-            exit("no streams present by url %r" % url)
-        for format in streams:
-            if not format.get("vcodec") or not format.get("acodec"):
-                continue
-
-            if format.get("resolution") == resolution:
-                if not re.match(r"^https.+", url := format.pop("url")):
-                    exit("can't get stream url from format: %s" % format)
-                print("choosed format: %s" % format)
-                return url
-    exit("can't find stream by url %r" % url)
+        if choose:
+            print(ydl.render_formats_table({**info, "formats": formats_map.values()}))
+            while True:
+                choice = input("format id: ")
+                if format := formats_map.get(choice):
+                    return format["url"]
+                print("not found format %r" % choice)
+        else:
+            for f in formats_map.values():
+                if not f.get("vcodec") or not f.get("acodec"):
+                    continue
+                if f.get("resolution") == resolution:
+                    if not re.match(r"^https.+", url := f.pop("url")):
+                        exit("can't get stream url from format: %s" % f)
+                    print("choosed format: %s" % f)
+                    return url
+            exit("resolution %r not available" % resolution)
 
 
 def build_cmd(args: argparse.Namespace, url: str) -> List[str]:
@@ -148,8 +134,5 @@ def build_cmd(args: argparse.Namespace, url: str) -> List[str]:
 
 if __name__ == "__main__":
     args = parse_agrs()
-    if args.choose:
-        url = choose_format(args.url)
-    else:
-        url = get_default_format(args.url, args.resolution)
+    url = choose_format(args.url, args.resolution, args.choose)
     subprocess.run(build_cmd(args, url))
