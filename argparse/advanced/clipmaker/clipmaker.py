@@ -6,6 +6,7 @@ from typing import Optional, List, Dict
 
 ffmpeg_cmd = """ffmpeg -hide_banner -loglevel warning -stats {y} {start} {to}
     -i {stream} {end} -c copy -avoid_negative_ts make_zero {output}"""
+formats_filter = {"ext": "mhtml", "filesize": None, "format_note": "storyboard"}
 
 
 def parse_agrs() -> argparse.Namespace:
@@ -77,10 +78,39 @@ def parse_agrs() -> argparse.Namespace:
         action="store_true",
         help="overwrite output file if exists",
     )
+    parser.add_argument("-c", "--choose", action="store_true", help="choose format")
     return parser.parse_args()
 
 
-def get_stream_url(url: str, resolution: str) -> str:
+def choose_format(url: str) -> str:
+    try:
+        from yt_dlp import YoutubeDL
+    except ImportError as e:
+        exit(f"{e}\nhttps://github.com/yt-dlp/yt-dlp#installation")
+
+    def to_remove(f: Dict) -> bool:
+        for k, v in formats_filter.items():
+            if f.get(k) == v:
+                return False
+        return True
+
+    with YoutubeDL() as ydl:
+        info = ydl.extract_info(url, download=False)
+        if not info or not isinstance(info, Dict):
+            exit("can't extract info")
+        if not info.get("formats"):
+            exit("can't get formats from info")
+        info["formats"] = filter(to_remove, info["formats"])
+        formats_map = {f["format_id"]: f for f in info["formats"]}
+        print(ydl.render_formats_table({**info, "formats": formats_map.values()}))
+        while True:
+            choice = input("format id: ")
+            if format := formats_map.get(choice):
+                return format["url"]
+            print("not found format %r" % choice)
+
+
+def get_default_format(url: str, resolution: str) -> str:
     try:
         from yt_dlp import YoutubeDL
     except ImportError as e:
@@ -105,16 +135,21 @@ def get_stream_url(url: str, resolution: str) -> str:
     exit("can't find stream by url %r" % url)
 
 
-def build_cmd(args: argparse.Namespace) -> List[str]:
+def build_cmd(args: argparse.Namespace, url: str) -> List[str]:
     return ffmpeg_cmd.format(
         y="-y" if args.force else "",
         start="-ss %s" % (args.start or 0),
         to="-to %s" % args.to if args.to else "",
-        stream=get_stream_url(args.url, args.resolution),
+        stream=url,
         end="-t %s" % args.duration if args.duration else "",
         output=args.output,
     ).split()
 
 
 if __name__ == "__main__":
-    subprocess.run(build_cmd(parse_agrs()))
+    args = parse_agrs()
+    if args.choose:
+        url = choose_format(args.url)
+    else:
+        url = get_default_format(args.url, args.resolution)
+    subprocess.run(build_cmd(args, url))
