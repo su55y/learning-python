@@ -2,11 +2,11 @@ import argparse
 import datetime as dt
 import re
 import subprocess
-from typing import Optional, List, Dict
+from typing import Optional, Dict
 
 ffmpeg_cmd = """ffmpeg -hide_banner -loglevel warning -stats {y} {start} {to}
     -i {stream} {end} -c copy -avoid_negative_ts make_zero {output}"""
-formats_filter = {"ext": "mhtml", "filesize": None, "format_note": "storyboard"}
+filters = {"ext": "mhtml", "filesize": None, "format_note": "storyboard"}
 
 
 def parse_agrs() -> argparse.Namespace:
@@ -82,17 +82,18 @@ def parse_agrs() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def filter_formats(f: Dict) -> bool:
+    for k, v in filters.items():
+        if f.get(k) == v:
+            return False
+    return True
+
+
 def choose_format(url: str, resolution: str, choose: bool) -> str:
     try:
         from yt_dlp import YoutubeDL
     except ImportError as e:
         exit(f"{e}\nhttps://github.com/yt-dlp/yt-dlp#installation")
-
-    def to_remove(f: Dict) -> bool:
-        for k, v in formats_filter.items():
-            if f.get(k) == v:
-                return False
-        return True
 
     with YoutubeDL() as ydl:
         info = ydl.extract_info(url, download=False)
@@ -100,7 +101,7 @@ def choose_format(url: str, resolution: str, choose: bool) -> str:
             exit("can't extract info")
         if not info.get("formats"):
             exit("can't get formats from info")
-        info["formats"] = filter(to_remove, info["formats"])
+        info["formats"] = filter(filter_formats, info["formats"])
         formats_map = {f["format_id"]: f for f in info["formats"]}
         if choose:
             print(ydl.render_formats_table({**info, "formats": formats_map.values()}))
@@ -121,18 +122,16 @@ def choose_format(url: str, resolution: str, choose: bool) -> str:
             exit("resolution %r not available" % resolution)
 
 
-def build_cmd(args: argparse.Namespace, url: str) -> List[str]:
-    return ffmpeg_cmd.format(
-        y="-y" if args.force else "",
-        start="-ss %s" % (args.start or 0),
-        to="-to %s" % args.to if args.to else "",
-        stream=url,
-        end="-t %s" % args.duration if args.duration else "",
-        output=args.output,
-    ).split()
-
-
 if __name__ == "__main__":
     args = parse_agrs()
     url = choose_format(args.url, args.resolution, args.choose)
-    subprocess.run(build_cmd(args, url))
+    subprocess.run(
+        ffmpeg_cmd.format(
+            y="-y" if args.force else "",
+            start="-ss %s" % (args.start or 0),
+            to="-to %s" % args.to if args.to else "",
+            stream=url,
+            end="-t %s" % args.duration if args.duration else "",
+            output=args.output,
+        ).split()
+    )
