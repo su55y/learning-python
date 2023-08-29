@@ -1,5 +1,5 @@
 import configparser
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Optional
 from entities import config, entities
 import logging as log
 
@@ -8,7 +8,7 @@ PREFIX_SERVER_TEXT_EXAMPLE = "server_test_example_"
 PREFIX_SERVER_TEST_LOCALHOST = "server_test_localhost_"
 
 
-def get_ini_config(file: str, section: str) -> config.Config | None:
+def get_ini_config(file: str, section: str) -> Optional[config.Config]:
     config_dict, err = _read_config(file, section)
     if err:
         log.error(f"read ini config error: {repr(err)}")
@@ -17,7 +17,7 @@ def get_ini_config(file: str, section: str) -> config.Config | None:
     return _parse_config(config_dict)
 
 
-def _read_config(file: str, section: str) -> Tuple[Dict[str, str], Exception | None]:
+def _read_config(file: str, section: str) -> Tuple[Dict[str, str], Optional[Exception]]:
     try:
         parser = configparser.ConfigParser()
         parser.read(file)
@@ -29,7 +29,7 @@ def _read_config(file: str, section: str) -> Tuple[Dict[str, str], Exception | N
         return {}, e
 
 
-def _parse_config(config_dict: Dict[str, str]) -> config.Config | None:
+def _parse_config(config_dict: Dict[str, str]) -> Optional[config.Config]:
     try:
         if db_tables := config_dict.get("db_tables"):
             db_tables = db_tables.split()

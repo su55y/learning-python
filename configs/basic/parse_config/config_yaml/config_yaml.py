@@ -1,10 +1,10 @@
-from typing import Dict, Tuple
+from typing import Dict, Optional, Tuple
 from entities import config, entities
 import logging as log
 import yaml
 
 
-def get_yaml_config(file: str) -> config.Config | None:
+def get_yaml_config(file: str) -> Optional[config.Config]:
     config_dict, err = _read_config(file)
     if err:
         log.error(f"read yaml config error: {repr(err)}")
@@ -13,7 +13,7 @@ def get_yaml_config(file: str) -> config.Config | None:
     return _parse_config(config_dict)
 
 
-def _read_config(file: str) -> Tuple[Dict, Exception | None]:
+def _read_config(file: str) -> Tuple[Dict, Optional[Exception]]:
     try:
         with open(file) as f:
             return yaml.safe_load(f), None
@@ -21,7 +21,7 @@ def _read_config(file: str) -> Tuple[Dict, Exception | None]:
         return {}, e
 
 
-def _parse_config(config_dict: Dict) -> config.Config | None:
+def _parse_config(config_dict: Dict) -> Optional[config.Config]:
     try:
         return config.Config(
             database=entities.Database(**config_dict["database"]),

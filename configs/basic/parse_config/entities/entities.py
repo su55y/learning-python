@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict
+from typing import Dict, Optional
 
 
 @dataclass
@@ -14,7 +14,7 @@ class Database:
 class Server:
     host: str
     port: str
-    url: str | None = None
+    url: Optional[str] = None
 
 
 @dataclass
