@@ -4,6 +4,8 @@ from pathlib import Path
 
 from httpx import AsyncClient
 
+from .crawler import Crawler
+
 LOG_FMT = "[%(asctime)s %(levelname)s] %(message)s (%(funcName)s:%(lineno)d)"
 
 
@@ -13,14 +15,6 @@ def init_logger(file: Path = Path(__file__).parent.joinpath("crawler.log")) -> N
     fh = logging.FileHandler(file)
     fh.setFormatter(logging.Formatter(LOG_FMT))
     logger.addHandler(fh)
-
-
-class Crawler:
-    def __init__(self, client: AsyncClient) -> None:
-        ...
-
-    async def run(self) -> None:
-        ...
 
 
 async def run_crawler():
