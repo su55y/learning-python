@@ -1,6 +1,7 @@
 import asyncio
 import logging
 from typing import Iterable, Optional, Set
+import urllib.parse as urlparse
 
 from httpx import AsyncClient
 
@@ -17,16 +18,23 @@ class Crawler:
         self.log = logging.getLogger()
         self.client = client
         self.start_urls = set(urls)
-        self.allowed_domains = set(urls)
-        if allowed_domains:
-            self.allowed_domains.update(allowed_domains)
         self.queue = asyncio.Queue()
         self.seen = set()
         self.done = set()
         self.total = 0
 
+        self.allowed_domains = set(urlparse.urlparse(u).netloc for u in urls)
+        if allowed_domains:
+            self.allowed_domains.update(allowed_domains)
+
     async def run(self) -> None:
         self.log.info("run...")
+        await self.on_found_links(self.start_urls)
+        tasks = [asyncio.create_task(self.worker()) for _ in range(4)]
+        await self.queue.join()
+
+        for task in tasks:
+            task.cancel()
 
     async def worker(self):
         while True:
