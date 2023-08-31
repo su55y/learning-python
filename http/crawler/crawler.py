@@ -63,7 +63,7 @@ class Crawler:
     async def crawl(self, url: str) -> None:
         await asyncio.sleep(self.ratelimit)
         resp = await self.client.get(url, follow_redirects=True)
-        self.log.debug("%s %s" % (resp.status_code, resp.reason_phrase))
+        self.log.debug("%s %s %s" % (resp.status_code, resp.reason_phrase, resp.url))
         found_links = await self.parse_links(
             base=str(resp.url),
             text=resp.text,

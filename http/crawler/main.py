@@ -2,7 +2,7 @@ import argparse
 import asyncio
 import logging
 from pathlib import Path
-from typing import Set
+from typing import Optional, Set
 import urllib.parse as urlparse
 
 from httpx import AsyncClient
@@ -14,9 +14,12 @@ LOG_FMT = (
 )
 
 
-def init_logger(file: Path) -> None:
+def init_logger(file: Optional[Path] = None, level: int = logging.DEBUG) -> None:
     logger = logging.getLogger()
-    logger.setLevel(logging.DEBUG)
+    if not file:
+        logger.addHandler(logging.NullHandler())
+        return
+    logger.setLevel(level)
     fh = logging.FileHandler(file)
     fh.setFormatter(logging.Formatter(LOG_FMT))
     logger.addHandler(fh)
@@ -84,6 +87,5 @@ async def main(args: argparse.Namespace) -> None:
 
 if __name__ == "__main__":
     args = parse_args()
-    if args.log_file:
-        init_logger(args.log_file)
+    init_logger(args.log_file)
     asyncio.run(main(args))
