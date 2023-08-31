@@ -32,6 +32,27 @@ def parse_args() -> argparse.Namespace:
         help="output file (default: 'url_domain.txt')",
     )
     parser.add_argument("-l", "--log-file", type=Path, help="log file")
+    parser.add_argument(
+        "-m",
+        "--max-queue",
+        type=int,
+        default=100,
+        help="queue limit (default: %(default)s)",
+    )
+    parser.add_argument(
+        "-c",
+        "--coroutines",
+        type=int,
+        default=10,
+        help="coroutines count (default: %(default)s)",
+    )
+    parser.add_argument(
+        "-r",
+        "--ratelimit",
+        type=float,
+        default=1,
+        help="rate limit (default: %(default).1f)",
+    )
     return parser.parse_args()
 
 
@@ -45,7 +66,13 @@ def write_results(file: Path, results: Set[str]) -> None:
 
 async def main(args: argparse.Namespace) -> None:
     async with AsyncClient() as client:
-        crawler = Crawler(client, args.url)
+        crawler = Crawler(
+            client=client,
+            url=args.url,
+            limit=args.max_queue,
+            routines_count=args.coroutines,
+            ratelimit=args.ratelimit,
+        )
         await crawler.run()
         write_results(
             args.output
