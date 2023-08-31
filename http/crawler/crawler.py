@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from typing import Iterable, Optional, Set
+from typing import Optional, Set
 import urllib.parse as urlparse
 
 from httpx import AsyncClient
@@ -12,24 +12,26 @@ class Crawler:
     def __init__(
         self,
         client: AsyncClient,
-        urls: Iterable[str],
+        url: str,
         allowed_domains: Optional[Set[str]] = None,
     ) -> None:
         self.log = logging.getLogger()
         self.client = client
-        self.start_urls = set(urls)
         self.queue = asyncio.Queue()
         self.seen = set()
         self.done = set()
         self.total = 0
 
-        self.allowed_domains = set(urlparse.urlparse(u).netloc for u in urls)
+        self.start_url = url
+        self.allowed_domains = set([urlparse.urlparse(url).netloc])
+        if url.startswith("www."):
+            self.allowed_domains.add(url.lstrip("www."))
         if allowed_domains:
             self.allowed_domains.update(allowed_domains)
 
     async def run(self) -> None:
         self.log.info("run...")
-        await self.on_found_links(self.start_urls)
+        await self.on_found_links(set([self.start_url]))
         tasks = [asyncio.create_task(self.worker()) for _ in range(4)]
         await self.queue.join()
 
