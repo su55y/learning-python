@@ -1,14 +1,13 @@
-import datetime as dt
 import time
 
 
 def time_generator():
     while True:
-        yield dt.datetime.now().strftime("%T")
+        yield time.strftime("%T")
 
 
 if __name__ == "__main__":
-    timenow = time_generator()
-    for _ in range(5):
-        print(next(timenow))
+    timenow_gen = time_generator()
+    for timenow in timenow_gen:
+        print(timenow)
         time.sleep(1)
