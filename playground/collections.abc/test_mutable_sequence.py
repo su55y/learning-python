@@ -40,6 +40,11 @@ class TestMutableSequence(unittest.TestCase):
         self.assertEqual(arr.count(3), 0)
 
     # MutableSequence methods
+    def test_append(self):
+        arr = Array()
+        arr.append(1)
+        self.assertEqual(list(arr), [1])
+
     def test_reverse(self):
         arr = Array(3).fill([1, 2, 3])
         arr.reverse()
@@ -69,3 +74,15 @@ class TestMutableSequence(unittest.TestCase):
         arr = Array(2).fill([1, 2])
         arr += [3]
         self.assertEqual(list(arr), [1, 2, 3])
+
+    # MutableSequence abstract methods (__getitem__, __setitem__, __delitem__, __len__, insert)
+    def test_getitem(self):
+        arr = Array(1)
+        self.assertIs(arr[0], None)
+        arr[0] = 42
+        self.assertEqual(arr[0], 42)
+        self.assertEqual(len(arr), 1)
+        del arr[0]
+        self.assertEqual(len(arr), 0)
+        arr.insert(0, 42)
+        self.assertEqual(arr[0], 42)
