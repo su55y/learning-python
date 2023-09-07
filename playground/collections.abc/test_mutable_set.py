@@ -19,3 +19,34 @@ class TestMutableSet(unittest.TestCase):
         self.assertEqual(Set("good") | Set("bye"), set("bdegoy"))
         self.assertEqual(Set("hello") - Set("world"), set("eh"))
         self.assertEqual(Set("hello") ^ Set("world"), set("edhrw"))
+
+    # MutableSet methods
+    def test_clear(self):
+        s = Set({1, 2})
+        s.clear()
+        self.assertEqual(len(s), 0)
+
+    def test_pop(self):
+        s = Set({1, 2})
+        self.assertEqual(s.pop(), 1)
+        self.assertEqual(len(s), 1)
+
+    def test_remove(self):
+        s = Set({1, 2})
+        s.remove(2)
+        self.assertEqual(len(s), 1)
+        self.assertEqual(s.pop(), 1)
+
+    def test_increment_methods(self):
+        s = Set({1, 2})
+        s |= Set({2, 3})
+        self.assertEqual(s, {1, 2, 3})
+        s = Set({1, 2})
+        s &= Set({2, 3})
+        self.assertEqual(s, {2})
+        s = Set({1, 2})
+        s ^= Set({2, 3})
+        self.assertEqual(s, {1, 3})
+        s = Set({1, 2})
+        s -= Set({2, 3})
+        self.assertEqual(s, {1})
