@@ -6,19 +6,18 @@ from mutable_set import Set
 class TestMutableSet(unittest.TestCase):
     # Set methods
     def test_comparsion(self):
-        s = Set("hello world!")
-        self.assertTrue(s.isdisjoint(set("sus")))
-        self.assertGreater(s, set("hello"))
-        self.assertGreaterEqual(s, set("world"))
-        self.assertLess(s, set("hello world!?"))
-        self.assertLessEqual(s, set("oh, hello world!?"))
-        self.assertNotEqual(s, set("hi"))
-        self.assertEqual(s, set("! ehodlrw"))
-        # __and__
-        self.assertEqual(s & Set("bye"), {"e"})
-        self.assertEqual(Set("good") | Set("bye"), set("bdegoy"))
-        self.assertEqual(Set("hello") - Set("world"), set("eh"))
-        self.assertEqual(Set("hello") ^ Set("world"), set("edhrw"))
+        s = Set({1, 2})
+        self.assertTrue(s.isdisjoint({3, 4}))
+        self.assertGreater(s, {2})
+        self.assertGreaterEqual(s, {1, 2})
+        self.assertLess(s, {1, 2, 3})
+        self.assertLessEqual(s, {1, 2})
+        self.assertNotEqual(s, {2})
+        self.assertEqual(s, {1, 2})
+        self.assertEqual(s & Set({2, 3}), {2})
+        self.assertEqual(s | Set({2, 3}), {1, 2, 3})
+        self.assertEqual(s - Set({2, 3}), {1})
+        self.assertEqual(s ^ Set({2, 3}), {1, 3})
 
     # MutableSet methods
     def test_clear(self):
