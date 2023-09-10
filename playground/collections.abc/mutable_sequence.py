@@ -2,21 +2,12 @@ from collections.abc import Iterable, MutableSequence
 from typing import Any, Optional
 
 
-class Array(MutableSequence):
-    def __init__(self, __size: Optional[int] = None, /) -> None:
-        self.__elements = list(None for _ in range(__size)) if __size else list()
+class List(MutableSequence):
+    def __init__(self, __elements: Optional[Iterable] = None, /) -> None:
+        self.__elements = list(__elements) if __elements else list()
 
     def insert(self, index: int, value: Any) -> None:
         self.__elements.insert(index, value)
-
-    def fill(self, elements: Iterable) -> "Array":
-        i = 0
-        for e in elements:
-            self.__elements[i] = e
-            i += 1
-            if i >= len(self.__elements):
-                break
-        return self
 
     def __setitem__(self, index: int, value: Any) -> None:
         self.__elements[index] = value
