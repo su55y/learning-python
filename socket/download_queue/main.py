@@ -1,4 +1,5 @@
 import argparse
+from collections import deque
 import datetime as dt
 import logging
 import json
@@ -11,7 +12,7 @@ from typing import Dict
 import urllib.request
 
 
-download_queue = []
+download_queue = deque()
 shutdown_event = threading.Event()
 log: logging.Logger
 
