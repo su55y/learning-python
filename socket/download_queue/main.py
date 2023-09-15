@@ -112,7 +112,7 @@ def handle_request(conn: socket.socket) -> Dict:
         log.error("decode error: %s" % e)
         return {"error": "invalid json"}
     except Exception as e:
-        log.error("decode data error: %s" % e)
+        log.error("invalid request: %s" % e)
     return {"error": "invalid request"}
 
 
@@ -157,7 +157,8 @@ def listener(host: str, port: int, timeout: int):
             t.start()
 
 
-if __name__ == "__main__":
+def main():
+    global log
     args = parse_args()
     if not args.download_dir.exists():
         args.download_dir.mkdir()
@@ -188,3 +189,7 @@ if __name__ == "__main__":
     log.info("shutting down...")
     shutdown_event.set()
     server_thread.join()
+
+
+if __name__ == "__main__":
+    main()
