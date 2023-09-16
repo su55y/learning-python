@@ -2,7 +2,7 @@ from collections.abc import Callable
 from typing import List, Tuple
 
 
-def main():
+if __name__ == "__main__":
     nums: List[int] = [1, 2, 3]
 
     half: Callable[[int], float] = lambda n: n * 0.5
@@ -13,10 +13,6 @@ def main():
 
     print("nums:", nums)
     print("half_nums:", half_nums)
-    print("combined:")
-    for (i, f) in nums_combined:
-        print(f"\t({i}({type(i).__name__}), {f}({type(f).__name__}))")
 
-
-if __name__ == "__main__":
-    main()
+    print_combined: Callable[[int, float], None] = lambda i, f: print(f"{i}: {f}")
+    _ = print("combined:") or [print_combined(i, f) for i, f in nums_combined]
