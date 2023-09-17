@@ -1,3 +1,5 @@
+import math
+
 print(
     """
 By listing the first six prime numbers: 2, 3, 5, 7, 11, and 13,
@@ -7,11 +9,9 @@ expected result: 104743
 """
 )
 
-from math import floor
-
 
 def is_prime(n):
-    for x in range(2, floor(n**0.5) + 1):
+    for x in range(2, math.floor(n**0.5) + 1):
         if n % x == 0:
             return False
     return True
