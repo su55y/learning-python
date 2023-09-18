@@ -1,5 +1,10 @@
+import unittest
+
 from ..storage import Storage
 from ..storage.db import SQLite
 
-if __name__ == "__main__":
-    storage = Storage(SQLite())
+
+class TestStorage(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.stor = Storage(SQLite(":memory:"))
