@@ -1,17 +1,15 @@
 from mysql.connector import connect, Error
-from typing import Any, List, Tuple
+from typing import Any, List, Optional, Tuple
 from logging import info
 
 
 def init_db(
-    host: str, port: str, user: str, password: str, database: str, force=False
-) -> Error | None:
+    host: str, port: str, user: str, password: str, database: str
+) -> Optional[Error]:
     try:
         with connect(host=host, port=port, user=user, password=password) as conn:
             with conn.cursor() as cursor:
-                cursor.execute(
-                    f"CREATE DATABASE {'IF NOT EXISTS' if not force else ''} {database}"
-                )
+                cursor.execute(f"CREATE DATABASE IF NOT EXISTS {database}")
     except Error as e:
         return e
 
