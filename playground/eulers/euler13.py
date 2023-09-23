@@ -112,13 +112,13 @@ expected result: 5537376230
 lines = NUMBER.split("\n", 99)
 
 result = ""
-carry, digit = 0, 0
+reminder, digit = 0, 0
 for i in range(49, -1, -1):
-    sum = carry
+    sum = reminder
     for j in range(len(lines)):
         sum += int(lines[j][i])
-    carry, digit = divmod(sum, 10)
+    reminder, digit = divmod(sum, 10)
     result = "%s%s" % (digit, result)
 
-result = "%s%s" % (carry, result)
+result = "%s%s" % (reminder, result)
 print("result:", result[:10])
