@@ -1,6 +1,6 @@
-from typing import List, Protocol, Tuple
+from typing import Any, List, Protocol, Tuple
 
-Rows = List[Tuple[str, ...]]
+Rows = List[Tuple[Any, ...]]
 
 
 class IDataBase(Protocol):

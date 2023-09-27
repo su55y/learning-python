@@ -15,8 +15,9 @@ class MySQL:
         try:
             with conn.cursor() as cur:
                 yield cur
-        except:
-            ...
+        except Exception as e:
+            # FIXME
+            print(repr(e))
         finally:
             conn.close()
 
@@ -26,7 +27,8 @@ class MySQL:
 
     def insert(self, query: str, rows: Rows) -> int:
         with self._get_cursor() as cur:
-            return cur.execute(query, rows).rowcount
+            # FIXME
+            return cur.executemany(query, rows).rowcount
 
     def delete(self, query: str) -> int:
         with self._get_cursor() as cur:
