@@ -18,12 +18,16 @@ class TestMySQL(unittest.TestCase):
         cls.stor = Storage(MySQL(**MYSQL_CONFIG))
 
     def test1_insert(self):
-        self.assertEqual(
-            self.stor.insert(
-                "insert into tb_test (id, foo) values (?, ?)", [(1, "bar")]
-            ),
-            1,
+        count = self.stor.insert(
+            "insert into tb_test (id, foo) values (%s, %s)",
+            [(1, "bar")],
         )
+        self.assertEqual(count, 1)
 
-    # def test2_select(self):
-    #     self.assertEqual(self.stor.select(1), [("1", "bar")])
+    def test2_select(self):
+        rows = self.stor.select("select * from tb_test where id=1")
+        self.assertEqual(rows, [(1, "bar")])
+
+    def test3_delete(self):
+        count = self.stor.delete("delete from tb_test where id=1")
+        self.assertEqual(count, 1)
