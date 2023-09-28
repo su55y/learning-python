@@ -5,14 +5,11 @@ class Storage:
     def __init__(self, db: IDataBase) -> None:
         self.db = db
 
-    def select(self, id: int) -> Rows:
-        query = "select * from table where id = %d" % id
+    def select(self, query: str) -> Rows:
         return self.db.select(query)
 
-    def insert(self, rows: Rows) -> int:
-        query = "insert into table values ?"
+    def insert(self, query: str, rows: Rows) -> int:
         return self.db.insert(query, rows)
 
-    def delete(self, id: int) -> int:
-        query = "delete from table whre id = %d" % id
+    def delete(self, query: str) -> int:
         return self.db.delete(query)

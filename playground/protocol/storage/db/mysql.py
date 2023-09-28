@@ -1,6 +1,6 @@
 from contextlib import contextmanager
 
-from mysql.connector import connect
+from mysql.connector import connect, Error as ErrorMySQL
 
 from .interface import Rows
 
@@ -15,21 +15,28 @@ class MySQL:
         try:
             with conn.cursor() as cur:
                 yield cur
+        except ErrorMySQL as e:
+            print("MySQL ERROR: %s" % e)
         except Exception as e:
             # FIXME
             print(repr(e))
+            exit(1)
+        else:
+            conn.commit()
         finally:
             conn.close()
 
     def select(self, query: str) -> Rows:
         with self._get_cursor() as cur:
-            return cur.execute(query).fetchall()
+            cur.execute(query)
+            return list(cur.fetchall())
 
     def insert(self, query: str, rows: Rows) -> int:
         with self._get_cursor() as cur:
-            # FIXME
-            return cur.executemany(query, rows).rowcount
+            cur.executemany(query, rows)
+            return cur.rowcount
 
     def delete(self, query: str) -> int:
         with self._get_cursor() as cur:
-            return cur.execute(query).rowcount
+            cur.execute(query)
+            return cur.rowcount
