@@ -14,8 +14,10 @@ class SQLite:
         try:
             cur = conn.cursor()
             yield cur
-        except:
-            ...
+        except Exception as e:
+            print(repr(e))
+        else:
+            conn.commit()
         finally:
             conn.close()
 
@@ -25,7 +27,7 @@ class SQLite:
 
     def insert(self, query: str, rows: Rows) -> int:
         with self._get_cursor() as cur:
-            return cur.execute(query, rows).rowcount
+            return cur.executemany(query, rows).rowcount
 
     def delete(self, query: str) -> int:
         with self._get_cursor() as cur:
