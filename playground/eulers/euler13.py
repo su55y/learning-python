@@ -6,8 +6,8 @@ if len(NUMBER) != 5100:
     exit("invalid input")
 
 print(
-    """
-Work out the first ten digits of the sum of the following one-hundred 50-digit numbers.
+    """Work out the first ten digits of the sum of the following one-hundred
+50-digit numbers.
 %s...
 
 expected result: 5537376230
