@@ -1,3 +1,4 @@
+from functools import reduce
 import math
 
 print(
@@ -20,33 +21,22 @@ expected result: 4179871
 """
 )
 
-LIMIT = 28124
-writable = [False for _ in range(LIMIT)]
-al = []
 
 def divisors_sum(inp: int) -> int:
-    limit = int(math.sqrt(inp))
     sum = 0
-    for i in range(1, limit+1):
+    for i in range(1, int(math.sqrt(inp)) + 1):
         if inp%i == 0:
-            sum += i
-        else:
-            sum += i + (inp / i)
-    return int(sum - inp)
+            if i == inp//i:
+                sum += i
+            else:
+                sum += i + (inp // i)
+    return sum - inp
 
-for i in range(1, LIMIT):
-    if i < divisors_sum(i):
-        al.append(i)
+LIMIT = 28124
+writables = [False for _ in range(LIMIT)]
+for i, a in enumerate(abundants := [i for i in range(1, LIMIT) if i < divisors_sum(i)]):
+    for b in abundants[i:]:
+        if (sum := a + b) < LIMIT:
+            writables[sum] = True
 
-for i, v in enumerate(al):
-    for j in al[i:]:
-        if (sum := i + j) < LIMIT:
-            writable[sum] = True
-
-
-sum = 0
-for i in range(1, LIMIT):
-    if not writable[i]:
-        sum += i
-
-print("result:", sum)
+print("result:", reduce(lambda p, n: p if writables[n] else p+n, range(1, LIMIT), 0))
