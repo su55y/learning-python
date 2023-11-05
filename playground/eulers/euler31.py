@@ -9,7 +9,8 @@ It is possible to make £2 in the following way:
 How many different ways can £2 be made using any number of coins?
 
 
-expected result: 73682"""
+expected result: 73682
+"""
 )
 
 coins = [1, 2, 5, 10, 20, 50, 100, 200]
