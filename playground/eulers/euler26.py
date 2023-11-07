@@ -20,30 +20,28 @@ expected result: 983
 )
 
 
-
-arr = [False for _ in range(1000)]
+LIMIT = 1000
+arr = [False for _ in range(LIMIT)]
 arr[0], arr[1] = True, True
-prime = 3
-k = 0
+i, prime = 0, 3
 while True:
-    for k in range(prime*2, len(arr), prime):
-        arr[k] = True
-    for k in range(prime+2, len(arr), 2):
-        pass
-    if k < len(arr):
-        prime = k
-    else:
+    for i in range(prime*2, LIMIT, prime):
+        arr[i] = True
+
+    i = prime + 2
+    while i < LIMIT and arr[i]:
+        i += 2
+
+    if i >= LIMIT:
         break
+    prime = i
 
-
-b = 0
-i = 0
-
-for k in range(prime, 0, -2):
-    if not arr[k] and k%2 != 0:
-        for i in range(i, k):
-            r, _ = divmod((10**i)-1, k)
-            if r == 0:
+j = 0
+for i in range(prime, 0, -2):
+    if not arr[i] and i%2:
+        for j in range(1, i):
+            if ((10**j)-1)%i == 0:
                 break
-            if k-i == 1:
-                print(k)
+        if i-j == 1:
+            print("result:", i)
+            exit(0)
