@@ -1,5 +1,6 @@
-import math
+from itertools import count
 from functools import cache
+import math
 
 print(
     """Euler discovered the remarkable quadratic formula:
@@ -22,12 +23,12 @@ Find the product of the coefficients, a and b, for the quadratic expression
 that produces the maximum number of primes for consecutive values of n,
 starting with n = 0.
 
-expected result: """
+expected result: -59231
+"""
 )
 
 @cache
 def is_prime(n: int) -> bool:
-    print(n)
     if n < 2 or n % 2 == 0:
         return False
     for i in range(2, int(math.sqrt(n))):
@@ -35,15 +36,15 @@ def is_prime(n: int) -> bool:
             return False
     return True
 
+
 counter = 0
 am, bm = 0, 0
 for a in range(-999, 1000):
     for b in range(-999, 1000):
-        print(counter)
-        n = 0
-        while not is_prime(n*n + a*n + b):
-            if n > counter:
-                counter, am, bm = n, a, b
-            n += 1
+        for n in count():
+            if not is_prime(n*n + a*n + b):
+                if n > counter:
+                    counter, am, bm = n, a, b
+                break
 
-print("result:", am+bm)
+print("result:", am*bm)
