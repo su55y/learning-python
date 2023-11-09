@@ -23,11 +23,11 @@ def is_pandigital(m1, m2, res):
             return False
     return True
 
-mp = set()
+sp = set()
 for i in range(1, 200):
     for j in range(1, 5000):
         if is_pandigital(i, j, p := i*j):
-            mp.add(p)
+            sp.add(p)
 
 
-print("result:", sum(mp))
+print("result:", sum(sp))
