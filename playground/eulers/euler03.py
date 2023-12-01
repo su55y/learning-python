@@ -7,14 +7,9 @@ expected result: 6857
 )
 
 
-def result() -> int:
-    LIMIT = 600851475143
-    i = 1
-    while (i := i + 1) * i < LIMIT:
-        while LIMIT % i == 0:
-            LIMIT /= i
-
-    return round(LIMIT)
-
-
-print("result:", result())
+res = 600851475143
+i = 1
+while (i := i + 1) ** 2 < res:
+    while res % i == 0:
+        res //= i
+print("result:", res)
