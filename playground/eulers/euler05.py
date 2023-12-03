@@ -13,16 +13,15 @@ def is_not_prime(n):
         if n % x == 0:
             return True
 
-
-primes = [n for n in range(2, 20) if not is_not_prime(n)]
-
-result = 1
+LIMIT = 20
+primes = [n for n in range(2, LIMIT) if not is_not_prime(n)]
+res = 1
 
 for i in range(len(primes)):
     divisor = primes[i]
-    while divisor <= 20:
+    while divisor <= LIMIT:
         divisor *= primes[i]
     divisor /= primes[i]
-    result *= divisor
+    res *= divisor
 
-print(result)
+print("result:", res)
