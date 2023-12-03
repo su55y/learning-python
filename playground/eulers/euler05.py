@@ -17,11 +17,11 @@ LIMIT = 20
 primes = [n for n in range(2, LIMIT) if not is_not_prime(n)]
 res = 1
 
-for i in range(len(primes)):
-    divisor = primes[i]
+for i in primes:
+    divisor = i
     while divisor <= LIMIT:
-        divisor *= primes[i]
-    divisor /= primes[i]
+        divisor *= i
+    divisor //= i
     res *= divisor
 
 print("result:", res)
