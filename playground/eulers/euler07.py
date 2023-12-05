@@ -1,3 +1,4 @@
+from itertools import count
 import math
 
 print(
@@ -12,16 +13,14 @@ expected result: 104743
 def is_prime(n):
     for x in range(2, math.floor(n**0.5) + 1):
         if n % x == 0:
-            return False
+            return
     return True
 
 
-if __name__ == "__main__":
-    primes = []
-    i = 2
-    while len(primes) < 10_001:
-        if is_prime(i):
-            primes.append(i)
-        i += 1
-
-    print(primes.pop())
+i = 0
+res = 0
+counter = count(2)
+while i < 10_001:
+    if is_prime(res := next(counter)):
+        i+=1
+print("result:", res)
