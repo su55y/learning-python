@@ -6,19 +6,19 @@ expected result: 142913828922
 """
 )
 
-flags = [False for _ in range(2_000_000)]
-flags[0], flags[1] = True, True
-sum, prime = 5, 3
-k = 0
+LIMIT = 2_000_000
+arr = [False for _ in range(LIMIT)]
+arr[0], arr[1] = True, True
+res, prime = 5, 3
 while True:
-    for k in range(prime * 2, len(flags), prime):
-        flags[k] = True
-    k = prime + 2
-    while k < len(flags) and flags[k]:
-        k += 2
-    if k < len(flags):
-        prime = k
-        sum += k
+    for i in range(prime * 2, LIMIT, prime):
+        arr[i] = True
+    i = prime + 2
+    while i < LIMIT and arr[i]:
+        i += 2
+    if i < LIMIT:
+        prime = i
+        res += i
     else:
         break
-print("result:", sum)
+print("result:", res)
