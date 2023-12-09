@@ -31,8 +31,8 @@ def divisors_count(n: int) -> int:
     return c
 
 
-result = 1
+res = 1
 i = count(2)
-while divisors_count(result) < 500:
-    result += next(i)
-print("result", result)
+while divisors_count(res) < 500:
+    res += next(i)
+print("result:", res)
