@@ -27,4 +27,4 @@ for i in range(49, -1, -1):
     res = "%s%s" % (digit, res)
 
 res = ("%s%s" % (reminder, res))[:10]
-print("result:", res[:10])
+print("result:", res)
