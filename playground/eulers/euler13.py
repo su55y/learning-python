@@ -17,14 +17,14 @@ expected result: 5537376230
 
 lines = NUMBER.split("\n", 99)
 
-result = ""
-reminder, digit = 0, 0
+res = ""
+reminder = 0
 for i in range(49, -1, -1):
     sum = reminder
     for j in range(len(lines)):
         sum += int(lines[j][i])
     reminder, digit = divmod(sum, 10)
-    result = "%s%s" % (digit, result)
+    res = "%s%s" % (digit, res)
 
-result = "%s%s" % (reminder, result)
-print("result:", result[:10])
+res = ("%s%s" % (reminder, res))[:10]
+print("result:", res[:10])
