@@ -15,38 +15,29 @@ expected result: 837799
 """
 )
 
-arr = [0 for _ in range(1_000_000)]
-max, max_loc, steps = 0, 0, 0
+LIMIT = 1_000_000
+arr = [0 for _ in range(LIMIT)]
+max, res = 0, 0
 
-
-def refresh(steps_: int, i_: int):
-    global max, max_loc
-    max = steps_
-    max_loc = i_
-
-
-for i in range(1, 1_000_000):
+for i in range(1, LIMIT):
     j = i
     steps = 0
-
-    not_found = True
-    while not_found:
+    while True:
         if j == 1:
-            not_found = False
             arr[i] = steps
             if steps > max:
-                refresh(steps, i)
+                max, res = steps, i
+            break
         elif j < i:
-            not_found = False
             steps += arr[j]
             arr[i] = steps
             if steps > max:
-                refresh(steps, i)
+                max, res = steps, i
+            break
+        if j % 2 == 0:
+            j //= 2
         else:
-            if j % 2 == 0:
-                j //= 2
-            else:
-                j = j * 3 + 1
+            j = j * 3 + 1
         steps += 1
 
-print("result:", max_loc)
+print("result:", res)
