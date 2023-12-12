@@ -35,34 +35,30 @@ lines = ""
 with open("input11.txt") as f:
     lines = f.read().strip().split("\n", 20)
 arr = [[int(s) for s in lines[i].split()] for i in range(len(lines))]
-max = 0
+res = 0
 
 # left to right
 for i in range(len(arr)):
     for j in range(17):
-        mul = arr[i][j] * arr[i][j + 1] * arr[i][j + 2] * arr[i][j + 3]
-        if mul > max:
-            max = mul
+        if (m := arr[i][j] * arr[i][j+1] * arr[i][j+2] * arr[i][j+3]) > res:
+            res = m
 
 # up to down
 for i in range(17):
     for j in range(len(arr[i])):
-        mul = arr[i][j] * arr[i + 1][j] * arr[i + 2][j] * arr[i + 3][j]
-        if mul > max:
-            max = mul
+        if (m := arr[i][j] * arr[i+1][j] * arr[i+2][j] * arr[i+3][j]) > res:
+            res = m
 
 # first diagonal
 for i in range(17):
     for j in range(17):
-        mul = arr[i][j] * arr[i + 1][j + 1] * arr[i + 2][j + 2] * arr[i + 3][j + 3]
-        if mul > max:
-            max = mul
+        if (m := arr[i][j] * arr[i+1][j+1] * arr[i+2][j+2] * arr[i+3][j+3]) > res:
+            res = m
 
 # second diagonal
 for i in range(3, 20):
     for j in range(17):
-        mul = arr[i][j] * arr[i - 1][j + 1] * arr[i - 2][j + 2] * arr[i - 3][j + 3]
-        if mul > max:
-            max = mul
+        if (m := arr[i][j] * arr[i-1][j+1] * arr[i-2][j+2] * arr[i-3][j+3]) > res:
+            res = m
 
-print("result:", max)
+print("result:", res)
