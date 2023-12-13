@@ -8,25 +8,20 @@ expected result: 1366
 
 
 def multiply(s: str) -> str:
-    res, reminder, n = "", 0, 0
+    res, reminder = "", 0
     for i in range(len(s) - 1, -1, -1):
         n = int(s[i]) * 2 + reminder
         reminder, n = divmod(n, 10)
         res = "%s%s" % (n, res)
     if reminder > 0:
-        res = "%s%s" % (reminder, res)
+        return "%s%s" % (reminder, res)
     return res
 
 
-def sum_up(s: str) -> int:
-    res = 0
-    for i in range(len(s)):
-        res += int(s[i])
-    return res
-
-
-inp = "2"
+s = "2"
 for i in range(999):
-    inp = multiply(inp)
-
-print("result:", sum_up(inp))
+    s = multiply(s)
+res = 0
+for i in range(len(s)):
+    res += int(s[i])
+print("result:", res)
