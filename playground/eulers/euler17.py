@@ -36,12 +36,10 @@ def numb_len(n: int):
             return 9  # seventeen
 
     if n < 100:
-        # mb divmod
         return numb_len(n - (n % 10)) + numb_len(n % 10)
     if n % 100 == 0:
         return numb_len(n // 100) + 7
     return numb_len(n // 100) + 10 + numb_len(n % 100)
 
 
-res = reduce(lambda p, n: p + numb_len(n), range(1000), len("onethousand"))
-print("result:", res)
+print("result:", reduce(lambda p, n: p + numb_len(n), range(1000), len("onethousand")))
