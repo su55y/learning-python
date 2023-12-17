@@ -11,6 +11,4 @@ expected result: 648
 )
 
 s = str(reduce(lambda p, n: p * n, range(1, 101)))
-result = reduce(lambda p, n: p + int(s[n]), range(len(s)), 0)
-
-print("result:", result)
+print("result:", reduce(lambda p, n: p + int(s[n]), range(len(s)), 0))
