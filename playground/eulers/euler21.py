@@ -14,19 +14,19 @@ expected result: 31626
 )
 
 def divisors_sum(inp: int) -> int:
-    sum = 0
+    res = 0
     for i in range(1, int(math.sqrt(abs(inp)))+1):
         if inp%i == 0:
             if i == inp//i:
-                sum += i
+                res += i
             else:
-                sum += i + (inp / i)
-    return int(sum - inp)
+                res += i + (inp // i)
+    return res - inp
 
-sum, j = 0, 0
+res, j = 0, 0
 for i in range(1, 10_000):
     j = divisors_sum(i)
     if i == divisors_sum(j) and i != j:
-        sum += i
+        res += i
 
-print("result:", sum)
+print("result:", res)
