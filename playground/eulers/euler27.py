@@ -1,4 +1,4 @@
-from itertools import count
+from itertools import count,product
 from functools import cache
 import math
 
@@ -39,12 +39,11 @@ def is_prime(n: int) -> bool:
 
 counter = 0
 am, bm = 0, 0
-for a in range(-999, 1000):
-    for b in range(-999, 1000):
-        for n in count():
-            if not is_prime(n*n + a*n + b):
-                if n > counter:
-                    counter, am, bm = n, a, b
-                break
+for a, b in product(range(-999,1000),repeat=2):
+    for n in count():
+        if not is_prime(n*n + a*n + b):
+            if n > counter:
+                counter, am, bm = n, a, b
+            break
 
 print("result:", am*bm)
