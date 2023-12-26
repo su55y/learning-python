@@ -1,3 +1,4 @@
+from itertools import product
 print(
     """Consider all integer combinations of a^b for 2 <= a <= 5 and 2 <= b <= 5:
     2^2=4,  2^3=8,   2^4=16,  2^5=32
@@ -15,7 +16,6 @@ expected result: 9183
 )
 
 s = set()
-for i in range(2, 101):
-    for j in range(2, 101):
-        s.add(i**j)
+for i, j in product(range(2,101), repeat=2):
+    s.add(i**j)
 print("result:", len(s))
