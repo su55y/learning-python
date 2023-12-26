@@ -14,11 +14,8 @@ expected result: 669171001
 """
 )
 
-sum, num, skip = 1, 1, 0
+res, num, skip = 1, 1, 0
 for i in range(2000):
-    if i%4 == 0:
-        skip +=2
-    for j in range(skip):
-        num+=1
-    sum+=num
-print("result:", sum)
+    if i%4 == 0: skip+=2
+    res+=(num:=num+skip)
+print("result:", res)
