@@ -13,6 +13,7 @@ expected result: 443839
 """
 )
 
+
 def sum5pows(n: int) -> int:
     s = 0
     while n > 0:
@@ -20,8 +21,9 @@ def sum5pows(n: int) -> int:
         s += rest**5
     return s
 
+
 res = 0
 for i in range(22, 9**5 * 4):
     if i == sum5pows(i):
-        res+=i
+        res += i
 print("result:", res)
