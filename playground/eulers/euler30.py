@@ -14,14 +14,14 @@ expected result: 443839
 )
 
 def sum5pows(n: int) -> int:
-    sum = 0
+    s = 0
     while n > 0:
         n, rest = divmod(n, 10)
-        sum += rest**5
-    return sum
+        s += rest**5
+    return s
 
-sum = 0
+res = 0
 for i in range(22, 9**5 * 4):
     if i == sum5pows(i):
-        sum+=i
-print("result:", sum)
+        res+=i
+print("result:", res)
