@@ -1,3 +1,4 @@
+import itertools
 import sys
 
 print(
@@ -15,24 +16,28 @@ expected result: 5482660
 )
 
 
-arr = [(i * (3*i - 1))//2 for i in range(2500)]
+arr = [(i * (3 * i - 1)) // 2 for i in range(2500)]
+
 
 def is_pentagonal(val: int, low: int, high: int) -> bool:
     global arr
     if high < low:
         return False
-    mid = low+(high-low)//2
+    mid = low + (high - low) // 2
     if arr[mid] > val:
-        return is_pentagonal(val,low, mid-1)
+        return is_pentagonal(val, low, mid - 1)
     elif arr[mid] < val:
-        return is_pentagonal(val, mid+1, high)
+        return is_pentagonal(val, mid + 1, high)
     return True
 
 
 res = sys.maxsize
-for i in range(1, 2500):
-    for j in range(i+1, 2500):
-        if is_pentagonal(arr[j]-arr[i], 0, 2499) and is_pentagonal(arr[j]+arr[i], 0, 2499) and arr[j]-arr[i] < res:
-                res = arr[j] - arr[i]
+for i, j in itertools.combinations(range(1, 2500), 2):
+    if (
+        is_pentagonal(arr[j] - arr[i], 0, 2499)
+        and is_pentagonal(arr[j] + arr[i], 0, 2499)
+        and arr[j] - arr[i] < res
+    ):
+        res = arr[j] - arr[i]
 
 print("result:", res)
