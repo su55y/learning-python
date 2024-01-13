@@ -8,4 +8,4 @@ expected result: 9110846700
 """
 )
 
-print("result:", str(reduce(lambda p, n: p + n**n,range(1, 1001), 0))[-10:])
+print("result:", str(reduce(lambda p, n: p + n**n, range(1, 1001)))[-10:])
