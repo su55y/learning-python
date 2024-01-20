@@ -1,5 +1,5 @@
-from random import random
 from pathlib import Path
+import secrets
 import sqlite3
 import unittest
 
@@ -17,7 +17,7 @@ def init_db(file: Path):
 class TestMySQL(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.file = Path("/tmp/storage%s.db" % str(random())[2:10])
+        cls.file = Path("/tmp/storage%s.db" % secrets.token_hex(8))
         if cls.file.exists():
             cls.file.unlink()
         init_db(cls.file)
