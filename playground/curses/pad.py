@@ -17,31 +17,39 @@ def main(scr: "curses._CursesWindow"):
     pad_pos = 0
 
     pad_content = read_self_lines()
-    for i, line in enumerate(pad_content):
-        pad.addstr("%d %s" % (i + 1, line))
 
+    def add_lines(pad):
+        for i, line in enumerate(pad_content):
+            pad.addstr("%d %s" % (i + 1, line))
+
+    def handle_resize(pad):
+        pad.clear()
+        h, w = scr.getmaxyx()
+        pad = curses.newpad(pad_height, w)
+        add_lines(pad)
+        pad.refresh(pad_pos, 0, 0, 0, h - 1, w - 1)
+        scr.refresh()
+        return pad
+
+    add_lines(pad)
     while 1:
         h, w = scr.getmaxyx()
-        pad.refresh(pad_pos, 0, 0, 0, h - 1, w)
+        pad.refresh(pad_pos, 0, 0, 0, h - 1, w - 1)
 
         match chr(ch := scr.getch()):
             case "j":
-                if pad_pos < pad.getyx()[0] - h:
-                    pad_pos += 1
+                pad_pos = min(pad_pos + 1, pad.getyx()[0] - h)
             case "k":
-                if pad_pos > 0:
-                    pad_pos -= 1
+                pad_pos = max(0, pad_pos - 1)
             case "g":
                 pad_pos = 0
             case "G":
-                pad_pos = len(pad_content) - h
+                pad_pos = pad.getyx()[0] - h
             case "q":
                 break
             case _:
                 if ch == curses.KEY_RESIZE:
-                    h, *_ = scr.getmaxyx()
-                    while pad_pos > pad.getyx()[0] - h:
-                        pad_pos -= 1
+                    pad = handle_resize(pad)
 
 
 if __name__ == "__main__":
