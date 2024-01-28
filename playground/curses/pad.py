@@ -1,5 +1,14 @@
+from enum import IntEnum
 import curses
 from typing import List
+
+
+class Key(IntEnum):
+    j = ord("j")
+    k = ord("k")
+    g = ord("g")
+    G = ord("G")
+    q = ord("q")
 
 
 def read_self_lines() -> List[str]:
@@ -10,6 +19,8 @@ def read_self_lines() -> List[str]:
 def main(scr: "curses._CursesWindow"):
     curses.use_default_colors()
     curses.curs_set(0)
+    scr.keypad(True)
+    curses.mousemask(-1)
     scr.refresh()
 
     pad_height = (2 << 14) - 1
@@ -36,20 +47,25 @@ def main(scr: "curses._CursesWindow"):
         h, w = scr.getmaxyx()
         pad.refresh(pad_pos, 0, 0, 0, h - 1, w - 1)
 
-        match chr(ch := scr.getch()):
-            case "j":
+        match scr.getch():
+            case Key.j | curses.KEY_DOWN:
                 pad_pos = min(pad_pos + 1, pad.getyx()[0] - h)
-            case "k":
+            case Key.k | curses.KEY_UP:
                 pad_pos = max(0, pad_pos - 1)
-            case "g":
+            case Key.g | curses.KEY_LEFT:
                 pad_pos = 0
-            case "G":
+            case Key.G | curses.KEY_RIGHT:
                 pad_pos = pad.getyx()[0] - h
-            case "q":
+            case Key.q:
                 break
-            case _:
-                if ch == curses.KEY_RESIZE:
-                    pad = handle_resize(pad)
+            case curses.KEY_RESIZE:
+                pad = handle_resize(pad)
+            case curses.KEY_MOUSE:
+                match curses.getmouse()[-1]:
+                    case curses.BUTTON4_PRESSED:
+                        pad_pos = max(0, pad_pos - 1)
+                    case curses.BUTTON5_PRESSED:
+                        pad_pos = min(pad_pos + 1, pad.getyx()[0] - h)
 
 
 if __name__ == "__main__":
