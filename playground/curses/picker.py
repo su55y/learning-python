@@ -25,13 +25,17 @@ class Picker:
     def __init__(self, lines: Sequence[str]) -> None:
         self.lines = list(map(Line, lines))
         self.index = 0
+        self.gravity = 1
+        self.last_scroll_pos = 0
 
     def move_up(self) -> None:
+        self.gravity = 0
         self.index -= 1
         if self.index < 0:
             self.index = len(self.lines) - 1
 
     def move_down(self) -> None:
+        self.gravity = 1
         self.index += 1
         if self.index >= len(self.lines):
             self.index = 0
@@ -48,11 +52,22 @@ class Picker:
 
         self.refresh_lines()
         current_line = self.index + 1
+        scroll_top = self.last_scroll_pos
 
-        # calculate how many lines we should scroll, relative to the top
-        scroll_top = 0
-        if current_line > max_rows:
-            scroll_top = current_line - max_rows
+        if self.gravity == 1:
+            if current_line > max_rows:
+                scroll_top += 1
+            if current_line == len(self.lines):
+                scroll_top = max(current_line - max_rows, 0)
+            if current_line == 1:
+                scroll_top = 0
+        else:
+            if current_line == scroll_top:
+                scroll_top = max(scroll_top - 1, 0)
+            if current_line == len(self.lines):
+                scroll_top = max(current_line - max_rows, 0)
+
+        self.last_scroll_pos = scroll_top
 
         for line in self.lines[scroll_top : scroll_top + max_rows]:
             if line.is_active:
@@ -64,7 +79,12 @@ class Picker:
             y += 1
 
         screen.attron(curses.color_pair(2))
-        status = " active: %d" % current_line
+        status = " current: %d, scroll_top: %d, max_rows: %d, gravity: %s" % (
+            current_line,
+            scroll_top,
+            max_rows,
+            "Down" if self.gravity else "Up",
+        )
         screen.addnstr(max_y - 1, x, f"{status:<{max_x-2}}", max_x - 2)
         screen.attroff(curses.color_pair(2))
 
@@ -101,7 +121,9 @@ class Picker:
 
 
 if __name__ == "__main__":
-    lines = [f"{chr(x)}" * random.randint(30, 80) for x in range(97, 123)]
-    lines += [" "] + lines
+    lines = [
+        f"{x-96} " + (f"{chr(x)}" * random.randint(30, 80)) for x in range(97, 108)
+    ]
+    # lines += [" "] + lines
     choice = Picker(lines).start()
     print(f"Your choice: {lines[choice]!r}")
