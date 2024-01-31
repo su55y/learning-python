@@ -1,6 +1,7 @@
 import curses
 from dataclasses import dataclass
 from enum import IntEnum
+import random
 from typing import Sequence
 
 
@@ -43,13 +44,12 @@ class Picker:
         screen.clear()
         x, y = 1, 0
         max_y, max_x = screen.getmaxyx()
-        max_rows = max_y - y
+        max_rows = max_y - y - 1
 
         self.refresh_lines()
         current_line = self.index + 1
 
         # calculate how many lines we should scroll, relative to the top
-        # scroll_top = current_line - max_rows if current_line > max_rows else 0
         scroll_top = 0
         if current_line > max_rows:
             scroll_top = current_line - max_rows
@@ -62,6 +62,11 @@ class Picker:
             else:
                 screen.addnstr(y, x, line.text, max_x - 2)
             y += 1
+
+        screen.attron(curses.color_pair(2))
+        status = " active: %d" % current_line
+        screen.addnstr(max_y - 1, x, f"{status:<{max_x-2}}", max_x - 2)
+        screen.attroff(curses.color_pair(2))
 
         screen.refresh()
 
@@ -83,6 +88,7 @@ class Picker:
             curses.use_default_colors()
             curses.curs_set(0)
             curses.init_pair(1, curses.COLOR_GREEN, curses.COLOR_BLACK)
+            curses.init_pair(2, curses.COLOR_BLACK, curses.COLOR_GREEN)
         except:
             curses.initscr()
 
@@ -93,8 +99,6 @@ class Picker:
     def start(self):
         return curses.wrapper(self._start)
 
-
-import random
 
 if __name__ == "__main__":
     lines = [f"{chr(x)}" * random.randint(30, 80) for x in range(97, 123)]
