@@ -1,6 +1,7 @@
 import curses
 from dataclasses import dataclass
 from enum import IntEnum
+import os
 import random
 from typing import Sequence
 
@@ -26,19 +27,15 @@ class Picker:
         self.lines = list(map(Line, lines))
         self.index = 0
         self.gravity = 1
-        self.last_scroll_pos = 0
+        self.scroll_top = 0
 
     def move_up(self) -> None:
         self.gravity = 0
-        self.index -= 1
-        if self.index < 0:
-            self.index = len(self.lines) - 1
+        self.index = (self.index - 1) % len(self.lines)
 
     def move_down(self) -> None:
         self.gravity = 1
-        self.index += 1
-        if self.index >= len(self.lines):
-            self.index = 0
+        self.index = (self.index + 1) % len(self.lines)
 
     def refresh_lines(self) -> None:
         for i in range(len(self.lines)):
@@ -51,25 +48,18 @@ class Picker:
         max_rows = max_y - y - 1
 
         self.refresh_lines()
-        current_line = self.index + 1
-        scroll_top = self.last_scroll_pos
-
         if self.gravity == 1:
-            if current_line > max_rows:
-                scroll_top += 1
-            if current_line == len(self.lines):
-                scroll_top = max(current_line - max_rows, 0)
-            if current_line == 1:
-                scroll_top = 0
+            if (self.index + 1) - self.scroll_top > max_rows:
+                self.scroll_top = (self.index + 1) - max_rows
+            if self.index + 1 < self.scroll_top:
+                self.scroll_top = self.index
         else:
-            if current_line == scroll_top:
-                scroll_top = max(scroll_top - 1, 0)
-            if current_line == len(self.lines):
-                scroll_top = max(current_line - max_rows, 0)
+            if self.index + 1 == self.scroll_top:
+                self.scroll_top = max(self.scroll_top - 1, 0)
+            if self.index + 1 == len(self.lines):
+                self.scroll_top = max((self.index + 1) - max_rows, 0)
 
-        self.last_scroll_pos = scroll_top
-
-        for line in self.lines[scroll_top : scroll_top + max_rows]:
+        for line in self.lines[self.scroll_top : self.scroll_top + max_rows]:
             if line.is_active:
                 screen.attron(curses.color_pair(1))
                 screen.addnstr(y, x, line.text, max_x - 2)
@@ -79,9 +69,9 @@ class Picker:
             y += 1
 
         screen.attron(curses.color_pair(2))
-        status = " current: %d, scroll_top: %d, max_rows: %d, gravity: %s" % (
-            current_line,
-            scroll_top,
+        status = " index: %d, self.scroll_top: %d, max_rows: %d, gravity: %s" % (
+            self.index,
+            self.scroll_top,
             max_rows,
             "Down" if self.gravity else "Up",
         )
@@ -121,9 +111,10 @@ class Picker:
 
 
 if __name__ == "__main__":
+    w, _ = os.get_terminal_size()
     lines = [
-        f"{x-96} " + (f"{chr(x)}" * random.randint(30, 80)) for x in range(97, 108)
+        "%d %s" % (x - 96, f"{chr(x)}" * random.randint(1, w - 1))
+        for x in range(97, 123)
     ]
-    # lines += [" "] + lines
     choice = Picker(lines).start()
     print(f"Your choice: {lines[choice]!r}")
