@@ -1,6 +1,6 @@
 import curses
 from dataclasses import dataclass
-from enum import IntEnum
+from enum import Enum, IntEnum
 import os
 import random
 from typing import Sequence
@@ -23,41 +23,59 @@ class Key(IntEnum):
 
 
 class Picker:
+    class Gravity(Enum):
+        DOWN = 0
+        UP = 1
+
+        def __str__(self) -> str:
+            return str(self.name)
+
     def __init__(self, lines: Sequence[str]) -> None:
         self.lines = list(map(Line, lines))
         self.index = 0
-        self.gravity = 1
+        self.gravity = self.Gravity.DOWN
         self.scroll_top = 0
 
     def move_up(self) -> None:
-        self.gravity = 0
+        self.gravity = self.Gravity.UP
         self.index = (self.index - 1) % len(self.lines)
 
     def move_down(self) -> None:
-        self.gravity = 1
+        self.gravity = self.Gravity.DOWN
         self.index = (self.index + 1) % len(self.lines)
 
     def refresh_lines(self) -> None:
         for i in range(len(self.lines)):
             self.lines[i].is_active = i == self.index
 
+    def update_scroll_top(self, max_rows: int) -> None:
+        match self.gravity:
+            case self.Gravity.DOWN:
+                if (self.index + 1) - self.scroll_top > max_rows:
+                    self.scroll_top = (self.index + 1) - max_rows
+                if self.index + 1 < self.scroll_top:
+                    self.scroll_top = self.index
+            case self.Gravity.UP:
+                if self.index + 1 == self.scroll_top:
+                    self.scroll_top = max(self.scroll_top - 1, 0)
+                if self.index + 1 == len(self.lines):
+                    self.scroll_top = max((self.index + 1) - max_rows, 0)
+
+    @property
+    def status(self) -> str:
+        return " index: %d, scroll_top: %d, gravity: %s" % (
+            self.index,
+            self.scroll_top,
+            self.gravity,
+        )
+
     def draw(self, screen: "curses._CursesWindow") -> None:
         screen.clear()
         x, y = 1, 0
         max_y, max_x = screen.getmaxyx()
         max_rows = max_y - y - 1
-
+        self.update_scroll_top(max_rows)
         self.refresh_lines()
-        if self.gravity == 1:
-            if (self.index + 1) - self.scroll_top > max_rows:
-                self.scroll_top = (self.index + 1) - max_rows
-            if self.index + 1 < self.scroll_top:
-                self.scroll_top = self.index
-        else:
-            if self.index + 1 == self.scroll_top:
-                self.scroll_top = max(self.scroll_top - 1, 0)
-            if self.index + 1 == len(self.lines):
-                self.scroll_top = max((self.index + 1) - max_rows, 0)
 
         for line in self.lines[self.scroll_top : self.scroll_top + max_rows]:
             if line.is_active:
@@ -69,15 +87,8 @@ class Picker:
             y += 1
 
         screen.attron(curses.color_pair(2))
-        status = " index: %d, self.scroll_top: %d, max_rows: %d, gravity: %s" % (
-            self.index,
-            self.scroll_top,
-            max_rows,
-            "Down" if self.gravity else "Up",
-        )
-        screen.addnstr(max_y - 1, x, f"{status:<{max_x-2}}", max_x - 2)
+        screen.addnstr(max_y - 1, x, f"{self.status:<{max_x-2}}", max_x - 2)
         screen.attroff(curses.color_pair(2))
-
         screen.refresh()
 
     def run_loop(self, screen: "curses._CursesWindow") -> int:
