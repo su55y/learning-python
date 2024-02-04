@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from enum import Enum, IntEnum
 import os
 import random
+import string
 from typing import Sequence
 
 
@@ -122,10 +123,10 @@ class Picker:
 
 
 if __name__ == "__main__":
-    w, _ = os.get_terminal_size()
+    w, h = os.get_terminal_size()
     lines = [
-        "%d %s" % (x - 96, f"{chr(x)}" * random.randint(1, w - 1))
-        for x in range(97, 123)
+        f"{i+1} {random.choice(string.ascii_letters) * random.randint(1, w - 1)}"
+        for i in range(h * 2)
     ]
     choice = Picker(lines).start()
     print(f"Your choice: {lines[choice]!r}")
