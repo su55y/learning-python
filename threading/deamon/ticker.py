@@ -1,4 +1,3 @@
-from datetime import datetime
 import sys
 import threading
 import time
@@ -7,14 +6,14 @@ import queue
 
 def ticker(q: queue.Queue):
     while True:
-        timestamp = datetime.now().strftime("%H:%M:%S")
-        sys.stdout.write(f"tick {timestamp}")
-        sys.stdout.flush()
-        sys.stdout.write("\033[2K\033[1E")
+        time_now = time.strftime("%T")
         if q.qsize() and q.get_nowait():
-            sys.stdout.write(f"{timestamp} tack\n")
+            text = f"\r{time_now} tack\n"
         else:
-            time.sleep(1)
+            text = f"\rtick {time_now}"
+        sys.stdout.write(text)
+        sys.stdout.flush()
+        time.sleep(1)
 
 
 def main():
