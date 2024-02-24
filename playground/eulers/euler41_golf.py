@@ -10,4 +10,4 @@ while 1:
 
 for i in range(L-1,0,-2):
     s=str(i)
-    if not a[i] and all(str(n) not in s for n in range(1,len(s)+1)):print(i);break
+    if not a[i] and all(str(n) in s for n in range(1,len(s)+1)):print(i);break
