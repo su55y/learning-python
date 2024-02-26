@@ -1,4 +1,4 @@
-from collections.abc import Sequence
+from collections.abc import Generator, Sequence
 from enum import IntEnum
 from io import TextIOWrapper
 from typing import Optional, Tuple
@@ -15,7 +15,7 @@ class Netpbm:
         self,
         magic_number: MagicNumber,
         file: str,
-        data: Sequence,
+        data: Sequence | Generator,
         dimensions: Tuple[int, int],
         max_value: Optional[int] = None,
     ) -> None:
@@ -48,9 +48,8 @@ class Netpbm:
                 self._write_rgb_sequence(file)
 
     def _write_matrix(self, file: TextIOWrapper):
-        _, h = self.dimensions
-        for i in range(h):
-            file.write("%s\n" % " ".join(str(n) for n in self.data[i]))
+        for row in self.data:
+            file.write("%s\n" % " ".join(str(n) for n in row))
 
     def _write_rgb_sequence(self, file: TextIOWrapper):
         for color in self.data:
