@@ -1,6 +1,8 @@
-from collections.abc import Generator, Sequence
+from collections.abc import Sequence
 from enum import IntEnum
 from typing import IO, Any, Optional, Tuple
+
+from .utils import is_onedimensional
 
 
 class MagicNumber(IntEnum):
@@ -16,7 +18,7 @@ class Netpbm:
         self,
         magic_number: MagicNumber,
         file: str,
-        data: Sequence | Generator,
+        data: Sequence,
         dimensions: Tuple[int, int],
         max_value: Optional[int] = None,
     ) -> None:
@@ -59,7 +61,7 @@ class Netpbm:
             case MagicNumber.P3:
                 self._write_rgb_sequence(file)
             case MagicNumber.P4:
-                self._write_matrix_bin(file)
+                self._write_sequence_bin(file)
             case MagicNumber.P6:
                 self._write_rgb_sequence_bin(file)
 
@@ -75,5 +77,21 @@ class Netpbm:
         for color in self.data:
             file.write(color)
 
-    def _write_matrix_bin(self, file: IO[Any]):
-        file.write(self.data)
+    def _write_sequence_bin(self, file: IO[Any]):
+        if isinstance(self.data, bytearray):
+            file.write(self.data)
+            return
+        assert isinstance(self.data, Sequence), "data should be sequence"
+        assert (
+            is_onedimensional(self.data) == True
+        ), "only singledimensional sequence allowed"
+        assert max(self.data) == 1, "max value allowed is 1"
+        assert min(self.data) == 0, "min value allowed is 0"
+        byte_groups = (self.data[i : i + 8] for i in range(0, len(self.data), 8))
+        data = bytearray()
+        for group in byte_groups:
+            byte = 0
+            for i, bit in enumerate(group):
+                byte |= bit << (7 - i)
+            data.append(byte)
+        file.write(data)
