@@ -51,7 +51,7 @@ class Netpbm:
         file.write(("P%d\n" % self.magic_number).encode("ascii"))
         file.write(("%d %d\n" % self.dimensions).encode("ascii"))
         match self.magic_number:
-            case MagicNumber.P2 | MagicNumber.P3:
+            case MagicNumber.P2 | MagicNumber.P3 | MagicNumber.P6:
                 file.write(("%d\n" % self.max_value).encode("ascii"))
 
     def _write_data(self, file: IO[Any]):
@@ -74,8 +74,9 @@ class Netpbm:
             file.write("%d %d %d\n" % color)
 
     def _write_rgb_sequence_bin(self, file: IO[Any]):
-        for color in self.data:
-            file.write(color)
+        file.write(self.data)
+        # for color in self.data:
+        #     file.write(color)
 
     def _write_sequence_bin(self, file: IO[Any]):
         if isinstance(self.data, bytearray):
