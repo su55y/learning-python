@@ -52,3 +52,11 @@ class TestNetpbm(unittest.TestCase):
         data = bytearray(b"".join(random.choice(colors) for _ in range(w * h)))
         err = Netpbm(MagicNumber.P6, "/tmp/testb.ppm", data, (w, h), max_value).write()
         self.assertIsNone(err)
+
+    def test_ppm_bin_from_sequence(self):
+        max_value = 0xFF
+        colors = ((0xFF, 0x00, 0xFF), (0xFF, 0xFF, 0x00), (0x00, 0xFF, 0xFF))
+        w, h = self.dimensions
+        data = [random.choice(colors) for _ in range(w * h)]
+        err = Netpbm(MagicNumber.P6, "/tmp/testb2.ppm", data, (w, h), max_value).write()
+        self.assertIsNone(err)

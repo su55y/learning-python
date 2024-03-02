@@ -74,9 +74,11 @@ class Netpbm:
             file.write("%d %d %d\n" % color)
 
     def _write_rgb_sequence_bin(self, file: IO[Any]):
-        file.write(self.data)
-        # for color in self.data:
-        #     file.write(color)
+        if isinstance(self.data, bytearray):
+            file.write(self.data)
+            return
+        assert isinstance(self.data, Sequence), "data should be sequence"
+        file.write(bytearray(b"".join(bytes(color) for color in self.data)))
 
     def _write_sequence_bin(self, file: IO[Any]):
         if isinstance(self.data, bytearray):
