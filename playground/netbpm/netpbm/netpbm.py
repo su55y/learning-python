@@ -10,6 +10,7 @@ class MagicNumber(IntEnum):
     P2 = 2
     P3 = 3
     P4 = 4
+    P5 = 5
     P6 = 6
 
 
@@ -51,7 +52,7 @@ class Netpbm:
         file.write(("P%d\n" % self.magic_number).encode("ascii"))
         file.write(("%d %d\n" % self.dimensions).encode("ascii"))
         match self.magic_number:
-            case MagicNumber.P2 | MagicNumber.P3 | MagicNumber.P6:
+            case MagicNumber.P2 | MagicNumber.P3 | MagicNumber.P5 | MagicNumber.P6:
                 file.write(("%d\n" % self.max_value).encode("ascii"))
 
     def _write_data(self, file: IO[Any]):
@@ -62,6 +63,8 @@ class Netpbm:
                 self._write_rgb_sequence(file)
             case MagicNumber.P4:
                 self._write_sequence_bin(file)
+            case MagicNumber.P5:
+                self._write_gray_sequence_bin(file)
             case MagicNumber.P6:
                 self._write_rgb_sequence_bin(file)
 
@@ -79,6 +82,13 @@ class Netpbm:
             return
         assert isinstance(self.data, Sequence), "data should be sequence"
         file.write(bytearray(b"".join(bytes(color) for color in self.data)))
+
+    def _write_gray_sequence_bin(self, file: IO[Any]):
+        if isinstance(self.data, bytearray):
+            file.write(self.data)
+            return
+        assert isinstance(self.data, Sequence), "data should be sequence"
+        file.write(bytearray(self.data))
 
     def _write_sequence_bin(self, file: IO[Any]):
         if isinstance(self.data, bytearray):

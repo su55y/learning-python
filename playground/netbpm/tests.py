@@ -44,9 +44,24 @@ class TestNetpbm(unittest.TestCase):
         self.assertIsNotNone(Netpbm(*args([2])).write())
         self.assertIsNotNone(Netpbm(*args((i for i in range(1)))).write())
 
+    def test_pgm_bin(self):
+        max_value = 0x10
+        colors = tuple(range(max_value + 1))
+        w, h = self.dimensions
+        data = bytearray(b"".join(bytes(random.choice(colors)) for _ in range(w * h)))
+        err = Netpbm(MagicNumber.P5, "/tmp/test.pgm", data, (w, h), max_value).write()
+        self.assertIsNone(err)
+
+    def test_pgm_bin_from_sequence(self):
+        max_value = 0x10
+        colors = tuple(range(max_value + 1))
+        w, h = self.dimensions
+        data = tuple(random.choice(colors) for _ in range(w * h))
+        err = Netpbm(MagicNumber.P5, "/tmp/testb2.pgm", data, (w, h), max_value).write()
+        self.assertIsNone(err)
+
     def test_ppm_bin(self):
         max_value = 0xFF
-        colors = ((0xFF, 0x00, 0xFF), (0xFF, 0xFF, 0x00), (0x00, 0xFF, 0xFF))
         colors = (b"\xff\x00\xff", b"\xff\xff\x00", b"\x00\xff\xff")
         w, h = self.dimensions
         data = bytearray(b"".join(random.choice(colors) for _ in range(w * h)))
