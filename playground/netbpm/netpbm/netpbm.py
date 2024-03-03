@@ -1,6 +1,7 @@
 from collections.abc import Sequence
 from enum import IntEnum
-from typing import IO, Any, Optional, Tuple
+from pathlib import Path
+from typing import IO, Any, Optional, Tuple, Union
 
 from .utils import is_onedimensional
 
@@ -18,7 +19,7 @@ class Netpbm:
     def __init__(
         self,
         magic_number: MagicNumber,
-        file: str,
+        file: Union[str, Path],
         data: Sequence,
         dimensions: Tuple[int, int],
         max_value: Optional[int] = None,
