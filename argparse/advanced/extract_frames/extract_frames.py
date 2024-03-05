@@ -55,7 +55,9 @@ def parse_args():
         try:
             path = Path(arg)
             if not re.match(r"^.*%(?:0\d)?d\..+$", path.name):
-                raise argparse.ArgumentTypeError(f"invalid format '{path.name}'")
+                raise argparse.ArgumentTypeError(
+                    f"invalid format {path.name!r}, should include decimal format specifier %d"
+                )
             if not path.parent.exists():
                 if "-y" not in argv[1:]:
                     resp = input(
@@ -68,7 +70,7 @@ def parse_args():
         except KeyboardInterrupt:
             exit(0)
         except Exception as e:
-            raise argparse.ArgumentTypeError(f"parse format error: {e}")
+            raise argparse.ArgumentTypeError(f"parsing format error: {e}")
         else:
             return path
 
