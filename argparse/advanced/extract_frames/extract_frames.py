@@ -2,11 +2,11 @@ import argparse
 from dataclasses import dataclass
 import json
 import math
+from pathlib import Path
 import re
 import subprocess as sp
-from pathlib import Path
 from sys import argv
-from typing import Dict, List, Optional
+from typing import Optional
 
 FFMPEG = "ffmpeg"
 FFPROBE = "ffprobe"
@@ -15,7 +15,9 @@ MONTAGE = "montage"
 EXTRACT_CMD = f"{FFMPEG} %s -i %s -vf thumbnail=%s,setpts=N/TB -r 1 -vframes %d %s"
 EXTRACT_ALL_CMD = f"{FFMPEG} %s -i %s -vframes %d %s"
 SILENCE_OPTS = "-hide_banner -loglevel warning -stats"
-PROBE_CMD = f"{FFPROBE} -v quiet -show_streams -select_streams v:0 -of json %s"
+PROBE_CMD = f"""{FFPROBE} -v quiet -select_streams v:0\
+    -show_entries stream=width:stream=height:stream=duration:format=duration:stream=r_frame_rate\
+    -of json=compact=1 -print_format json %s"""
 MOTAGE_CMD = f"{MONTAGE} -geometry +0+0 -tile %s %s %s"
 
 DEFAULT_COUNT = 10
@@ -116,57 +118,43 @@ def parse_args():
     return parser.parse_args()
 
 
-def choose_video_stream(streams: List[Dict]) -> Optional[Dict]:
-    for stream in streams:
-        if stream.get("codec_type") == "video":
-            return stream
-
-
 def get_probe(file: str) -> Probe:
-    try:
-        cmd = PROBE_CMD % file
-        out = sp.check_output(cmd, shell=True, stderr=sp.DEVNULL, timeout=10)
-        if not out:
-            raise Exception("can't get output from cmd '%s'" % cmd)
-        match probe := json.loads(out.decode()):
-            case {
-                "streams": [
-                    {
-                        "codec_type": str(),
-                        "width": int(),
-                        "height": int(),
-                        "duration": str(),
-                        "r_frame_rate": str(),
-                    }
-                ]
-            }:
-                streams = probe.get("streams")
-                if not isinstance(streams, List) or len(streams) < 1:
-                    exit("can't find streams")
-                if not (vstream := choose_video_stream(streams)):
-                    exit("can't find video stream")
+    cmd = PROBE_CMD % file
+    out = sp.check_output(cmd, shell=True, stderr=sp.DEVNULL, timeout=10)
+    if not out:
+        raise Exception("can't get output from cmd '%s'" % cmd)
+    probe = json.loads(out.decode())
+    if not (streams := probe.get("streams")) or len(streams) != 1:
+        raise Exception("can't get video stream from probe:\n%r" % probe)
 
-                probe_dict = {}
-                for key in Probe.__annotations__:
-                    if not (value := vstream.get(key)):
-                        exit("can't find %s" % key)
-                    match key:
-                        case "duration":
-                            if not re.match(r"^(\d+(?:\.\d+)?)$", value):
-                                exit("invalid duration '%s'" % value)
-                            value = float(value)
-                        case "r_frame_rate":
-                            if not re.match(r"^\d+(?:\.\d+)?\/\d+$", value):
-                                exit("invalid r_frame_rate: %s" % value)
-                            value = float(eval(value))
-                        case "width" | "height":
-                            value = int(value)
-                    probe_dict[key] = value
+    v = streams[0]
+    probe_dict = {}
+    for key in Probe.__annotations__:
+        if not (value := v.get(key)):
+            # handle edge cases
+            if key == "duration":
+                if not (f := probe.get("format")) or not (d := f.get("duration")):
+                    raise Exception("can't get duration from probe:\n%r" % probe)
+                if not re.match(r"^(\d+(?:\.\d+)?)$", d):
+                    exit("invalid duration '%s'" % d)
+                probe_dict["duration"] = float(d)
+                continue
+            else:
+                exit("can't find %s in probe:\n%r" % (key, probe))
+        match key:
+            case "duration":
+                if not re.match(r"^(\d+(?:\.\d+)?)$", value):
+                    exit("invalid duration '%s'" % value)
+                value = float(value)
+            case "r_frame_rate":
+                if not re.match(r"^\d+(?:\.\d+)?\/\d+$", value):
+                    exit("invalid r_frame_rate: %s" % value)
+                value = float(eval(value))
+            case "width" | "height":
+                value = int(value)
+        probe_dict[key] = value
 
-                return Probe(**probe_dict)
-        raise Exception("unexpected probe format")
-    except Exception as e:
-        exit(repr(e))
+    return Probe(**probe_dict)
 
 
 def generate_preview(args: argparse.Namespace, probe: Probe):
@@ -212,7 +200,10 @@ if __name__ == "__main__":
         exit(f"{FFPROBE} executable is not available")
 
     args = parse_args()
-    probe = get_probe(args.file)
+    try:
+        probe = get_probe(args.file)
+    except Exception as e:
+        exit("error while parsing probe: %s" % e)
     interval = probe.calc_interval(args.count)
     verbosity = "" if args.verbose else SILENCE_OPTS
     if interval >= 2:
