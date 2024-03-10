@@ -18,23 +18,25 @@ expected result: 16695334890
 )
 
 res = 0
-divisors = [2, 3, 5, 7, 11, 13, 17]
+
 
 def check_prop(s: str):
-    if s[0] == '0':
+    if s.startswith("0"):
         return
     for i in range(1, 8):
-        if int(s[i: i+3])%divisors[i-1] != 0:
+        if int(s[i : i + 3]) % (2, 3, 5, 7, 11, 13, 17)[i - 1] != 0:
             return
     global res
     res += int(s)
+
 
 def all_perms(pre: str, s: str):
     if len(s) == 0:
         check_prop(pre)
     else:
         for i in range(len(s)):
-            all_perms(pre+s[i:i+1], s[:i]+s[i+1:])
+            all_perms(pre + s[i : i + 1], s[:i] + s[i + 1 :])
+
 
 all_perms("", "0123456789")
 print("result:", res)
