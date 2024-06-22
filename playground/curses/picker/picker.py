@@ -71,25 +71,29 @@ class Picker:
         )
 
     def draw(self, screen: "curses._CursesWindow") -> None:
-        screen.clear()
-        x, y = 1, 0
+        # screen.clear()
+        screen.refresh()
+        x, y = 0, 0
         max_y, max_x = screen.getmaxyx()
         max_rows = max_y - y - 1
         self.update_scroll_top(max_rows)
         self.refresh_lines()
 
         for line in self.lines[self.scroll_top : self.scroll_top + max_rows]:
+            color_pair = 0
             if line.is_active:
-                screen.attron(curses.color_pair(1))
-                screen.addnstr(y, x, line.text, max_x - 2)
-                screen.attroff(curses.color_pair(1))
-            else:
-                screen.addnstr(y, x, line.text, max_x - 2)
+                color_pair = curses.color_pair(1)
+
+            text = f"{line.text:<{max_x}}"
+            screen.addnstr(y, x, text, max_x, color_pair)
             y += 1
 
-        screen.attron(curses.color_pair(2))
-        screen.addnstr(max_y - 1, x, f"{self.status:<{max_x-2}}", max_x - 2)
-        screen.attroff(curses.color_pair(2))
+        try:
+            screen.addnstr(
+                max_y - 1, x, f"{self.status:<{max_x}}", max_x, curses.color_pair(2)
+            )
+        except:
+            pass
         screen.refresh()
 
     def run_loop(self, screen: "curses._CursesWindow") -> int:
