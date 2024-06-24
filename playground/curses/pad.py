@@ -23,11 +23,10 @@ def main(scr: "curses._CursesWindow"):
     curses.mousemask(-1)
     scr.refresh()
 
-    pad_height = (2 << 14) - 1
+    pad_content = read_self_lines()
+    pad_height = len(pad_content) + 1
     pad = curses.newpad(pad_height, scr.getmaxyx()[-1])
     pad_pos = 0
-
-    pad_content = read_self_lines()
 
     def add_lines(pad):
         for i, line in enumerate(pad_content):
