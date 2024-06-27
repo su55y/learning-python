@@ -14,6 +14,7 @@ class Key(IntEnum):
     q = ord("q")
     l = ord("l")
     h = ord("h")
+    r = ord("r")
 
 
 @dataclass
@@ -50,10 +51,20 @@ class LinesPrinter:
                     self.scroll_top = max((self.index + 1) - max_rows, 0)
 
     def run(self, stdscr: "curses._CursesWindow") -> None:
-        curses.curs_set(0)
-        curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_YELLOW)
-        curses.init_pair(2, curses.COLOR_WHITE, 0)
-        curses.init_pair(3, curses.COLOR_YELLOW, 0)
+        self.config_curses()
+        self._run(stdscr)
+
+    def config_curses(self) -> None:
+        try:
+            curses.use_default_colors()
+            curses.curs_set(0)
+            curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_YELLOW)
+            curses.init_pair(2, curses.COLOR_WHITE, 0)
+            curses.init_pair(3, curses.COLOR_YELLOW, 0)
+        except:
+            curses.initscr()
+
+    def _run(self, stdscr: "curses._CursesWindow") -> None:
         max_y, max_x = stdscr.getmaxyx()
         status_window = curses.newwin(1, max_x, 0, 0)
         lines_window = curses.newwin(max_y, max_x - 1, 1, 0)
@@ -67,8 +78,11 @@ class LinesPrinter:
                 self.index,
                 self._debug_info,
             )
-            text = f"{text:^{max_x - 1}}"
-            s.addnstr(0, 0, text, max_x - 2, curses.color_pair(1))
+            text = f"{text:^{max_x}}"
+            try:
+                s.addnstr(0, 0, text, max_x, curses.color_pair(1))
+            except:
+                pass
             s.refresh()
 
         def status_thread_loop(s: "curses._CursesWindow"):
@@ -86,6 +100,7 @@ class LinesPrinter:
             stdscr.refresh()
             try:
                 self.print_lines(lines_window)
+                redraw_status(status_window)
             except Exception as e:
                 input("Exception: %s" % e)
                 exit(1)
@@ -101,6 +116,14 @@ class LinesPrinter:
                     self.gravity = 1
                 case Key.l | curses.KEY_RIGHT:
                     self.switch_to_pad(lines_window)
+                case Key.g | curses.KEY_HOME:
+                    self.index = 0
+                    self.gravity = 0
+                case Key.G | curses.KEY_END:
+                    self.index = len(self.lines) - 1
+                    self.gravity = 1
+                case Key.r:
+                    stdscr.clear()
 
     def print_status(self, status_window: "curses._CursesWindow") -> None:
         _, max_x = status_window.getmaxyx()
@@ -114,8 +137,8 @@ class LinesPrinter:
 
         def redraw_pad(pad, max_x):
             for i, line in enumerate(self.raw_lines):
-                text = f"{i:{self.index_width}d} {line}"
-                pad.addnstr(i, 0, text, min(len(text), max_x))
+                text = f"{i+1:{self.index_width}d}) {line}"
+                pad.addnstr(i, 0, text, min(len(text), max_x), curses.color_pair(2))
 
         redraw_pad(pad, max_x)
         pad.refresh(pad_pos, 0, 1, 0, max_y - 1, max_x - 1)
@@ -128,11 +151,18 @@ class LinesPrinter:
             match s.getch():
                 case Key.h | curses.KEY_LEFT | Key.q:
                     s.clear()
+                    self.scroll_top = pad_pos
+                    self.index = pad_pos
+                    self.gravity = 0
                     break
                 case Key.j | curses.KEY_DOWN:
                     pad_pos = min(pad_pos + 1, pad.getyx()[0] - max_y)
                 case Key.k | curses.KEY_UP:
                     pad_pos = max(0, pad_pos - 1)
+                case Key.g | curses.KEY_HOME:
+                    pad_pos = 0
+                case Key.G | curses.KEY_END:
+                    pad_pos = len(self.raw_lines) - max_y
 
     def print_lines(self, s: "curses._CursesWindow") -> None:
         max_y, max_x = s.getmaxyx()
@@ -145,7 +175,7 @@ class LinesPrinter:
         ):
             text = f"%s %{self.index_width}d) %s\n" % (
                 ">" if line.is_active else " ",
-                i + self.scroll_top,
+                i + self.scroll_top + 1,
                 line.text,
             )
             width = min(max_x - 1, len(text))
