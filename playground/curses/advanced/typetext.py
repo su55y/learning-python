@@ -94,41 +94,23 @@ class TextProducer:
     def __init__(self, game_words: list[str]) -> None:
         assert len(game_words) > 0
         self.words = game_words
-        self.chars_ = self.build_chars_alt(self.words)
         self.chars = self.build_chars(self.words)
-        # self.pos = CursorPos(length=len(self.chars))
         self.chars_count = sum(map(len, game_words))
         self.pos = CursorPos(length=sum(map(len, game_words)))
 
     def update_char(self, char: str) -> bool:
         pos = 0
-        for i in range(len(self.chars_)):
-            for j in range(len(self.chars_[i])):
+        for i in range(len(self.chars)):
+            for j in range(len(self.chars[i])):
                 if pos == self.pos.current:
-                    self.chars_[i][j].input = char
+                    self.chars[i][j].input = char
                     return True
                 pos += 1
-        print(f"can't increment with {char!r}")
         return False
 
     def move_forward(self, char: str) -> None:
-        # if not self.pos.is_increment_valid:
-        #     return
-        # self.chars[self.pos.current].input = char
-        # self.chars_[self.pos.current].input = char
         if self.update_char(char):
             self.pos.increment()
-        # self.check_if_next_space()
-
-    def check_if_next_space(self) -> None:
-        if self.chars[self.pos.current].char == " ":
-            self.pos.increment()
-
-    def check_if_prev_space(self) -> None:
-        if not self.pos.is_decrement_valid:
-            return
-        if self.chars[self.pos.current].char == " ":
-            self.pos.decrement()
 
     def move_backwards(self) -> None:
         if not self.pos.is_decrement_valid:
@@ -137,21 +119,18 @@ class TextProducer:
             self.pos.decrement()
         if not self.update_char(""):
             self.pos.increment()
-        # self.chars[self.pos.current].input = ""
-        # self.check_if_prev_space()
 
-    def produce_text_alt(self) -> list[TextChunk]:
+    def produce_text(self) -> list[TextChunk]:
         text: list[TextChunk] = list()
         i = 0
-        while i < len(self.chars_):
-            word = self.chars_[i]
+        while i < len(self.chars):
+            word = self.chars[i]
             j = 0
             while j < len(word):
-                # for j in range(len(self.chars_[i])):
                 chunk_text = ""
-                chunk_state = self.chars_[i][j].state
-                while j < len(word) and chunk_state == self.chars_[i][j].state:
-                    chunk_text += self.chars_[i][j].char
+                chunk_state = self.chars[i][j].state
+                while j < len(word) and chunk_state == self.chars[i][j].state:
+                    chunk_text += self.chars[i][j].char
                     j += 1
                 if len(chunk_text):
                     text.append(TextChunk(chunk_text, chunk_state))
@@ -159,32 +138,11 @@ class TextProducer:
             i += 1
         return text
 
-    def produce_text(self) -> list[TextChunk]:
-        text: list[TextChunk] = list()
-        i = 0
-        while i < len(self.chars):
-            chunk_text = ""
-            chunk_state = self.chars[i].state
-            while i < len(self.chars) and chunk_state == self.chars[i].state:
-                chunk_text += self.chars[i].char
-                i += 1
-            if len(chunk_text):
-                text.append(TextChunk(chunk_text, chunk_state))
-
-        return text
-
     @staticmethod
-    def build_chars_alt(words_: list[str]) -> list[list[Char]]:
+    def build_chars(words_: list[str]) -> list[list[Char]]:
         chars: list[list[Char]] = list()
         for word in words_:
             chars.append(list(map(Char, word)))
-        return chars
-
-    @staticmethod
-    def build_chars(words_: list[str]) -> list[Char]:
-        chars: list[Char] = list()
-        for word in words_:
-            chars.extend(map(Char, word))
         return chars
 
 
@@ -193,41 +151,20 @@ def main(stdscr: "curses._CursesWindow"):
     curses.curs_set(0)
     curses.init_pair(1, curses.COLOR_YELLOW, 0)
     curses.init_pair(2, curses.COLOR_RED, 0)
-    curses.init_pair(3, 0, curses.COLOR_YELLOW)
-    curses.init_pair(4, 0, curses.COLOR_RED)
-    curses.init_pair(5, 0, curses.COLOR_WHITE)
+    curses.init_pair(3, 0, curses.COLOR_WHITE)
     fg_yellow = curses.color_pair(1)
     fg_red = curses.color_pair(2)
-    bg_yellow = curses.color_pair(3)
-    bg_red = curses.color_pair(4)
-    bg_white = curses.color_pair(5)
+    bg_white = curses.color_pair(3)
 
     raw_game_words = rnd_words()
-    game_words_str = " ".join(raw_game_words)
-    # game_words_len = words_len(game_words)
-    game_words_len = len(game_words_str)
     index = -1
     tp = TextProducer(raw_game_words)
-
-    max_y, max_x = stdscr.getmaxyx()
-
-    def words_by_rows(mx) -> list[list[str]]:
-        rows = [[]]
-        i = 0
-        for word in raw_game_words:
-            l = len("".join(rows[i])) + len(rows[i]) + len(word)
-            if l >= mx:
-                i += 1
-                rows.append([word])
-            else:
-                rows[i].append(word)
-        return rows
 
     def print_words() -> None:
         stdscr.clear()
         color_pair = 0
         pos = 0
-        for word in tp.chars_:
+        for word in tp.chars:
             for char in word:
                 color_pair = 0
                 if char.state == CharState.Correct:
@@ -239,33 +176,6 @@ def main(stdscr: "curses._CursesWindow"):
                 stdscr.addnstr(char.char, 1, color_pair)
                 pos += 1
             stdscr.addnstr(" ", 1, 0)
-
-    def print_words_() -> None:
-        my, mx = stdscr.getmaxyx()
-        color_pair = 0
-        rows = words_by_rows(mx)
-        char_index = 0
-        for y, row in enumerate(rows):
-            x = 0
-            for _, word in enumerate(row):
-                for i, ch in enumerate(word):
-                    if char_index <= index:
-                        color_pair = fg_yellow
-                    else:
-                        color_pair = 0
-                    try:
-                        stdscr.addnstr(y, x, ch, 1, color_pair)
-                    except:
-                        pass
-                    x += 1
-                    char_index += 1
-                try:
-                    stdscr.addnstr(y, x, " ", 1)
-                except:
-                    pass
-                x += 1
-                char_index += 1
-            stdscr.refresh()
 
     print_words()
     stdscr.refresh()
@@ -279,7 +189,6 @@ def main(stdscr: "curses._CursesWindow"):
         elif ch in valid_keys:
             tp.move_forward(chr(ch))
             index += 1
-        # stdscr.clrtoeol()
         print_words()
         stdscr.refresh()
 
