@@ -1,7 +1,8 @@
 from enum import IntEnum
+import curses
+from curses.textpad import rectangle as curses_rect
 from functools import lru_cache
 import string
-import curses
 import random
 
 valid_keys = set(map(ord, string.ascii_lowercase))
@@ -157,27 +158,43 @@ def main(stdscr: "curses._CursesWindow"):
     bg_white = curses.color_pair(3)
 
     raw_game_words = rnd_words()
-    index = -1
     tp = TextProducer(raw_game_words)
 
-    def print_words() -> None:
-        stdscr.clear()
+    def print_char(y, x, char, pos) -> None:
         color_pair = 0
-        pos = 0
-        for word in tp.chars:
-            for char in word:
-                color_pair = 0
-                if char.state == CharState.Correct:
-                    color_pair = fg_yellow
-                elif char.state == CharState.Wrong:
-                    color_pair = fg_red
-                if tp.pos.current == pos:
-                    color_pair = bg_white
-                stdscr.addnstr(char.char, 1, color_pair)
-                pos += 1
-            stdscr.addnstr(" ", 1, 0)
+        if char.state == CharState.Correct:
+            color_pair = fg_yellow
+        elif char.state == CharState.Wrong:
+            color_pair = fg_red
+        if tp.pos.current == pos:
+            color_pair = bg_white
+        stdscr.addnstr(y, x, char.char, 1, color_pair)
 
-    print_words()
+    def print_words_by_rows() -> None:
+        start_y, start_x = 2, 2
+        y, x = start_y, start_x
+        max_y, max_x = stdscr.getmaxyx()
+        pos = 0
+        row_len = 0
+        for word in tp.chars:
+            if (row_len + len(word) + 3) >= max_x:
+                y += 1
+                x = start_x
+                row_len = 0
+            row_len += len(word) + 1
+            if y >= max_y - 1:
+                break
+            for char in word:
+                print_char(y, x, char, pos)
+                pos += 1
+                x += 1
+            stdscr.addnstr(y, x, " ", 1, 0)
+            x += 1
+
+        if y + 2 < max_y:
+            curses_rect(stdscr, 0, 0, y + 2, max_x - 1)
+
+    print_words_by_rows()
     stdscr.refresh()
     while True:
         ch = stdscr.getch()
@@ -185,11 +202,9 @@ def main(stdscr: "curses._CursesWindow"):
             continue
         if ch == 263:
             tp.move_backwards()
-            index = max(-1, index - 1)
         elif ch in valid_keys:
             tp.move_forward(chr(ch))
-            index += 1
-        print_words()
+        print_words_by_rows()
         stdscr.refresh()
 
 
