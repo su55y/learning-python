@@ -147,49 +147,54 @@ class TextProducer:
         return chars
 
 
-def main(stdscr: "curses._CursesWindow"):
-    curses.use_default_colors()
-    curses.curs_set(0)
-    curses.init_pair(1, curses.COLOR_YELLOW, 0)
-    curses.init_pair(2, curses.COLOR_RED, 0)
-    curses.init_pair(3, 0, curses.COLOR_WHITE)
-    curses.init_pair(4, curses.COLOR_BLACK, curses.COLOR_YELLOW)
-    fg_yellow = curses.color_pair(1)
-    fg_red = curses.color_pair(2)
-    bg_white = curses.color_pair(3)
-    status_pair = curses.color_pair(4)
+class Game:
+    def __init__(self) -> None:
+        self.tp = TextProducer(rnd_words())
+        self.keys_pressed = 0
 
-    raw_game_words = rnd_words()
-    tp = TextProducer(raw_game_words)
-    status_msg = ""
-    keys_pressed = 0
+        self.fg_yellow = 0
+        self.fg_red = 0
+        self.bg_white = 0
+        self.status_color = 0
 
-    max_y, max_x = stdscr.getmaxyx()
-    game_win = curses.newwin(max_y - 2, max_x, 0, 0)
-    status_win = curses.newwin(1, max_x, max_y - 1, 0)
+    def run(self, stdscr: "curses._CursesWindow") -> None:
+        curses.use_default_colors()
+        curses.curs_set(0)
+        curses.init_pair(1, curses.COLOR_YELLOW, 0)
+        curses.init_pair(2, curses.COLOR_RED, 0)
+        curses.init_pair(3, 0, curses.COLOR_WHITE)
+        curses.init_pair(4, curses.COLOR_BLACK, curses.COLOR_YELLOW)
+        self.fg_yellow = curses.color_pair(1)
+        self.fg_red = curses.color_pair(2)
+        self.bg_white = curses.color_pair(3)
+        self.status_color = curses.color_pair(4)
+        self._run_loop(stdscr)
 
-    def print_status():
-        status_str = f" keys pressed: {keys_pressed}"
-        status_win.addnstr(0, 0, f"{status_str:<{max_x - 1}}", max_x, status_pair)
-        status_win.refresh()
+    def _run_loop(self, stdscr: "curses._CursesWindow") -> None:
+        max_y, max_x = stdscr.getmaxyx()
+        game_win = curses.newwin(max_y - 2, max_x, 0, 0)
+        status_win = curses.newwin(1, max_x, max_y - 1, 0)
+        stdscr.refresh()
+        while True:
+            self.print_words_by_rows(game_win)
+            self.print_status(status_win)
+            ch = stdscr.getch()
+            if ord(" ") == ch:
+                continue
+            if ch == 263:
+                self.tp.move_backwards()
+            elif ch in valid_keys:
+                self.tp.move_forward(chr(ch))
+                self.keys_pressed += 1
+            stdscr.refresh()
 
-    def print_char(y, x, char, pos) -> None:
-        color_pair = 0
-        if char.state == CharState.Correct:
-            color_pair = fg_yellow
-        elif char.state == CharState.Wrong:
-            color_pair = fg_red
-        if tp.pos.current == pos:
-            color_pair = bg_white
-        game_win.addnstr(y, x, char.char, 1, color_pair)
-
-    def print_words_by_rows() -> None:
+    def print_words_by_rows(self, game_win: "curses._CursesWindow") -> None:
         start_y, start_x = 2, 2
         y, x = start_y, start_x
         max_y, max_x = game_win.getmaxyx()
         pos = 0
         row_len = 0
-        for word in tp.chars:
+        for word in self.tp.chars:
             if (row_len + len(word) + 3) >= max_x:
                 y += 1
                 x = start_x
@@ -198,7 +203,7 @@ def main(stdscr: "curses._CursesWindow"):
             if y >= max_y - 1:
                 break
             for char in word:
-                print_char(y, x, char, pos)
+                self.print_char(game_win, y, x, char, pos)
                 pos += 1
                 x += 1
             game_win.addnstr(y, x, " ", 1, 0)
@@ -208,25 +213,39 @@ def main(stdscr: "curses._CursesWindow"):
             curses_rect(game_win, 0, 0, y + 2, max_x - 1)
         game_win.refresh()
 
-    stdscr.refresh()
-    while True:
-        print_words_by_rows()
-        print_status()
-        ch = stdscr.getch()
-        if ord(" ") == ch:
-            continue
-        if ch == 263:
-            tp.move_backwards()
-        elif ch in valid_keys:
-            tp.move_forward(chr(ch))
-            keys_pressed += 1
-        stdscr.refresh()
+    def print_char(
+        self,
+        game_win: "curses._CursesWindow",
+        y: int,
+        x: int,
+        char: Char,
+        pos: int,
+    ) -> None:
+        color_pair = 0
+        if char.state == CharState.Correct:
+            color_pair = self.fg_yellow
+        elif char.state == CharState.Wrong:
+            color_pair = self.fg_red
+        if self.tp.pos.current == pos:
+            color_pair = self.bg_white
+        game_win.addnstr(y, x, char.char, 1, color_pair)
+
+    def print_status(self, status_win: "curses._CursesWindow") -> None:
+        _, max_x = status_win.getmaxyx()
+        status_str = f" keys pressed: {self.keys_pressed}"
+        status_win.addnstr(0, 0, f"{status_str:<{max_x - 1}}", max_x, self.status_color)
+        status_win.refresh()
 
 
-if __name__ == "__main__":
+def main():
+    game = Game()
     try:
-        curses.wrapper(main)
+        curses.wrapper(game.run)
     except KeyboardInterrupt:
         pass
     except Exception as e:
-        print(f"ERR: {e}")
+        print(f"error: {e}")
+
+
+if __name__ == "__main__":
+    main()
