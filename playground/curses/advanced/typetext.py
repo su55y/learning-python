@@ -160,6 +160,9 @@ def main(stdscr: "curses._CursesWindow"):
     raw_game_words = rnd_words()
     tp = TextProducer(raw_game_words)
 
+    max_y, max_x = stdscr.getmaxyx()
+    game_win = curses.newwin(max_y - 2, max_x, 0, 0)
+
     def print_char(y, x, char, pos) -> None:
         color_pair = 0
         if char.state == CharState.Correct:
@@ -168,12 +171,12 @@ def main(stdscr: "curses._CursesWindow"):
             color_pair = fg_red
         if tp.pos.current == pos:
             color_pair = bg_white
-        stdscr.addnstr(y, x, char.char, 1, color_pair)
+        game_win.addnstr(y, x, char.char, 1, color_pair)
 
     def print_words_by_rows() -> None:
         start_y, start_x = 2, 2
         y, x = start_y, start_x
-        max_y, max_x = stdscr.getmaxyx()
+        max_y, max_x = game_win.getmaxyx()
         pos = 0
         row_len = 0
         for word in tp.chars:
@@ -188,15 +191,16 @@ def main(stdscr: "curses._CursesWindow"):
                 print_char(y, x, char, pos)
                 pos += 1
                 x += 1
-            stdscr.addnstr(y, x, " ", 1, 0)
+            game_win.addnstr(y, x, " ", 1, 0)
             x += 1
 
         if y + 2 < max_y:
-            curses_rect(stdscr, 0, 0, y + 2, max_x - 1)
+            curses_rect(game_win, 0, 0, y + 2, max_x - 1)
+        game_win.refresh()
 
-    print_words_by_rows()
     stdscr.refresh()
     while True:
+        print_words_by_rows()
         ch = stdscr.getch()
         if ord(" ") == ch:
             continue
@@ -204,7 +208,6 @@ def main(stdscr: "curses._CursesWindow"):
             tp.move_backwards()
         elif ch in valid_keys:
             tp.move_forward(chr(ch))
-        print_words_by_rows()
         stdscr.refresh()
 
 
