@@ -153,15 +153,25 @@ def main(stdscr: "curses._CursesWindow"):
     curses.init_pair(1, curses.COLOR_YELLOW, 0)
     curses.init_pair(2, curses.COLOR_RED, 0)
     curses.init_pair(3, 0, curses.COLOR_WHITE)
+    curses.init_pair(4, curses.COLOR_BLACK, curses.COLOR_YELLOW)
     fg_yellow = curses.color_pair(1)
     fg_red = curses.color_pair(2)
     bg_white = curses.color_pair(3)
+    status_pair = curses.color_pair(4)
 
     raw_game_words = rnd_words()
     tp = TextProducer(raw_game_words)
+    status_msg = ""
+    keys_pressed = 0
 
     max_y, max_x = stdscr.getmaxyx()
     game_win = curses.newwin(max_y - 2, max_x, 0, 0)
+    status_win = curses.newwin(1, max_x, max_y - 1, 0)
+
+    def print_status():
+        status_str = f" keys pressed: {keys_pressed}"
+        status_win.addnstr(0, 0, f"{status_str:<{max_x - 1}}", max_x, status_pair)
+        status_win.refresh()
 
     def print_char(y, x, char, pos) -> None:
         color_pair = 0
@@ -201,6 +211,7 @@ def main(stdscr: "curses._CursesWindow"):
     stdscr.refresh()
     while True:
         print_words_by_rows()
+        print_status()
         ch = stdscr.getch()
         if ord(" ") == ch:
             continue
@@ -208,6 +219,7 @@ def main(stdscr: "curses._CursesWindow"):
             tp.move_backwards()
         elif ch in valid_keys:
             tp.move_forward(chr(ch))
+            keys_pressed += 1
         stdscr.refresh()
 
 
