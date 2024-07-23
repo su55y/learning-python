@@ -85,19 +85,15 @@ class CursorPos:
         return self._current - 1 >= self.min
 
 
-class TextChunk:
-    def __init__(self, chars: str, state: CharState) -> None:
-        self.state = state
-        self.chars = chars
-
-
-class TextProducer:
+class CharsClass:
     def __init__(self, game_words: list[str]) -> None:
         assert len(game_words) > 0
         self.words = game_words
         self.chars = self.build_chars(self.words)
         self.chars_count = sum(map(len, game_words))
         self.pos = CursorPos(length=sum(map(len, game_words)))
+        self._correct_chars = 0
+        self._wrong_chars = 0
 
     def update_char(self, char: str) -> bool:
         pos = 0
@@ -121,23 +117,19 @@ class TextProducer:
         if not self.update_char(""):
             self.pos.increment()
 
-    def produce_text(self) -> list[TextChunk]:
-        text: list[TextChunk] = list()
-        i = 0
-        while i < len(self.chars):
-            word = self.chars[i]
-            j = 0
-            while j < len(word):
-                chunk_text = ""
-                chunk_state = self.chars[i][j].state
-                while j < len(word) and chunk_state == self.chars[i][j].state:
-                    chunk_text += self.chars[i][j].char
-                    j += 1
-                if len(chunk_text):
-                    text.append(TextChunk(chunk_text, chunk_state))
-            text.append(TextChunk(" ", CharState.Default))
-            i += 1
-        return text
+    @property
+    def correct_chars(self) -> int:
+        correct = 0
+        for w in self.chars:
+            correct += len(list(filter(lambda c: c.state == CharState.Correct, w)))
+        return correct
+
+    @property
+    def wrong_chars(self) -> int:
+        wrong = 0
+        for w in self.chars:
+            wrong += len(list(filter(lambda c: c.state == CharState.Wrong, w)))
+        return wrong
 
     @staticmethod
     def build_chars(words_: list[str]) -> list[list[Char]]:
@@ -149,13 +141,15 @@ class TextProducer:
 
 class Game:
     def __init__(self) -> None:
-        self.tp = TextProducer(rnd_words())
+        self.chars_class = CharsClass(rnd_words())
         self.keys_pressed = 0
 
         self.fg_yellow = 0
         self.fg_red = 0
         self.bg_white = 0
         self.status_color = 0
+
+        self.status_fmt = " correct: {correct}  wrong: {wrong}"
 
     def run(self, stdscr: "curses._CursesWindow") -> None:
         curses.use_default_colors()
@@ -182,9 +176,9 @@ class Game:
             if ord(" ") == ch:
                 continue
             if ch == 263:
-                self.tp.move_backwards()
+                self.chars_class.move_backwards()
             elif ch in valid_keys:
-                self.tp.move_forward(chr(ch))
+                self.chars_class.move_forward(chr(ch))
                 self.keys_pressed += 1
             stdscr.refresh()
 
@@ -194,7 +188,7 @@ class Game:
         max_y, max_x = game_win.getmaxyx()
         pos = 0
         row_len = 0
-        for word in self.tp.chars:
+        for word in self.chars_class.chars:
             if (row_len + len(word) + 3) >= max_x:
                 y += 1
                 x = start_x
@@ -226,15 +220,22 @@ class Game:
             color_pair = self.fg_yellow
         elif char.state == CharState.Wrong:
             color_pair = self.fg_red
-        if self.tp.pos.current == pos:
+        if self.chars_class.pos.current == pos:
             color_pair = self.bg_white
         game_win.addnstr(y, x, char.char, 1, color_pair)
 
     def print_status(self, status_win: "curses._CursesWindow") -> None:
         _, max_x = status_win.getmaxyx()
-        status_str = f" keys pressed: {self.keys_pressed}"
+        # status_str = f" keys pressed: {self.keys_pressed}"
+        status_str = self.format_status()
         status_win.addnstr(0, 0, f"{status_str:<{max_x - 1}}", max_x, self.status_color)
         status_win.refresh()
+
+    def format_status(self) -> str:
+        return self.status_fmt.format(
+            correct=self.chars_class.correct_chars,
+            wrong=self.chars_class.wrong_chars,
+        )
 
 
 def main():
