@@ -1,9 +1,9 @@
-from enum import IntEnum
 import curses
 from curses.textpad import rectangle as curses_rect
+from enum import IntEnum
 from functools import lru_cache
-import string
 import random
+import string
 import threading
 import time
 
@@ -19,7 +19,6 @@ words = list(
 )
 
 rnd_words = lambda: random.choices(words, k=words_count)
-words_len = lambda words_: len(" ".join(words_))
 
 
 @lru_cache(len(valid_chars))
@@ -166,11 +165,6 @@ class Game:
         self.status_color = curses.color_pair(4)
         self._run_loop(stdscr)
 
-    def _run_status_loop(self, status_win: "curses._CursesWindow") -> None:
-        while True:
-            self.print_status(status_win)
-            time.sleep(1)
-
     def _run_loop(self, stdscr: "curses._CursesWindow") -> None:
         max_y, max_x = stdscr.getmaxyx()
         game_win = curses.newwin(max_y - 2, max_x, 0, 0)
@@ -234,6 +228,11 @@ class Game:
         if self.chars_class.pos.current == pos:
             color_pair = self.bg_white
         game_win.addnstr(y, x, char.char, 1, color_pair)
+
+    def _run_status_loop(self, status_win: "curses._CursesWindow") -> None:
+        while True:
+            self.print_status(status_win)
+            time.sleep(1)
 
     def print_status(self, status_win: "curses._CursesWindow") -> None:
         _, max_x = status_win.getmaxyx()
