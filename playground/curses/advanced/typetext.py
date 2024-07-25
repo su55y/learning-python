@@ -4,6 +4,8 @@ from curses.textpad import rectangle as curses_rect
 from functools import lru_cache
 import string
 import random
+import threading
+import time
 
 valid_keys = set(map(ord, string.ascii_lowercase))
 valid_keys.add(ord(" "))
@@ -164,11 +166,20 @@ class Game:
         self.status_color = curses.color_pair(4)
         self._run_loop(stdscr)
 
+    def _run_status_loop(self, status_win: "curses._CursesWindow") -> None:
+        while True:
+            self.print_status(status_win)
+            time.sleep(1)
+
     def _run_loop(self, stdscr: "curses._CursesWindow") -> None:
         max_y, max_x = stdscr.getmaxyx()
         game_win = curses.newwin(max_y - 2, max_x, 0, 0)
         status_win = curses.newwin(1, max_x, max_y - 1, 0)
         stdscr.refresh()
+        status_thread = threading.Thread(
+            target=self._run_status_loop, daemon=True, args=(status_win,)
+        )
+        status_thread.start()
         while True:
             self.print_words_by_rows(game_win)
             self.print_status(status_win)
@@ -226,13 +237,13 @@ class Game:
 
     def print_status(self, status_win: "curses._CursesWindow") -> None:
         _, max_x = status_win.getmaxyx()
-        # status_str = f" keys pressed: {self.keys_pressed}"
         status_str = self.format_status()
         status_win.addnstr(0, 0, f"{status_str:<{max_x - 1}}", max_x, self.status_color)
         status_win.refresh()
 
     def format_status(self) -> str:
-        return self.status_fmt.format(
+        timenow = " %s" % time.strftime("%T")
+        return timenow + self.status_fmt.format(
             correct=self.chars_class.correct_chars,
             wrong=self.chars_class.wrong_chars,
         )
