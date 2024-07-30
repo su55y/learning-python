@@ -162,7 +162,7 @@ class Game:
         self.bg_white = 0
         self.status_color = 0
 
-        self.status_fmt = " correct: {correct}  wrong: {wrong}, left: {left}"
+        self.status_fmt = " correct: {correct} | wrong: {wrong} | left: {left}"
 
     def run(self, stdscr: "curses._CursesWindow") -> None:
         curses.use_default_colors()
@@ -250,8 +250,8 @@ class Game:
         elapsed = time.perf_counter() - self.start_perf_time
         wpm = 60 / elapsed * self.chars_class.correct_words
         acc = (self.chars_class.correct_chars / self.chars_class.chars_count) * 100
-        stats = f"time: {elapsed:.1f}s wpm: {wpm:.2f} acc: {acc:.2f}%"
-        self.status_fmt = f"{self.status_fmt} {stats}"
+        stats = f"time: {elapsed:.1f}s | wpm: {wpm:.2f} | acc: {acc:.2f}%"
+        self.status_fmt = f"{self.status_fmt} | {stats}"
         while True:
             # TODO: reset option
             stdscr.getch()
