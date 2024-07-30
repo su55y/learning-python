@@ -11,7 +11,7 @@ valid_keys = set(map(ord, string.ascii_lowercase))
 valid_keys.add(ord(" "))
 valid_chars = {" ", *string.ascii_lowercase}
 
-words_count = 20
+words_count = 10
 
 LOREM = "Lorem ipsum dolor sit amet, officia excepteur ex fugiat reprehenderit enim labore culpa sint ad nisi Lorem pariatur mollit ex esse exercitation amet. Nisi anim cupidatat excepteur officia. Reprehenderit nostrud nostrud ipsum Lorem est aliquip amet voluptate voluptate dolor minim nulla est proident. Nostrud officia pariatur ut officia. Sit irure elit esse ea nulla sunt ex occaecat reprehenderit commodo officia dolor Lorem duis laboris cupidatat officia voluptate. Culpa proident adipisicing id nulla nisi laboris ex in Lorem sunt duis officia eiusmod. Aliqua reprehenderit commodo ex non excepteur duis sunt velit enim. Voluptate laboris sint cupidatat ullamco ut ea consectetur et est culpa et culpa duis."
 words = list(
@@ -56,7 +56,7 @@ class Char:
 class CursorPos:
     def __init__(self, length: int) -> None:
         self.min = 0
-        self.max = max(0, length - 1)
+        self.max = max(0, length)
         self._current = 0
 
     def increment(self) -> None:
@@ -132,6 +132,14 @@ class CharsClass:
             wrong += len(list(filter(lambda c: c.state == CharState.Wrong, w)))
         return wrong
 
+    @property
+    def correct_words(self) -> int:
+        c = 0
+        for word in self.chars:
+            if all(ch.input == ch.char for ch in word):
+                c += 1
+        return c
+
     @staticmethod
     def build_chars(words_: list[str]) -> list[list[Char]]:
         chars: list[list[Char]] = list()
@@ -142,7 +150,11 @@ class CharsClass:
 
 class Game:
     def __init__(self) -> None:
-        self.chars_class = CharsClass(rnd_words())
+        self.words = rnd_words()
+        self.chars_class = CharsClass(self.words)
+        self.start_perf_time = 0
+
+        self.words_count = len(self.words)
         self.keys_pressed = 0
 
         self.fg_yellow = 0
@@ -150,7 +162,7 @@ class Game:
         self.bg_white = 0
         self.status_color = 0
 
-        self.status_fmt = " correct: {correct}  wrong: {wrong}"
+        self.status_fmt = " correct: {correct}  wrong: {wrong}, left: {left}"
 
     def run(self, stdscr: "curses._CursesWindow") -> None:
         curses.use_default_colors()
@@ -174,6 +186,7 @@ class Game:
             target=self._run_status_loop, daemon=True, args=(status_win,)
         )
         status_thread.start()
+        self.start_perf_time = time.perf_counter()
         while True:
             self.print_words_by_rows(game_win)
             self.print_status(status_win)
@@ -185,6 +198,10 @@ class Game:
             elif ch in valid_keys:
                 self.chars_class.move_forward(chr(ch))
                 self.keys_pressed += 1
+                if self.chars_class.pos.max == self.chars_class.pos.current:
+                    curses.curs_set(0)
+                    game_win.refresh()
+                    self._run_winscreen_loop(stdscr)
             stdscr.refresh()
 
     def print_words_by_rows(self, game_win: "curses._CursesWindow") -> None:
@@ -229,6 +246,16 @@ class Game:
             color_pair = self.bg_white
         game_win.addnstr(y, x, char.char, 1, color_pair)
 
+    def _run_winscreen_loop(self, stdscr: "curses._CursesWindow") -> None:
+        elapsed = time.perf_counter() - self.start_perf_time
+        wpm = 60 / elapsed * self.chars_class.correct_words
+        acc = (self.chars_class.correct_chars / self.chars_class.chars_count) * 100
+        stats = f"time: {elapsed:.1f}s wpm: {wpm:.2f} acc: {acc:.2f}%"
+        self.status_fmt = f"{self.status_fmt} {stats}"
+        while True:
+            # TODO: reset option
+            stdscr.getch()
+
     def _run_status_loop(self, status_win: "curses._CursesWindow") -> None:
         while True:
             self.print_status(status_win)
@@ -241,10 +268,10 @@ class Game:
         status_win.refresh()
 
     def format_status(self) -> str:
-        timenow = " %s" % time.strftime("%T")
-        return timenow + self.status_fmt.format(
+        return self.status_fmt.format(
             correct=self.chars_class.correct_chars,
             wrong=self.chars_class.wrong_chars,
+            left=self.chars_class.chars_count - self.chars_class.pos.current,
         )
 
 
