@@ -149,8 +149,8 @@ class CharsClass:
 
 
 class Game:
-    def __init__(self) -> None:
-        self.words = rnd_words()
+    def __init__(self, words: list[str]) -> None:
+        self.words = words
         self.chars_class = CharsClass(self.words)
         self.start_perf_time = 0
 
@@ -276,7 +276,7 @@ class Game:
 
 
 def main():
-    game = Game()
+    game = Game(rnd_words())
     try:
         curses.wrapper(game.run)
     except KeyboardInterrupt:
