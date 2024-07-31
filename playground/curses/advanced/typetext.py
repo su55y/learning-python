@@ -202,6 +202,7 @@ class Game:
                     curses.curs_set(0)
                     game_win.refresh()
                     self._run_winscreen_loop(stdscr)
+                    return
             stdscr.refresh()
 
     def print_words_by_rows(self, game_win: "curses._CursesWindow") -> None:
@@ -253,8 +254,14 @@ class Game:
         stats = f"time: {elapsed:.1f}s | wpm: {wpm:.2f} | acc: {acc:.2f}%"
         self.status_fmt = f"{self.status_fmt} | {stats}"
         while True:
-            # TODO: reset option
-            stdscr.getch()
+            ch = stdscr.getch()
+            if ch == ord("r"):
+                stdscr.refresh()
+                self.__init__(rnd_words())
+                self.run(stdscr)
+                break
+            elif ch == ord("q"):
+                break
 
     def _run_status_loop(self, status_win: "curses._CursesWindow") -> None:
         while True:
