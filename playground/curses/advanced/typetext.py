@@ -162,9 +162,14 @@ class Game:
         self.bg_white = 0
         self.status_color = 0
 
+        self.status_fmt = "{time} start typing..."
         self.status_fmt = " correct: {correct} | wrong: {wrong} | left: {left}"
 
     def run(self, stdscr: "curses._CursesWindow") -> None:
+        self._setup_curses()
+        self._run_loop(stdscr)
+
+    def _setup_curses(self) -> None:
         curses.use_default_colors()
         curses.curs_set(0)
         curses.init_pair(1, curses.COLOR_YELLOW, 0)
@@ -175,7 +180,6 @@ class Game:
         self.fg_red = curses.color_pair(2)
         self.bg_white = curses.color_pair(3)
         self.status_color = curses.color_pair(4)
-        self._run_loop(stdscr)
 
     def _run_loop(self, stdscr: "curses._CursesWindow") -> None:
         max_y, max_x = stdscr.getmaxyx()
