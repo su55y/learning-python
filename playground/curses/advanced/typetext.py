@@ -20,6 +20,13 @@ words = list(
 rnd_words = lambda: random.choices(words, k=words_count)
 
 
+class Key(IntEnum):
+    BACKSPACE = 263
+    CTRL_R = 18
+    r = ord("r")
+    q = ord("q")
+
+
 @lru_cache(len(valid_chars))
 def validate_char(char: str) -> bool:
     return char in valid_chars
@@ -192,7 +199,11 @@ class Game:
             self.print_words_by_rows(game_win)
             self.print_status(status_win)
             ch = stdscr.getch()
-            if ch == 263:
+            if ch == Key.CTRL_R:
+                stdscr.refresh()
+                self.__init__(rnd_words())
+                self.run(stdscr)
+            if ch == Key.BACKSPACE:
                 self.chars_class.move_backwards()
             elif ch in valid_keys:
                 if self.start_perf_time < 0:
@@ -265,14 +276,13 @@ class Game:
         self.status_fmt = f"{self.status_fmt} | {stats} | [r]: restart | [q]: quit"
         self.print_status(status_win)
         while True:
-            ch = stdscr.getch()
-            if ch == ord("r"):
-                stdscr.refresh()
-                self.__init__(rnd_words())
-                self.run(stdscr)
-                break
-            elif ch == ord("q"):
-                break
+            match stdscr.getch():
+                case Key.r:
+                    stdscr.refresh()
+                    self.__init__(rnd_words())
+                    self.run(stdscr)
+                case Key.q:
+                    break
 
     def _run_status_loop(self, status_win: "curses._CursesWindow") -> None:
         while True:
