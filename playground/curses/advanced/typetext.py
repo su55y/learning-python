@@ -3,6 +3,8 @@ from curses.textpad import rectangle as curses_rect
 from enum import IntEnum
 from functools import lru_cache
 import random
+import re
+from pathlib import Path
 import string
 import threading
 import time
@@ -10,14 +12,20 @@ import time
 valid_keys = set(map(ord, string.ascii_lowercase))
 valid_chars = {" ", *string.ascii_lowercase}
 
-words_count = 10
 
-LOREM = "Lorem ipsum dolor sit amet, officia excepteur ex fugiat reprehenderit enim labore culpa sint ad nisi Lorem pariatur mollit ex esse exercitation amet. Nisi anim cupidatat excepteur officia. Reprehenderit nostrud nostrud ipsum Lorem est aliquip amet voluptate voluptate dolor minim nulla est proident. Nostrud officia pariatur ut officia. Sit irure elit esse ea nulla sunt ex occaecat reprehenderit commodo officia dolor Lorem duis laboris cupidatat officia voluptate. Culpa proident adipisicing id nulla nisi laboris ex in Lorem sunt duis officia eiusmod. Aliqua reprehenderit commodo ex non excepteur duis sunt velit enim. Voluptate laboris sint cupidatat ullamco ut ea consectetur et est culpa et culpa duis."
-words = list(
-    set(map(lambda w: w.lower(), LOREM.replace(",", "").replace(".", "").split()))
-)
+def rnd_words(words: list[str], words_count: int = 10) -> list[str]:
+    return random.choices(words, k=words_count)
 
-rnd_words = lambda: random.choices(words, k=words_count)
+
+def read_self_words() -> list[str]:
+    reader = (row for row in open(Path(__file__)))
+    rx = re.compile(r"[^a-zA-Z\s]")
+    words_ = set()
+    for row in reader:
+        row_words = rx.sub(" ", row).split()
+        if len(row_words) > 0:
+            words_ |= set(row_words)
+    return list(map(lambda w: w.lower(), filter(lambda w: len(w) > 1, words_)))
 
 
 class Key(IntEnum):
@@ -156,7 +164,8 @@ class CharsClass:
 
 class Game:
     def __init__(self, words: list[str]) -> None:
-        self.words = words
+        self.src_words = words
+        self.words = rnd_words(self.src_words)
         self.chars_class = CharsClass(self.words)
         self.start_perf_time = -1
 
@@ -201,7 +210,7 @@ class Game:
             ch = stdscr.getch()
             if ch == Key.CTRL_R:
                 stdscr.refresh()
-                self.__init__(rnd_words())
+                self.__init__(rnd_words(self.src_words))
                 self.run(stdscr)
             if ch == Key.BACKSPACE:
                 self.chars_class.move_backwards()
@@ -279,7 +288,7 @@ class Game:
             match stdscr.getch():
                 case Key.r:
                     stdscr.refresh()
-                    self.__init__(rnd_words())
+                    self.__init__(rnd_words(self.src_words))
                     self.run(stdscr)
                 case Key.q:
                     break
@@ -304,7 +313,7 @@ class Game:
 
 
 def main():
-    game = Game(rnd_words())
+    game = Game(read_self_words())
     try:
         curses.wrapper(game.run)
     except KeyboardInterrupt:
