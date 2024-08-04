@@ -190,8 +190,17 @@ class Game:
         self.bg_white = 0
         self.status_color = 0
 
-        self.status_fmt = " start typing..."
+        self.default_status_fmt = " start typing..."
+        self.status_fmt = self.default_status_fmt
         self.in_game_stats = " correct: {correct} | wrong: {wrong} | left: {left}"
+
+    def reset(self, stdscr: "curses._CursesWindow") -> None:
+        stdscr.clear()
+        self.words = rnd_words(self.src_words, self.words_count)
+        self.chars_class = CharsClass(self.words)
+        self.start_perf_time = -1
+        self.status_fmt = self.default_status_fmt
+        self.run(stdscr)
 
     def run(self, stdscr: "curses._CursesWindow") -> None:
         self._setup_curses()
@@ -223,9 +232,8 @@ class Game:
             self.print_status(status_win)
             ch = stdscr.getch()
             if ch == Key.CTRL_R:
-                stdscr.refresh()
-                self.__init__(rnd_words(self.src_words), self.words_count)
-                self.run(stdscr)
+                self.reset(stdscr)
+                return
             if ch == Key.BACKSPACE:
                 self.chars_class.move_backwards()
             elif ch in valid_keys:
@@ -301,9 +309,8 @@ class Game:
         while True:
             match stdscr.getch():
                 case Key.r:
-                    stdscr.refresh()
-                    self.__init__(rnd_words(self.src_words), self.words_count)
-                    self.run(stdscr)
+                    self.reset(stdscr)
+                    return
                 case Key.q:
                     break
 
