@@ -1,3 +1,4 @@
+import argparse
 import curses
 from curses.textpad import rectangle as curses_rect
 from enum import IntEnum
@@ -11,6 +12,19 @@ import time
 
 valid_keys = set(map(ord, string.ascii_lowercase))
 valid_chars = {" ", *string.ascii_lowercase}
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-c",
+        "--words-count",
+        type=int,
+        default=10,
+        metavar="INT",
+        help="Words count (default: %(default)s)",
+    )
+    return parser.parse_args()
 
 
 def rnd_words(words: list[str], words_count: int = 10) -> list[str]:
@@ -163,13 +177,13 @@ class CharsClass:
 
 
 class Game:
-    def __init__(self, words: list[str]) -> None:
+    def __init__(self, words: list[str], words_count: int) -> None:
         self.src_words = words
-        self.words = rnd_words(self.src_words)
+        self.words_count = words_count
+
+        self.words = rnd_words(self.src_words, self.words_count)
         self.chars_class = CharsClass(self.words)
         self.start_perf_time = -1
-
-        self.words_count = len(self.words)
 
         self.fg_yellow = 0
         self.fg_red = 0
@@ -210,7 +224,7 @@ class Game:
             ch = stdscr.getch()
             if ch == Key.CTRL_R:
                 stdscr.refresh()
-                self.__init__(rnd_words(self.src_words))
+                self.__init__(rnd_words(self.src_words), self.words_count)
                 self.run(stdscr)
             if ch == Key.BACKSPACE:
                 self.chars_class.move_backwards()
@@ -288,7 +302,7 @@ class Game:
             match stdscr.getch():
                 case Key.r:
                     stdscr.refresh()
-                    self.__init__(rnd_words(self.src_words))
+                    self.__init__(rnd_words(self.src_words), self.words_count)
                     self.run(stdscr)
                 case Key.q:
                     break
@@ -313,7 +327,8 @@ class Game:
 
 
 def main():
-    game = Game(read_self_words())
+    args = parse_args()
+    game = Game(read_self_words(), args.words_count)
     try:
         curses.wrapper(game.run)
     except KeyboardInterrupt:
