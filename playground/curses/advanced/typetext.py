@@ -114,7 +114,7 @@ class CursorPos:
         return self._current - 1 >= self.min
 
 
-class CharsClass:
+class Chars:
     def __init__(self, game_words: list[str]) -> None:
         assert len(game_words) > 0
         self.words = game_words
@@ -182,7 +182,7 @@ class Game:
         self.words_count = words_count
 
         self.words = rnd_words(self.src_words, self.words_count)
-        self.chars_class = CharsClass(self.words)
+        self.chars = Chars(self.words)
         self.start_perf_time = -1
 
         self.fg_yellow = 0
@@ -192,12 +192,12 @@ class Game:
 
         self.default_status_fmt = " start typing..."
         self.status_fmt = self.default_status_fmt
-        self.in_game_stats = " correct: {correct} | wrong: {wrong} | left: {left}"
+        self.chars_stats_fmt = " correct: {correct} | wrong: {wrong} | left: {left}"
 
     def reset(self, stdscr: "curses._CursesWindow") -> None:
         stdscr.clear()
         self.words = rnd_words(self.src_words, self.words_count)
-        self.chars_class = CharsClass(self.words)
+        self.chars = Chars(self.words)
         self.start_perf_time = -1
         self.status_fmt = self.default_status_fmt
         self.run(stdscr)
@@ -235,19 +235,19 @@ class Game:
                 self.reset(stdscr)
                 return
             if ch == Key.BACKSPACE:
-                self.chars_class.move_backwards()
+                self.chars.move_backwards()
             elif ch in valid_keys:
                 if self.start_perf_time < 0:
                     self.start_perf_time = time.perf_counter()
-                    self.status_fmt = self.in_game_stats
+                    self.status_fmt = self.chars_stats_fmt
                     self.print_status(status_win)
 
-                self.chars_class.move_forward(chr(ch))
+                self.chars.move_forward(chr(ch))
 
-                if self.chars_class.pos.max == self.chars_class.pos.current:
-                    self.chars_class.pos.current += 1
+                if self.chars.pos.max == self.chars.pos.current:
+                    self.chars.pos.current += 1
                     self.print_words_by_rows(game_win)
-                    self.chars_class.pos.current -= 1
+                    self.chars.pos.current -= 1
                     self._run_winscreen_loop(stdscr, status_win)
                     return
 
@@ -259,7 +259,7 @@ class Game:
         max_y, max_x = game_win.getmaxyx()
         pos = 0
         row_len = 0
-        for word in self.chars_class.chars:
+        for word in self.chars.chars:
             if (row_len + len(word) + 3) >= max_x:
                 y += 1
                 x = start_x
@@ -291,7 +291,7 @@ class Game:
             color_pair = self.fg_yellow
         elif char.state == CharState.Wrong:
             color_pair = self.fg_red
-        if self.chars_class.pos.current == pos:
+        if self.chars.pos.current == pos:
             color_pair = self.bg_white
         game_win.addnstr(y, x, char.char, 1, color_pair)
 
@@ -302,8 +302,8 @@ class Game:
     ) -> None:
         elapsed = time.perf_counter() - self.start_perf_time
         self.start_perf_time = -1
-        wpm = 60 / elapsed * self.chars_class.correct_words
-        acc = (self.chars_class.correct_chars / self.chars_class.chars_count) * 100
+        wpm = 60 / elapsed * self.chars.correct_words
+        acc = (self.chars.correct_chars / self.chars.chars_count) * 100
         stats = f"time: {elapsed:.1f}s | wpm: {wpm:.2f} | acc: {acc:.2f}%"
         self.status_fmt = f"{self.status_fmt} | {stats} | [r]: restart | [q]: quit"
         self.print_status(status_win)
@@ -328,9 +328,9 @@ class Game:
 
     def format_status(self) -> str:
         return self.status_fmt.format(
-            correct=self.chars_class.correct_chars,
-            wrong=self.chars_class.wrong_chars,
-            left=self.chars_class.chars_count - self.chars_class.pos.current,
+            correct=self.chars.correct_chars,
+            wrong=self.chars.wrong_chars,
+            left=self.chars.chars_count - self.chars.pos.current,
         )
 
 
