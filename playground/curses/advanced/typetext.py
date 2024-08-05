@@ -245,8 +245,9 @@ class Game:
                 self.chars_class.move_forward(chr(ch))
 
                 if self.chars_class.pos.max == self.chars_class.pos.current:
-                    curses.curs_set(0)
-                    game_win.refresh()
+                    self.chars_class.pos.current += 1
+                    self.print_words_by_rows(game_win)
+                    self.chars_class.pos.current -= 1
                     self._run_winscreen_loop(stdscr, status_win)
                     return
 
