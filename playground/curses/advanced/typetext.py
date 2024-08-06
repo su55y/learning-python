@@ -24,6 +24,9 @@ def parse_args() -> argparse.Namespace:
         metavar="INT",
         help="Words count (default: %(default)s)",
     )
+    parser.add_argument(
+        "-f", "--words-file", type=Path, help="Words file path in word per line format"
+    )
     return parser.parse_args()
 
 
@@ -40,6 +43,17 @@ def read_self_words() -> list[str]:
         if len(row_words) > 0:
             words_ |= set(row_words)
     return list(map(lambda w: w.lower(), filter(lambda w: len(w) > 1, words_)))
+
+
+def read_words_file(path: Path) -> list[str]:
+    reader = (row for row in open(path))
+    rx = re.compile(r"^[a-zA-Z]+$")
+    words_ = set()
+    for row in reader:
+        row = row.strip()
+        if rx.match(row):
+            words_.add(row)
+    return list(words_)
 
 
 class Key(IntEnum):
@@ -336,7 +350,11 @@ class Game:
 
 def main():
     args = parse_args()
-    game = Game(read_self_words(), args.words_count)
+    if args.words_file and args.words_file.exists():
+        words_src = read_words_file(args.words_file)
+    else:
+        words_src = read_self_words()
+    game = Game(words_src, args.words_count)
     try:
         curses.wrapper(game.run)
     except KeyboardInterrupt:
