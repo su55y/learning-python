@@ -198,6 +198,7 @@ class Game:
         self.words = rnd_words(self.src_words, self.words_count)
         self.chars = Chars(self.words)
         self.start_perf_time = -1
+        self.status_thead_started = False
 
         self.fg_yellow = 0
         self.fg_red = 0
@@ -237,10 +238,12 @@ class Game:
         game_win = curses.newwin(max_y - 2, max_x, 0, 0)
         status_win = curses.newwin(1, max_x, max_y - 1, 0)
         stdscr.refresh()
-        status_thread = threading.Thread(
-            target=self._run_status_loop, daemon=True, args=(status_win,)
-        )
-        status_thread.start()
+        if not self.status_thead_started:
+            threading.Thread(
+                target=self._run_status_loop,
+                daemon=True,
+                args=(status_win,),
+            ).start()
         while True:
             self.print_words_by_rows(game_win)
             self.print_status(status_win)
@@ -330,6 +333,7 @@ class Game:
                     break
 
     def _run_status_loop(self, status_win: "curses._CursesWindow") -> None:
+        self.status_thead_started = True
         while True:
             self.print_status(status_win)
             time.sleep(1)
