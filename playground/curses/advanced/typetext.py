@@ -209,17 +209,17 @@ class Game:
         self.status_fmt = self.default_status_fmt
         self.chars_stats_fmt = " correct: {correct} | wrong: {wrong} | left: {left}"
 
-    def reset(self, stdscr: "curses._CursesWindow") -> None:
-        stdscr.clear()
+    def reset(self) -> None:
         self.words = rnd_words(self.src_words, self.words_count)
         self.chars = Chars(self.words)
         self.start_perf_time = -1
         self.status_fmt = self.default_status_fmt
-        self.run(stdscr)
 
     def run(self, stdscr: "curses._CursesWindow") -> None:
         self._setup_curses()
-        self._run_loop(stdscr)
+        while self._run_loop(stdscr):
+            stdscr.clear()
+            self.reset()
 
     def _setup_curses(self) -> None:
         curses.use_default_colors()
@@ -233,7 +233,7 @@ class Game:
         self.bg_white = curses.color_pair(3)
         self.status_color = curses.color_pair(4)
 
-    def _run_loop(self, stdscr: "curses._CursesWindow") -> None:
+    def _run_loop(self, stdscr: "curses._CursesWindow") -> bool:
         max_y, max_x = stdscr.getmaxyx()
         game_win = curses.newwin(max_y - 2, max_x, 0, 0)
         status_win = curses.newwin(1, max_x, max_y - 1, 0)
@@ -249,8 +249,7 @@ class Game:
             self.print_status(status_win)
             ch = stdscr.getch()
             if ch == Key.CTRL_R:
-                self.reset(stdscr)
-                return
+                return True
             if ch == Key.BACKSPACE:
                 self.chars.move_backwards()
             elif ch in valid_keys:
@@ -265,10 +264,9 @@ class Game:
                     self.chars.pos.current += 1
                     self.print_words_by_rows(game_win)
                     self.chars.pos.current -= 1
-                    self._run_winscreen_loop(stdscr, status_win)
-                    return
+                    return self._run_winscreen_loop(stdscr, status_win)
 
-            stdscr.refresh()
+                stdscr.refresh()
 
     def print_words_by_rows(self, game_win: "curses._CursesWindow") -> None:
         start_y, start_x = 2, 2
@@ -316,7 +314,7 @@ class Game:
         self,
         stdscr: "curses._CursesWindow",
         status_win: "curses._CursesWindow",
-    ) -> None:
+    ) -> bool:
         elapsed = time.perf_counter() - self.start_perf_time
         self.start_perf_time = -1
         wpm = 60 / elapsed * self.chars.correct_words
@@ -327,10 +325,10 @@ class Game:
         while True:
             match stdscr.getch():
                 case Key.r:
-                    self.reset(stdscr)
-                    return
+                    return True
                 case Key.q:
                     break
+        return False
 
     def _run_status_loop(self, status_win: "curses._CursesWindow") -> None:
         self.status_thead_started = True
