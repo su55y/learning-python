@@ -1,7 +1,7 @@
 import argparse
 import curses
 from curses.textpad import rectangle as curses_rect
-from enum import IntEnum
+from enum import IntEnum, Enum, auto as enum_auto
 from functools import lru_cache
 import random
 import re
@@ -190,6 +190,12 @@ class Chars:
         return chars
 
 
+class GameState(Enum):
+    INIT = enum_auto()
+    TYPING = enum_auto()
+    WINSCREEN = enum_auto()
+
+
 class Game:
     def __init__(self, words: list[str], words_count: int) -> None:
         self.src_words = words
@@ -199,6 +205,7 @@ class Game:
         self.chars = Chars(self.words)
         self.start_perf_time = -1
         self.status_thead_started = False
+        self.state = GameState.INIT
 
         self.fg_yellow = 0
         self.fg_red = 0
@@ -206,14 +213,18 @@ class Game:
         self.status_color = 0
 
         self.default_status_fmt = " start typing..."
-        self.status_fmt = self.default_status_fmt
+        self.status_fmt_ = self.default_status_fmt
         self.chars_stats_fmt = " correct: {correct} | wrong: {wrong} | left: {left}"
+        self.winscreen_status_fmt = " time: {time:.1f}s | wpm: {wpm:.2f} | acc: {acc:.1f}% | [r]: restart | [q]: quit"
+        self.time = 0
+        self.wpm = 0
+        self.acc = 0
 
     def reset(self) -> None:
         self.words = rnd_words(self.src_words, self.words_count)
         self.chars = Chars(self.words)
         self.start_perf_time = -1
-        self.status_fmt = self.default_status_fmt
+        self.state = GameState.INIT
 
     def run(self, stdscr: "curses._CursesWindow") -> None:
         self._setup_curses()
@@ -253,9 +264,9 @@ class Game:
             if ch == Key.BACKSPACE:
                 self.chars.move_backwards()
             elif ch in valid_keys:
-                if self.start_perf_time < 0:
+                if self.state is GameState.INIT and self.start_perf_time < 0:
                     self.start_perf_time = time.perf_counter()
-                    self.status_fmt = self.chars_stats_fmt
+                    self.state = GameState.TYPING
                     self.print_status(status_win)
 
                 self.chars.move_forward(chr(ch))
@@ -315,12 +326,11 @@ class Game:
         stdscr: "curses._CursesWindow",
         status_win: "curses._CursesWindow",
     ) -> bool:
-        elapsed = time.perf_counter() - self.start_perf_time
+        self.time = time.perf_counter() - self.start_perf_time
         self.start_perf_time = -1
-        wpm = 60 / elapsed * self.chars.correct_words
-        acc = (self.chars.correct_chars / self.chars.chars_count) * 100
-        stats = f"time: {elapsed:.1f}s | wpm: {wpm:.2f} | acc: {acc:.2f}%"
-        self.status_fmt = f"{self.status_fmt} | {stats} | [r]: restart | [q]: quit"
+        self.wpm = 60 / self.time * self.chars.correct_words
+        self.acc = (self.chars.correct_chars / self.chars.chars_count) * 100
+        self.state = GameState.WINSCREEN
         self.print_status(status_win)
         while True:
             match stdscr.getch():
@@ -347,7 +357,20 @@ class Game:
             correct=self.chars.correct_chars,
             wrong=self.chars.wrong_chars,
             left=self.chars.chars_count - self.chars.pos.current,
+            time=self.time,
+            wpm=self.wpm,
+            acc=self.acc,
         )
+
+    @property
+    def status_fmt(self) -> str:
+        match self.state:
+            case GameState.TYPING:
+                return self.chars_stats_fmt
+            case GameState.WINSCREEN:
+                return self.winscreen_status_fmt
+            case _:
+                return self.default_status_fmt
 
 
 def main():
