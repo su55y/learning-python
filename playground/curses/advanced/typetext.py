@@ -224,6 +224,9 @@ class Game:
         self.chars = Chars(self.words)
         self.start_perf_time = -1
         self.state = GameState.INIT
+        self.time = 0
+        self.wpm = 0
+        self.acc = 0
 
     def run(self, stdscr: "curses._CursesWindow") -> None:
         self._setup_curses()
