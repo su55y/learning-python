@@ -30,10 +30,6 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def rnd_words(words: list[str], words_count: int = 10) -> list[str]:
-    return random.choices(words, k=words_count)
-
-
 def read_self_words() -> list[str]:
     reader = (row for row in open(Path(__file__)))
     rx = re.compile(r"[^a-zA-Z\s]")
@@ -201,7 +197,7 @@ class Game:
         self.src_words = words
         self.words_count = words_count
 
-        self.words = rnd_words(self.src_words, self.words_count)
+        self.words = self.rnd_words()
         self.chars = Chars(self.words)
         self.start_perf_time = -1
         self.status_thead_started = False
@@ -220,8 +216,11 @@ class Game:
         self.wpm = 0
         self.acc = 0
 
+    def rnd_words(self) -> list[str]:
+        return random.choices(self.src_words, k=self.words_count)
+
     def reset(self) -> None:
-        self.words = rnd_words(self.src_words, self.words_count)
+        self.words = self.rnd_words()
         self.chars = Chars(self.words)
         self.start_perf_time = -1
         self.state = GameState.INIT
