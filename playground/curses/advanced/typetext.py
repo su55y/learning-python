@@ -130,6 +130,7 @@ class Chars:
         self.words = game_words
         self.chars = self.build_chars(self.words)
         self.chars_count = sum(map(len, game_words))
+        self.avg_word_len = self.chars_count / len(game_words)
         self.pos = CursorPos(length=sum(map(len, game_words)))
         self._correct_chars = 0
         self._wrong_chars = 0
@@ -178,6 +179,10 @@ class Chars:
                 c += 1
         return c
 
+    @property
+    def correct_chars_avg(self) -> float:
+        return self.correct_chars / self.avg_word_len
+
     @staticmethod
     def build_chars(words_: list[str]) -> list[list[Char]]:
         chars: list[list[Char]] = list()
@@ -211,9 +216,10 @@ class Game:
         self.default_status_fmt = " start typing..."
         self.status_fmt_ = self.default_status_fmt
         self.chars_stats_fmt = " correct: {correct} | wrong: {wrong} | left: {left}"
-        self.winscreen_status_fmt = " time: {time:.1f}s | wpm: {wpm:.2f} | acc: {acc:.1f}% | [r]: restart | [q]: quit"
+        self.winscreen_status_fmt = " time: {time:.1f}s | wpm: {wpm:.2f} | wpm (avg): {avg_wpm:.2f} | acc: {acc:.1f}% | [r]: restart | [q]: quit"
         self.time = 0
         self.wpm = 0
+        self.avg_wpm = 0
         self.acc = 0
 
     def rnd_words(self) -> list[str]:
@@ -226,6 +232,7 @@ class Game:
         self.state = GameState.INIT
         self.time = 0
         self.wpm = 0
+        self.avg_wpm = 0
         self.acc = 0
 
     def run(self, stdscr: "curses._CursesWindow") -> None:
@@ -331,6 +338,7 @@ class Game:
         self.time = time.perf_counter() - self.start_perf_time
         self.start_perf_time = -1
         self.wpm = 60 / self.time * self.chars.correct_words
+        self.avg_wpm = 60 / self.time * self.chars.correct_chars_avg
         self.acc = (self.chars.correct_chars / self.chars.chars_count) * 100
         self.state = GameState.WINSCREEN
         self.print_status(status_win)
@@ -361,6 +369,7 @@ class Game:
             left=self.chars.chars_count - self.chars.pos.current,
             time=self.time,
             wpm=self.wpm,
+            avg_wpm=self.avg_wpm,
             acc=self.acc,
         )
 
