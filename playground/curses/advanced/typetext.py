@@ -253,6 +253,13 @@ class Game:
         self.bg_white = curses.color_pair(3)
         self.status_color = curses.color_pair(4)
 
+    @staticmethod
+    def try_addnstr(stdscr: "curses._CursesWindow", *args) -> None:
+        try:
+            stdscr.addnstr(*args)
+        except:
+            pass
+
     def _run_loop(self, stdscr: "curses._CursesWindow") -> bool:
         max_y, max_x = stdscr.getmaxyx()
         game_win = curses.newwin(max_y - 2, max_x, 0, 0)
@@ -306,7 +313,7 @@ class Game:
                 self.print_char(game_win, y, x, char, pos)
                 pos += 1
                 x += 1
-            game_win.addnstr(y, x, " ", 1, 0)
+            self.try_addnstr(game_win, y, x, " ", 1, 0)
             x += 1
 
         if y + 2 < max_y:
@@ -328,7 +335,7 @@ class Game:
             color_pair = self.fg_red
         if self.chars.pos.current == pos:
             color_pair = self.bg_white
-        game_win.addnstr(y, x, char.char, 1, color_pair)
+        self.try_addnstr(game_win, y, x, char.char, 1, color_pair)
 
     def _run_winscreen_loop(
         self,
@@ -359,7 +366,8 @@ class Game:
     def print_status(self, status_win: "curses._CursesWindow") -> None:
         _, max_x = status_win.getmaxyx()
         status_str = self.format_status()
-        status_win.addnstr(0, 0, f"{status_str:<{max_x - 1}}", max_x, self.status_color)
+        status_str = f"{status_str:<{max_x - 1}}"
+        self.try_addnstr(status_win, 0, 0, status_str, max_x, self.status_color)
         status_win.refresh()
 
     def format_status(self) -> str:
