@@ -237,8 +237,9 @@ class Game:
 
     def run(self, stdscr: "curses._CursesWindow") -> None:
         self._setup_curses()
-        while self._run_loop(stdscr):
-            stdscr.clear()
+        self.stdscr = stdscr
+        while self._run_loop():
+            self.stdscr.clear()
             self.reset()
 
     def _setup_curses(self) -> None:
@@ -260,21 +261,20 @@ class Game:
         except:
             pass
 
-    def _run_loop(self, stdscr: "curses._CursesWindow") -> bool:
-        max_y, max_x = stdscr.getmaxyx()
-        game_win = curses.newwin(max_y - 2, max_x, 0, 0)
-        status_win = curses.newwin(1, max_x, max_y - 1, 0)
-        stdscr.refresh()
+    def _run_loop(self) -> bool:
+        max_y, max_x = self.stdscr.getmaxyx()
+        self.game_win = curses.newwin(max_y - 2, max_x, 0, 0)
+        self.status_win = curses.newwin(1, max_x, max_y - 1, 0)
+        self.stdscr.refresh()
         if not self.status_thread_started:
             threading.Thread(
                 target=self._run_status_loop,
                 daemon=True,
-                args=(status_win,),
             ).start()
         while True:
-            self.print_words_by_rows(game_win)
-            self.print_status(status_win)
-            ch = stdscr.getch()
+            self.print_words_by_rows()
+            self.print_status()
+            ch = self.stdscr.getch()
             if ch == Key.CTRL_R:
                 return True
             if ch == Key.BACKSPACE:
@@ -283,22 +283,22 @@ class Game:
                 if self.state is GameState.INIT and self.start_perf_time < 0:
                     self.start_perf_time = time.perf_counter()
                     self.state = GameState.TYPING
-                    self.print_status(status_win)
+                    self.print_status()
 
                 self.chars.move_forward(chr(ch))
 
                 if self.chars.pos.max == self.chars.pos.current:
                     self.chars.pos.current += 1
-                    self.print_words_by_rows(game_win)
+                    self.print_words_by_rows()
                     self.chars.pos.current -= 1
-                    return self._run_winscreen_loop(stdscr, status_win)
+                    return self._run_winscreen_loop()
 
-                stdscr.refresh()
+                self.stdscr.refresh()
 
-    def print_words_by_rows(self, game_win: "curses._CursesWindow") -> None:
+    def print_words_by_rows(self) -> None:
         start_y, start_x = 2, 2
         y, x = start_y, start_x
-        max_y, max_x = game_win.getmaxyx()
+        max_y, max_x = self.game_win.getmaxyx()
         pos = 0
         row_len = 0
         for word in self.chars.chars:
@@ -310,19 +310,18 @@ class Game:
             if y >= max_y - 1:
                 break
             for char in word:
-                self.print_char(game_win, y, x, char, pos)
+                self.print_char(y, x, char, pos)
                 pos += 1
                 x += 1
-            self.try_addnstr(game_win, y, x, " ", 1, 0)
+            self.try_addnstr(self.game_win, y, x, " ", 1, 0)
             x += 1
 
         if y + 2 < max_y:
-            curses_rect(game_win, 0, 0, y + 2, max_x - 1)
-        game_win.refresh()
+            curses_rect(self.game_win, 0, 0, y + 2, max_x - 1)
+        self.game_win.refresh()
 
     def print_char(
         self,
-        game_win: "curses._CursesWindow",
         y: int,
         x: int,
         char: Char,
@@ -335,40 +334,36 @@ class Game:
             color_pair = self.fg_red
         if self.chars.pos.current == pos:
             color_pair = self.bg_white
-        self.try_addnstr(game_win, y, x, char.char, 1, color_pair)
+        self.try_addnstr(self.game_win, y, x, char.char, 1, color_pair)
 
-    def _run_winscreen_loop(
-        self,
-        stdscr: "curses._CursesWindow",
-        status_win: "curses._CursesWindow",
-    ) -> bool:
+    def _run_winscreen_loop(self) -> bool:
         self.time = time.perf_counter() - self.start_perf_time
         self.start_perf_time = -1
         self.wpm = 60 / self.time * self.chars.correct_words
         self.avg_wpm = 60 / self.time * self.chars.correct_chars_avg
         self.acc = (self.chars.correct_chars / self.chars.chars_count) * 100
         self.state = GameState.WINSCREEN
-        self.print_status(status_win)
+        self.print_status()
         while True:
-            match stdscr.getch():
+            match self.stdscr.getch():
                 case Key.r:
                     return True
                 case Key.q:
                     break
         return False
 
-    def _run_status_loop(self, status_win: "curses._CursesWindow") -> None:
+    def _run_status_loop(self) -> None:
         self.status_thread_started = True
         while True:
-            self.print_status(status_win)
+            self.print_status()
             time.sleep(1)
 
-    def print_status(self, status_win: "curses._CursesWindow") -> None:
-        _, max_x = status_win.getmaxyx()
+    def print_status(self) -> None:
+        _, max_x = self.status_win.getmaxyx()
         status_str = self.format_status()
         status_str = f"{status_str:<{max_x - 1}}"
-        self.try_addnstr(status_win, 0, 0, status_str, max_x, self.status_color)
-        status_win.refresh()
+        self.try_addnstr(self.status_win, 0, 0, status_str, max_x, self.status_color)
+        self.status_win.refresh()
 
     def format_status(self) -> str:
         return self.status_fmt.format(
