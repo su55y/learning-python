@@ -183,6 +183,10 @@ class Chars:
     def correct_chars_avg(self) -> float:
         return self.correct_chars / self.avg_word_len
 
+    @property
+    def penalty(self) -> float:
+        return self.wrong_chars * max(0, self.wrong_chars / self.avg_word_len)
+
     @staticmethod
     def build_chars(words_: list[str]) -> list[list[Char]]:
         chars: list[list[Char]] = list()
@@ -339,8 +343,15 @@ class Game:
     def _run_winscreen_loop(self) -> bool:
         self.time = time.perf_counter() - self.start_perf_time
         self.start_perf_time = -1
-        self.wpm = 60 / self.time * self.chars.correct_words
-        self.avg_wpm = 60 / self.time * self.chars.correct_chars_avg
+        # self.wpm = 60 / self.time * self.chars.correct_words
+        # self.avg_wpm = 60 / self.time * self.chars.correct_chars_avg
+        minutes = self.time / 60
+        self.wpm = (
+            max(self.chars.correct_chars - self.chars.penalty, 0)
+            / max(10 - self.chars.avg_word_len, 3)
+            / minutes
+        )
+        self.avg_wpm = self.chars.correct_chars_avg / (self.time / 60)
         self.acc = (self.chars.correct_chars / self.chars.chars_count) * 100
         self.state = GameState.WINSCREEN
         self.print_status()
