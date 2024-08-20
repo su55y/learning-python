@@ -292,9 +292,8 @@ class Game:
                 self.chars.move_forward(chr(ch))
 
                 if self.chars.pos.max == self.chars.pos.current:
-                    self.chars.pos.current += 1
+                    self.chars.pos.current = -1
                     self.print_words_by_rows()
-                    self.chars.pos.current -= 1
                     return self._run_winscreen_loop()
 
                 self.stdscr.refresh()
