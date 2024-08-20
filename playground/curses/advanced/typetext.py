@@ -343,14 +343,8 @@ class Game:
     def _run_winscreen_loop(self) -> bool:
         self.time = time.perf_counter() - self.start_perf_time
         self.start_perf_time = -1
-        # self.wpm = 60 / self.time * self.chars.correct_words
-        # self.avg_wpm = 60 / self.time * self.chars.correct_chars_avg
         minutes = self.time / 60
-        self.wpm = (
-            max(self.chars.correct_chars - self.chars.penalty, 0)
-            / max(10 - self.chars.avg_word_len, 3)
-            / minutes
-        )
+        self.wpm = self.chars.correct_words / minutes
         self.avg_wpm = self.chars.correct_chars_avg / (self.time / 60)
         self.acc = (self.chars.correct_chars / self.chars.chars_count) * 100
         self.state = GameState.WINSCREEN
