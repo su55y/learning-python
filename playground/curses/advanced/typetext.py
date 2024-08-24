@@ -55,6 +55,7 @@ def read_words_file(path: Path) -> list[str]:
 class Key(IntEnum):
     BACKSPACE = 263
     CTRL_R = 18
+    RETURN = 10
     r = ord("r")
     q = ord("q")
 
@@ -281,7 +282,11 @@ class Game:
             ch = self.stdscr.getch()
             if ch == Key.CTRL_R:
                 return True
-            if ch == Key.BACKSPACE:
+            elif ch == Key.RETURN:
+                self.chars.pos.current = -1
+                self.print_words_by_rows()
+                return self._run_winscreen_loop()
+            elif ch == Key.BACKSPACE:
                 self.chars.move_backwards()
             elif ch in valid_keys:
                 if self.state is GameState.INIT and self.start_perf_time < 0:
