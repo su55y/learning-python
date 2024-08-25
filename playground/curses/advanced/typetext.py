@@ -221,11 +221,13 @@ class Game:
         self.default_status_fmt = " start typing..."
         self.status_fmt_ = self.default_status_fmt
         self.chars_stats_fmt = " correct: {correct} | wrong: {wrong} | left: {left}"
-        self.winscreen_status_fmt = " time: {time:.1f}s | wpm: {wpm:.2f} | wpm (avg): {avg_wpm:.2f} | acc: {acc:.1f}% | [r]: restart | [q]: quit"
+        self.winscreen_status_fmt = " time: {time:.1f}s | wpm: {wpm:.2f} | wpm (avg): {avg_wpm:.2f} | acc: {acc:.1f}% | pps: {pps:.1f} | [r]: restart | [q]: quit"
         self.time = 0
         self.wpm = 0
         self.avg_wpm = 0
         self.acc = 0
+        self.keys_pressed = 0
+        self.pps = 0
 
     def rnd_words(self) -> list[str]:
         return random.choices(self.src_words, k=self.words_count)
@@ -239,6 +241,8 @@ class Game:
         self.wpm = 0
         self.avg_wpm = 0
         self.acc = 0
+        self.keys_pressed = 0
+        self.pps = 0
 
     def run(self, stdscr: "curses._CursesWindow") -> None:
         self._setup_curses()
@@ -280,6 +284,7 @@ class Game:
             self.print_words_by_rows()
             self.print_status()
             ch = self.stdscr.getch()
+            self.keys_pressed += 1
             if ch == Key.CTRL_R:
                 return True
             elif ch == Key.RETURN:
@@ -351,6 +356,7 @@ class Game:
         self.wpm = self.chars.correct_words / minutes
         self.avg_wpm = self.chars.correct_chars_avg / (self.time / 60)
         self.acc = (self.chars.correct_chars / self.chars.chars_count) * 100
+        self.pps = self.keys_pressed / self.time
         self.state = GameState.WINSCREEN
         self.print_status()
         while True:
@@ -383,6 +389,7 @@ class Game:
             wpm=self.wpm,
             avg_wpm=self.avg_wpm,
             acc=self.acc,
+            pps=self.pps,
         )
 
     @property
