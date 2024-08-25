@@ -13,6 +13,9 @@ import time
 valid_keys = set(map(ord, string.ascii_lowercase))
 valid_chars = {" ", *string.ascii_lowercase}
 
+DEFAULT_STATUS_FMT = " correct: {correct} | wrong: {wrong} | left: {left}"
+DEFAULT_WS_STATUS_FMT = " time: {time:.1f}s | wpm: {wpm:.2f} | wpm (avg): {avg_wpm:.2f} | acc: {acc:.1f}% | pps: {pps:.1f} | [r]: restart | [q]: quit"
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
@@ -25,7 +28,25 @@ def parse_args() -> argparse.Namespace:
         help="Words count (default: %(default)s)",
     )
     parser.add_argument(
-        "-f", "--words-file", type=Path, help="Words file path in word per line format"
+        "-f",
+        "--words-file",
+        type=Path,
+        metavar="PATH",
+        help="Words file path in word per line format",
+    )
+    parser.add_argument(
+        "-s",
+        "--status-fmt",
+        default=DEFAULT_STATUS_FMT,
+        metavar="STR",
+        help="Status format (default: %(default)r)",
+    )
+    parser.add_argument(
+        "-w",
+        "--winscreen-fmt",
+        default=DEFAULT_WS_STATUS_FMT,
+        metavar="STR",
+        help="Winscreen status format (default: %(default)r)",
     )
     return parser.parse_args()
 
@@ -203,7 +224,9 @@ class GameState(Enum):
 
 
 class Game:
-    def __init__(self, words: list[str], words_count: int) -> None:
+    def __init__(
+        self, words: list[str], words_count: int, status_fmt: str, winscreen_fmt: str
+    ) -> None:
         self.src_words = words
         self.words_count = words_count
 
@@ -220,8 +243,8 @@ class Game:
 
         self.default_status_fmt = " start typing..."
         self.status_fmt_ = self.default_status_fmt
-        self.chars_stats_fmt = " correct: {correct} | wrong: {wrong} | left: {left}"
-        self.winscreen_status_fmt = " time: {time:.1f}s | wpm: {wpm:.2f} | wpm (avg): {avg_wpm:.2f} | acc: {acc:.1f}% | pps: {pps:.1f} | [r]: restart | [q]: quit"
+        self.chars_stats_fmt = status_fmt
+        self.winscreen_status_fmt = winscreen_fmt
         self.time = 0
         self.wpm = 0
         self.avg_wpm = 0
@@ -409,7 +432,7 @@ def main():
         words_src = read_words_file(args.words_file)
     else:
         words_src = read_self_words()
-    game = Game(words_src, args.words_count)
+    game = Game(words_src, args.words_count, args.status_fmt, args.winscreen_fmt)
     try:
         curses.wrapper(game.run)
     except KeyboardInterrupt:
