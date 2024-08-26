@@ -377,7 +377,7 @@ class Game:
         self.start_perf_time = -1
         minutes = self.time / 60
         self.wpm = self.chars.correct_words / minutes
-        self.avg_wpm = self.chars.correct_chars_avg / (self.time / 60)
+        self.avg_wpm = self.chars.correct_chars_avg / minutes
         self.acc = (self.chars.correct_chars / self.chars.chars_count) * 100
         self.pps = self.keys_pressed / self.time
         self.state = GameState.WINSCREEN
