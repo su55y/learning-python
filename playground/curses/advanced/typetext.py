@@ -13,7 +13,7 @@ import time
 valid_keys = set(map(ord, string.ascii_lowercase))
 valid_chars = {" ", *string.ascii_lowercase}
 
-DEFAULT_STATUS_FMT = "correct: {correct} | wrong: {wrong} | left: {left}"
+DEFAULT_STATUS_FMT = "correct: {correct} | wrong: {wrong} | left: {left} | [C-r]: restart | [Return]: finish"
 DEFAULT_WS_STATUS_FMT = "time: {time:.1f}s | wpm: {wpm:.2f} | wpm (avg): {avg_wpm:.2f} | acc: {acc:.1f}% | pps: {pps:.1f} | [r]: restart | [q]: quit"
 
 
