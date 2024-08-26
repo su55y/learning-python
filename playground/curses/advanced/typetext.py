@@ -13,8 +13,8 @@ import time
 valid_keys = set(map(ord, string.ascii_lowercase))
 valid_chars = {" ", *string.ascii_lowercase}
 
-DEFAULT_STATUS_FMT = " correct: {correct} | wrong: {wrong} | left: {left}"
-DEFAULT_WS_STATUS_FMT = " time: {time:.1f}s | wpm: {wpm:.2f} | wpm (avg): {avg_wpm:.2f} | acc: {acc:.1f}% | pps: {pps:.1f} | [r]: restart | [q]: quit"
+DEFAULT_STATUS_FMT = "correct: {correct} | wrong: {wrong} | left: {left}"
+DEFAULT_WS_STATUS_FMT = "time: {time:.1f}s | wpm: {wpm:.2f} | wpm (avg): {avg_wpm:.2f} | acc: {acc:.1f}% | pps: {pps:.1f} | [r]: restart | [q]: quit"
 
 
 def parse_args() -> argparse.Namespace:
@@ -241,7 +241,7 @@ class Game:
         self.bg_white = 0
         self.status_color = 0
 
-        self.default_status_fmt = " start typing..."
+        self.default_status_fmt = "start typing..."
         self.status_fmt_ = self.default_status_fmt
         self.chars_stats_fmt = status_fmt
         self.winscreen_status_fmt = winscreen_fmt
@@ -399,7 +399,7 @@ class Game:
     def print_status(self) -> None:
         _, max_x = self.status_win.getmaxyx()
         status_str = self.format_status()
-        status_str = f"{status_str:<{max_x - 1}}"
+        status_str = f" {status_str:<{max_x - 1}}"
         self.try_addnstr(self.status_win, 0, 0, status_str, max_x, self.status_color)
         self.status_win.refresh()
 
