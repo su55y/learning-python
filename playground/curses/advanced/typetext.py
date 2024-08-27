@@ -15,10 +15,26 @@ valid_chars = {" ", *string.ascii_lowercase}
 
 DEFAULT_STATUS_FMT = "correct: {correct} | wrong: {wrong} | left: {left} | [C-r]: restart | [Return]: finish"
 DEFAULT_WS_STATUS_FMT = "time: {time:.1f}s | wpm: {wpm:.2f} | wpm (avg): {avg_wpm:.2f} | acc: {acc:.1f}% | pps: {pps:.1f} | [r]: restart | [q]: quit"
+OPTIONS_DESCRIPTION = """
+status-fmt keys:
+    {correct} - number of characters typed correctly 
+    {wrong}   - number of characters typed incorrectly
+    {left}    - number of characters left to type
+
+winscreen-fmt keys:
+    {time}    - number of seconds from begining of typing
+    {wpm}     - words per minute (correct words / minutes)
+    {avg_wpm} - average words per minute (correct chars / avg word length / minutes)
+    {acc}     - accuracy percentage
+    {pps}     - presses per second
+"""
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        epilog=OPTIONS_DESCRIPTION,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     parser.add_argument(
         "-c",
         "--words-count",
