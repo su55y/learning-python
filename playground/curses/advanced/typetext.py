@@ -406,6 +406,11 @@ class Game:
         self.print_status()
         while True:
             match self.stdscr.getch():
+                case Key.CTRL_L:
+                    self.game_win.clear()
+                    self.print_words_by_rows()
+                    self.reset_status_win()
+                    self.print_status()
                 case Key.r:
                     return True
                 case Key.q:
