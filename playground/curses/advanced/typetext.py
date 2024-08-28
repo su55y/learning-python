@@ -92,6 +92,7 @@ def read_words_file(path: Path) -> list[str]:
 class Key(IntEnum):
     BACKSPACE = 263
     CTRL_R = 18
+    CTRL_L = 12
     RETURN = 10
     r = ord("r")
     q = ord("q")
@@ -326,6 +327,9 @@ class Game:
             self.keys_pressed += 1
             if ch == Key.CTRL_R:
                 return True
+            elif ch == Key.CTRL_L:
+                self.game_win.clear()
+                self.print_words_by_rows()
             elif ch == Key.RETURN:
                 self.chars.pos.current = -1
                 self.print_words_by_rows()
