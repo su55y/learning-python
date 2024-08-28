@@ -330,6 +330,8 @@ class Game:
             elif ch == Key.CTRL_L:
                 self.game_win.clear()
                 self.print_words_by_rows()
+                self.reset_status_win()
+                self.print_status()
             elif ch == Key.RETURN:
                 self.chars.pos.current = -1
                 self.print_words_by_rows()
@@ -422,6 +424,10 @@ class Game:
         status_str = f" {status_str:<{max_x - 1}}"
         self.try_addnstr(self.status_win, 0, 0, status_str, max_x, self.status_color)
         self.status_win.refresh()
+
+    def reset_status_win(self) -> None:
+        max_y, max_x = self.stdscr.getmaxyx()
+        self.status_win = curses.newwin(1, max_x, max_y - 1, 0)
 
     def format_status(self) -> str:
         return self.status_fmt.format(
