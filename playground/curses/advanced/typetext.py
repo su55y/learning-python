@@ -27,6 +27,15 @@ winscreen-fmt keys:
     {avg_wpm} - average words per minute (correct chars / avg word length / minutes)
     {acc}     - accuracy percentage
     {pps}     - presses per second
+
+game keybinds:
+    [C-r]: restart
+    [Return]: finish
+    [C-l]: clear/refresh screen
+
+winscreen keybinds:
+    [r]: restart
+    [q]: quit
 """
 
 
