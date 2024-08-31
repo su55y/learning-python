@@ -444,6 +444,10 @@ class Game:
         self.status_win = curses.newwin(1, max_x, max_y - 1, 0)
 
     def format_status(self) -> str:
+        # game_time = 0
+        # if "game_time" in self.status_fmt:
+        #     game_time = self.game_time
+
         return self.status_fmt.format(
             correct=self.chars.correct_chars,
             wrong=self.chars.wrong_chars,
@@ -453,7 +457,12 @@ class Game:
             avg_wpm=self.avg_wpm,
             acc=self.acc,
             pps=self.pps,
+            game_time=self.game_time,
         )
+
+    @property
+    def game_time(self) -> float:
+        return max(time.perf_counter() - self.start_perf_time, 0)
 
     @property
     def status_fmt(self) -> str:
