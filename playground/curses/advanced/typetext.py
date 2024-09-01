@@ -17,25 +17,27 @@ DEFAULT_STATUS_FMT = "correct: {correct} | wrong: {wrong} | left: {left} | [C-r]
 DEFAULT_WS_STATUS_FMT = "time: {time:.1f}s | wpm: {wpm:.2f} | wpm (avg): {avg_wpm:.2f} | acc: {acc:.1f}% | pps: {pps:.1f} | [r]: restart | [q]: quit"
 OPTIONS_DESCRIPTION = """
 status-fmt keys:
-    {correct} - number of characters typed correctly 
-    {wrong}   - number of characters typed incorrectly
-    {left}    - number of characters left to type
+    {correct}   - number of characters typed correctly 
+    {wrong}     - number of characters typed incorrectly
+    {left}      - number of characters left to type
+    {game_time} - game time in seconds (float)
 
 winscreen-fmt keys:
-    {time}    - number of seconds from begining of typing
-    {wpm}     - words per minute (correct words / minutes)
-    {avg_wpm} - average words per minute (correct chars / avg word length / minutes)
-    {acc}     - accuracy percentage
-    {pps}     - presses per second
+    {time}      - number of seconds from begining of typing
+    {wpm}       - words per minute (correct words / minutes)
+    {avg_wpm}   - average words per minute (correct chars / avg word length / minutes)
+    {acc}       - accuracy percentage
+    {pps}       - presses per second
 
 game keybinds:
-    [C-r]: restart
+    [C-r]:    restart
     [Return]: finish
-    [C-l]: clear/refresh screen
+    [C-l]:    clear/refresh screen
 
 winscreen keybinds:
-    [r]: restart
-    [q]: quit
+    [r]:   restart
+    [q]:   quit
+    [C-l]: clear/refresh screen
 """
 
 
