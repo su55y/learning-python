@@ -17,11 +17,12 @@ DEFAULT_STATUS_FMT = "correct: {correct} | wrong: {wrong} | left: {left} | [C-r]
 DEFAULT_WS_STATUS_FMT = "time: {time:.1f}s | wpm: {wpm:.2f} | wpm (avg): {avg_wpm:.2f} | acc: {acc:.1f}% | pps: {pps:.1f} | [r]: restart | [q]: quit"
 OPTIONS_DESCRIPTION = """
 status-fmt keys:
-    {correct}   - number of characters typed correctly 
-    {wrong}     - number of characters typed incorrectly
-    {left}      - number of characters left to type
-    {game_time} - game time in seconds (float)
-    {words}     - typed words count
+    {correct}    - number of characters typed correctly 
+    {wrong}      - number of characters typed incorrectly
+    {left}       - number of characters left to type
+    {game_time}  - game time in seconds (float)
+    {words}      - words completed
+    {words_left} - words left
 
 winscreen-fmt keys:
     {time}      - number of seconds from begining of typing
