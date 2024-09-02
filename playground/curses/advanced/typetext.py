@@ -21,6 +21,7 @@ status-fmt keys:
     {wrong}     - number of characters typed incorrectly
     {left}      - number of characters left to type
     {game_time} - game time in seconds (float)
+    {words}     - typed words count
 
 winscreen-fmt keys:
     {time}      - number of seconds from begining of typing
