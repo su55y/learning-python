@@ -239,6 +239,10 @@ class Chars:
         return c
 
     @property
+    def words_left(self) -> int:
+        return len(self.words) - self.typed_words
+
+    @property
     def correct_chars_avg(self) -> float:
         return self.correct_chars / self.avg_word_len
 
@@ -466,6 +470,7 @@ class Game:
             pps=self.pps,
             game_time=self.game_time,
             words=self.chars.typed_words,
+            words_left=self.chars.words_left,
         )
 
     @property
