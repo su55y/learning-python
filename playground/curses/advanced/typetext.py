@@ -263,6 +263,9 @@ class GameState(Enum):
     INIT = enum_auto()
     TYPING = enum_auto()
     WINSCREEN = enum_auto()
+    RESTART = enum_auto()
+    RESTART_SAME = enum_auto()
+    EXIT = enum_auto()
 
 
 class Game:
@@ -297,8 +300,9 @@ class Game:
     def rnd_words(self) -> list[str]:
         return random.choices(self.src_words, k=self.words_count)
 
-    def reset(self) -> None:
-        self.words = self.rnd_words()
+    def reset(self, same=False) -> None:
+        if not same:
+            self.words = self.rnd_words()
         self.chars = Chars(self.words)
         self.start_perf_time = -1
         self.state = GameState.INIT
@@ -312,9 +316,16 @@ class Game:
     def run(self, stdscr: "curses._CursesWindow") -> None:
         self._setup_curses()
         self.stdscr = stdscr
-        while self._run_loop():
+        while True:
+            state = self._run_loop()
             self.stdscr.clear()
-            self.reset()
+            match state:
+                case GameState.RESTART:
+                    self.reset()
+                case GameState.RESTART_SAME:
+                    self.reset(same=True)
+                case GameState.EXIT:
+                    break
 
     def _setup_curses(self) -> None:
         curses.use_default_colors()
@@ -335,7 +346,7 @@ class Game:
         except:
             pass
 
-    def _run_loop(self) -> bool:
+    def _run_loop(self) -> GameState:
         max_y, max_x = self.stdscr.getmaxyx()
         self.game_win = curses.newwin(max_y - 2, max_x, 0, 0)
         self.status_win = curses.newwin(1, max_x, max_y - 1, 0)
@@ -351,7 +362,7 @@ class Game:
             ch = self.stdscr.getch()
             self.keys_pressed += 1
             if ch == Key.CTRL_R:
-                return True
+                return GameState.RESTART
             elif ch == Key.CTRL_L:
                 self.game_win.clear()
                 self.print_words_by_rows()
@@ -419,7 +430,7 @@ class Game:
             color_pair = self.bg_white
         self.try_addnstr(self.game_win, y, x, char.char, 1, color_pair)
 
-    def _run_winscreen_loop(self) -> bool:
+    def _run_winscreen_loop(self) -> GameState:
         self.time = time.perf_counter() - self.start_perf_time
         self.start_perf_time = -1
         minutes = self.time / 60
@@ -437,10 +448,12 @@ class Game:
                     self.reset_status_win()
                     self.print_status()
                 case Key.r:
-                    return True
+                    return GameState.RESTART
+                case Key.CTRL_R:
+                    return GameState.RESTART_SAME
                 case Key.q:
                     break
-        return False
+        return GameState.EXIT
 
     def _run_status_loop(self) -> None:
         self.status_thread_started = True
