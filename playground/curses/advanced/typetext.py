@@ -38,6 +38,7 @@ game keybinds:
 
 winscreen keybinds:
     [r]:   restart
+    [C-r]: restart same game
     [q]:   quit
     [C-l]: clear/refresh screen
 """
