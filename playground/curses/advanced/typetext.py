@@ -23,6 +23,7 @@ status-fmt keys:
     {game_time}  - game time in seconds (float)
     {words}      - words completed
     {words_left} - words left
+    {progress}   - game progress (float)
 
 winscreen-fmt keys:
     {time}      - number of seconds from begining of typing
@@ -243,6 +244,14 @@ class Chars:
     @property
     def words_left(self) -> int:
         return len(self.words) - self.typed_words
+
+    @property
+    def chars_left(self) -> int:
+        return self.chars_count - self.pos.current
+
+    @property
+    def progress(self) -> float:
+        return self.pos.current / self.chars_count * 100
 
     @property
     def correct_chars_avg(self) -> float:
@@ -477,7 +486,7 @@ class Game:
         return self.status_fmt.format(
             correct=self.chars.correct_chars,
             wrong=self.chars.wrong_chars,
-            left=self.chars.chars_count - self.chars.pos.current,
+            left=self.chars.chars_left,
             time=self.time,
             wpm=self.wpm,
             avg_wpm=self.avg_wpm,
@@ -486,6 +495,7 @@ class Game:
             game_time=self.game_time,
             words=self.chars.typed_words,
             words_left=self.chars.words_left,
+            progress=self.chars.progress,
         )
 
     @property
