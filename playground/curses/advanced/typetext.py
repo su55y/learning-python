@@ -306,6 +306,9 @@ class Game:
         self.acc = 0
         self.keys_pressed = 0
         self.pps = 0
+        self.game_pps = 0
+        self.keys_pressed_last_value = 0
+        self.game_pps_last_recount = 0
 
     def rnd_words(self) -> list[str]:
         return random.choices(self.src_words, k=self.words_count)
@@ -322,6 +325,9 @@ class Game:
         self.acc = 0
         self.keys_pressed = 0
         self.pps = 0
+        self.game_pps = 0
+        self.keys_pressed_last_value = 0
+        self.game_pps_last_recount = 0
 
     def run(self, stdscr: "curses._CursesWindow") -> None:
         self._setup_curses()
@@ -371,6 +377,7 @@ class Game:
             self.print_status()
             ch = self.stdscr.getch()
             self.keys_pressed += 1
+            self.recount_game_pps()
             if ch == Key.CTRL_R:
                 return GameState.RESTART
             elif ch == Key.CTRL_L:
@@ -496,11 +503,8 @@ class Game:
             words=self.chars.typed_words,
             words_left=self.chars.words_left,
             progress=self.chars.progress,
+            game_pps=self.game_pps,
         )
-
-    @property
-    def game_time(self) -> float:
-        return max(time.perf_counter() - self.start_perf_time, 0)
 
     @property
     def status_fmt(self) -> str:
@@ -511,6 +515,15 @@ class Game:
                 return self.winscreen_status_fmt
             case _:
                 return self.default_status_fmt
+
+    @property
+    def game_time(self) -> float:
+        return max(time.perf_counter() - self.start_perf_time, 0)
+
+    def recount_game_pps(self) -> None:
+        self.game_pps_last_recount = max(1, self.game_time - self.game_pps_last_recount)
+        self.keys_pressed_last_value = self.keys_pressed - self.keys_pressed_last_value
+        self.game_pps = self.keys_pressed_last_value / self.game_pps_last_recount
 
 
 def main():
