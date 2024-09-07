@@ -17,21 +17,21 @@ DEFAULT_STATUS_FMT = "correct: {correct} | wrong: {wrong} | left: {left} | [C-r]
 DEFAULT_WS_STATUS_FMT = "time: {time:.1f}s | wpm: {wpm:.2f} | wpm (avg): {avg_wpm:.2f} | acc: {acc:.1f}% | pps: {pps:.1f} | [r]: restart | [q]: quit"
 OPTIONS_DESCRIPTION = """
 status-fmt keys:
-    {correct}    - number of characters typed correctly 
-    {wrong}      - number of characters typed incorrectly
-    {left}       - number of characters left to type
+    {correct}    - number of characters typed correctly (int)
+    {wrong}      - number of characters typed incorrectly (int)
+    {left}       - number of characters left to type (int)
     {game_time}  - game time in seconds (float)
-    {words}      - words completed
-    {words_left} - words left
+    {words}      - words completed (int)
+    {words_left} - words left (int)
     {progress}   - game progress (float)
-    {game_pps}   - current presses per second
+    {game_pps}   - current presses per second (float)
 
 winscreen-fmt keys:
-    {time}      - number of seconds from begining of typing
-    {wpm}       - words per minute (correct words / minutes)
-    {avg_wpm}   - average words per minute (correct chars / avg word length / minutes)
-    {acc}       - accuracy percentage
-    {pps}       - presses per second
+    {time}      - number of seconds from begining of typing (float)
+    {wpm}       - words per minute (correct words / minutes) (float)
+    {avg_wpm}   - average words per minute (correct chars / avg word length / minutes) (float)
+    {acc}       - accuracy percentage (float)
+    {pps}       - presses per second (float)
 
 game keybinds:
     [C-r]:    restart
