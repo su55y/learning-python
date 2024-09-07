@@ -24,6 +24,7 @@ status-fmt keys:
     {words}      - words completed
     {words_left} - words left
     {progress}   - game progress (float)
+    {game_pps}   - current presses per second
 
 winscreen-fmt keys:
     {time}      - number of seconds from begining of typing
