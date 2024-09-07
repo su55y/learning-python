@@ -35,6 +35,7 @@ winscreen-fmt keys:
 
 game keybinds:
     [C-r]:    restart
+    [C-s]:    restart same game
     [Return]: finish
     [C-l]:    clear/refresh screen
 
@@ -108,6 +109,7 @@ def read_words_file(path: Path) -> list[str]:
 class Key(IntEnum):
     BACKSPACE = 263
     CTRL_R = 18
+    CTRL_S = 19
     CTRL_L = 12
     RETURN = 10
     r = ord("r")
@@ -386,6 +388,8 @@ class Game:
                 self.print_words_by_rows()
                 self.reset_status_win()
                 self.print_status()
+            elif ch == Key.CTRL_S:
+                return GameState.RESTART_SAME
             elif ch == Key.RETURN:
                 self.chars.pos.current = -1
                 self.print_words_by_rows()
