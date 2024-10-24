@@ -20,7 +20,8 @@ def clean_(event: KeyPressEvent):
 
 
 def on_text_changed_handler(buf1: Buffer, buf2: Buffer):
-    buf2.text = buf1.text[::-1]
+    lines = buf1.text.split("\n")
+    buf2.text = "\n".join(line[::-1] for line in lines)
 
 
 if __name__ == "__main__":
@@ -33,5 +34,5 @@ if __name__ == "__main__":
     win2 = Window(BufferControl(buf2), align=WindowAlign.RIGHT)
     layout = Layout(VSplit([win1, Window(width=1, char="|"), win2]))
 
-    app = Application(layout=layout, key_bindings=kb)
+    app = Application(layout=layout, key_bindings=kb, full_screen=True)
     app.run()
