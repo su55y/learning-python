@@ -1,5 +1,3 @@
-import time
-import datetime as dt
 import os
 
 
@@ -50,20 +48,21 @@ def get_palette() -> list[str]:
     return [fg, bg]
 
 if __name__ == "__main__":
-    distro_l = "\033[33mOS\033[0m    "
-    shell_l = "\033[34mShell\033[0m    "
-    uptime_l = "\033[35mUptime\033[0m    "
+    tab = " " * 4
+    distro_l = f"\033[33mOS\033[0m{tab}"
+    shell_l = f"\033[34mShell\033[0m{tab}"
+    uptime_l = f"\033[35mUptime\033[0m{tab}"
     title = get_title().strip()
     distro = get_distro().strip()
     shell = get_shell().strip()
     palette = get_palette()
     uptime = get_uptime()
     max_len = max(map(len, [distro_l, shell_l, shell, distro, uptime]))
-    print(f"{title: >{8 + len(title)}}")
-    print("*---*   " + "-" * len(title))
-    print("| F |   " + f"{distro_l: <{max_len}}{distro.strip("\"")}")
-    print("*---*   " + f"{shell_l: <{max_len}}{shell}")
-    print("        " + f"{uptime_l: <{max_len}}{uptime}")
+    print(f"{title: >{9+len(title)}}")
+    print(f"*---*{tab}{'-'*len(title)}")
+    print(f"| F |{tab}{distro_l: <{max_len}}{distro.strip("\"")}")
+    print(f"*---*{tab}{shell_l: <{max_len}}{shell}")
+    print(f"     {tab}{uptime_l: <{max_len}}{uptime}")
     print()
     for colors in palette:
         print(f"{colors: >{len(colors) + 8}}")
