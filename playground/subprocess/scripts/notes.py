@@ -1,9 +1,11 @@
+import os
 from pathlib import Path
 import re
 import subprocess as sp
 import time
 
 
+EDITOR = None
 NOTES_DIR_PATH = Path().home() / ".notes"
 MONTH_DIR = NOTES_DIR_PATH / time.strftime("%Y_%02m")
 TODAY_FILE = MONTH_DIR / time.strftime("%d")
@@ -38,8 +40,12 @@ def last_line(filepath: Path) -> str:
 
 
 if __name__ == "__main__":
+    EDITOR = os.environ.get("EDITOR", None)
+    if EDITOR is None:
+        print("EDITOR env is not set")
+        exit(1)
     init()
-    p = sp.run(["nvim", str(TODAY_FILE), "+"], capture_output=False)
+    p = sp.run([EDITOR, str(TODAY_FILE), "+"], capture_output=False)
     if p.returncode != 0:
         exit(1)
 
