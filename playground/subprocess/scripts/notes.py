@@ -33,8 +33,17 @@ def init():
             f.write(FILE_FMT)
 
 
+def last_line(filepath: Path) -> str:
+    return sp.getoutput(f"tail -n 1 {filepath!s}").strip()
+
+
 if __name__ == "__main__":
     init()
     p = sp.run(["nvim", str(TODAY_FILE), "+"], capture_output=False)
     if p.returncode != 0:
         exit(1)
+
+    line = last_line(TODAY_FILE)
+    if line != "":
+        with open(TODAY_FILE, "a") as f:
+            f.write("\n\n")
