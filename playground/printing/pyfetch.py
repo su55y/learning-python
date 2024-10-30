@@ -18,11 +18,6 @@ def get_uptime():
     else:
         return f"{mins} min{'' if mins == 1 else 's'}"
 
-def get_title() -> str:
-    username = os.getlogin()
-    uname = os.uname()
-    return f"\033[32m{username}\033[0m@\033[32m{uname.nodename}\033[0m"
-
 
 def get_kernel() -> str:
     uname = os.uname()
@@ -52,14 +47,17 @@ if __name__ == "__main__":
     distro_l = f"\033[33mOS\033[0m{tab}"
     shell_l = f"\033[34mShell\033[0m{tab}"
     uptime_l = f"\033[35mUptime\033[0m{tab}"
-    title = get_title().strip()
+    username = os.getlogin() or "Unknown"
+    hostname = os.uname().nodename
+    title_len = len(username) + len(hostname) + 1
+    title = f"\033[32m{username}\033[0m@\033[32m{hostname}\033[0m"
     distro = get_distro().strip()
     shell = get_shell().strip()
     palette = get_palette()
     uptime = get_uptime()
     max_len = max(map(len, [distro_l, shell_l, shell, distro, uptime]))
     print(f"{title: >{9+len(title)}}")
-    print(f"*---*{tab}{'-'*len(title)}")
+    print(f"*---*{tab}{'-'*title_len}")
     print(f"| F |{tab}{distro_l: <{max_len}}{distro.strip("\"")}")
     print(f"*---*{tab}{shell_l: <{max_len}}{shell}")
     print(f"     {tab}{uptime_l: <{max_len}}{uptime}")
