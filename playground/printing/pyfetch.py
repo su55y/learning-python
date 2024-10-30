@@ -1,3 +1,4 @@
+import random
 import os
 
 
@@ -42,6 +43,13 @@ def get_palette() -> list[str]:
     bg = "".join(f"\033[10{i}m   \033[0m" for i in range(8))
     return [fg, bg]
 
+def get_ascii_lines() -> list[str]:
+    clr = lambda: random.randint(16, 231)
+    bg = "\033[48;5;{c}m \033[0m"
+    return ["".join([bg.format(c=clr())for _ in range(8)]) for _ in range(4)]
+
+
+
 if __name__ == "__main__":
     tab = " " * 4
     distro_l = f"\033[33mOS\033[0m{tab}"
@@ -56,11 +64,12 @@ if __name__ == "__main__":
     palette = get_palette()
     uptime = get_uptime()
     max_len = max(map(len, [distro_l, shell_l, shell, distro, uptime]))
-    print(f"{title: >{9+len(title)}}")
-    print(f"*---*{tab}{'-'*title_len}")
-    print(f"| F |{tab}{distro_l: <{max_len}}{distro.strip("\"")}")
-    print(f"*---*{tab}{shell_l: <{max_len}}{shell}")
-    print(f"     {tab}{uptime_l: <{max_len}}{uptime}")
+    ascii_lines = get_ascii_lines()
+    print(f"{title: >{12+len(title)}}")
+    print(f"{ascii_lines[0]}{tab}{'-'*title_len}")
+    print(f"{ascii_lines[1]}{tab}{distro_l: <{max_len}}{distro.strip("\"")}")
+    print(f"{ascii_lines[2]}{tab}{shell_l: <{max_len}}{shell}")
+    print(f"{ascii_lines[3]}{tab}{uptime_l: <{max_len}}{uptime}")
     print()
     for colors in palette:
-        print(f"{colors: >{len(colors) + 8}}")
+        print(f"{colors: >{len(colors) + 12}}")
