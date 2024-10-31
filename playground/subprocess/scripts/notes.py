@@ -8,7 +8,7 @@ import time
 EDITOR = None
 NOTES_DIR_PATH = Path().home() / ".notes"
 MONTH_DIR = NOTES_DIR_PATH / time.strftime("%Y_%02m")
-TODAY_FILE = MONTH_DIR / time.strftime("%d")
+TODAY_FILE = MONTH_DIR / time.strftime("%02d")
 FILE_FMT = """
 =============================
 {date}
