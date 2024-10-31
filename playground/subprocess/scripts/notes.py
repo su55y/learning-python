@@ -20,7 +20,7 @@ FILE_FMT = """
 )
 
 
-def init():
+def init_files():
     if not NOTES_DIR_PATH.exists():
         resp = input(f"Directory {NOTES_DIR_PATH} not exists, create it? [y/n]: ")
         if not re.match("[yY](?:es)?", resp, flags=re.IGNORECASE):
@@ -35,7 +35,7 @@ def init():
             f.write(FILE_FMT)
 
 
-def last_line(filepath: Path) -> str:
+def get_last_line(filepath: Path) -> str:
     return sp.getoutput(f"tail -n 1 {filepath!s}").strip()
 
 
@@ -44,12 +44,14 @@ if __name__ == "__main__":
     if EDITOR is None:
         print("EDITOR env is not set")
         exit(1)
-    init()
+
+    init_files()
+
     p = sp.run([EDITOR, str(TODAY_FILE), "+"], capture_output=False)
     if p.returncode != 0:
         exit(1)
 
-    line = last_line(TODAY_FILE)
-    if line != "":
+    last_line = get_last_line(TODAY_FILE)
+    if last_line != "":
         with open(TODAY_FILE, "a") as f:
             f.write("\n\n")
