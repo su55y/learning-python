@@ -1,9 +1,11 @@
+import argparse
 from dataclasses import dataclass
 import os
 from pathlib import Path
 import re
 import subprocess as sp
 import time
+import toml
 
 
 EDITOR = None
@@ -19,13 +21,39 @@ FILE_FMT = """
 )
 
 
+def str2path(v: str) -> Path:
+    return Path(v).expanduser()
+
+
 @dataclass
 class Config:
     notes_dir: Path
 
+    def __post_init__(self):
+        if isinstance(self.notes_dir, str):
+            self.notes_dir = str2path(self.notes_dir)
+
 
 def default_config() -> Config:
     return Config(notes_dir=DEFAULT_NOTES_DIR_PATH)
+
+
+def default_config_path() -> Path:
+    config_home = os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")
+    return Path(config_home) / "notes/config.toml"
+
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-c",
+        "--config",
+        default=default_config_path(),
+        type=str2path,
+        metavar="PATH",
+        help="config file path (default: %(default)s)",
+    )
+    return parser.parse_args()
 
 
 class Notes:
@@ -56,7 +84,13 @@ def get_last_line(filepath: Path) -> str:
 
 
 if __name__ == "__main__":
-    config = default_config()
+    args = parse_args()
+    if args.config.exists():
+        with open(args.config) as f:
+            config = Config(**toml.load(f))
+    else:
+        config = default_config()
+
     EDITOR = os.environ.get("EDITOR", None)
     if EDITOR is None:
         print("EDITOR env is not set")
