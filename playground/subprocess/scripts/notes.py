@@ -8,7 +8,6 @@ import time
 import toml
 
 
-EDITOR = None
 DEFAULT_NOTES_DIR_PATH = Path().home() / ".notes"
 FILE_FMT = """
 =============================
@@ -28,10 +27,17 @@ def str2path(v: str) -> Path:
 @dataclass
 class Config:
     notes_dir: Path
+    editor: str = ""
 
     def __post_init__(self):
         if isinstance(self.notes_dir, str):
             self.notes_dir = str2path(self.notes_dir)
+        if len(self.editor) == 0:
+            EDITOR = os.environ.get("EDITOR", None)
+            if EDITOR is None:
+                print("EDITOR env is not set")
+                exit(1)
+            self.editor = EDITOR
 
 
 def default_config() -> Config:
@@ -78,6 +84,19 @@ class Notes:
             with open(self.today_file, "w") as f:
                 f.write(FILE_FMT)
 
+    def edit(self):
+        p = sp.run(
+            [self.config.editor, str(notes.today_file), "+"],
+            capture_output=False,
+        )
+        if p.returncode != 0:
+            exit(1)
+
+        last_line = get_last_line(notes.today_file)
+        if last_line != "":
+            with open(notes.today_file, "a") as f:
+                f.write("\n\n")
+
 
 def get_last_line(filepath: Path) -> str:
     return sp.getoutput(f"tail -n 1 {filepath!s}").strip()
@@ -91,18 +110,5 @@ if __name__ == "__main__":
     else:
         config = default_config()
 
-    EDITOR = os.environ.get("EDITOR", None)
-    if EDITOR is None:
-        print("EDITOR env is not set")
-        exit(1)
-
     notes = Notes(config)
-
-    p = sp.run([EDITOR, str(notes.today_file), "+"], capture_output=False)
-    if p.returncode != 0:
-        exit(1)
-
-    last_line = get_last_line(notes.today_file)
-    if last_line != "":
-        with open(notes.today_file, "a") as f:
-            f.write("\n\n")
+    notes.edit()
