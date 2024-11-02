@@ -39,9 +39,9 @@ def get_shell() -> str:
 
 
 def get_palette() -> list[str]:
-    fg = "".join(f"\033[4{i}m   \033[0m" for i in range(8))
-    bg = "".join(f"\033[10{i}m   \033[0m" for i in range(8))
-    return [fg, bg]
+    normal = "".join(f"\033[4{i}m   \033[0m" for i in range(8))
+    bright = "".join(f"\033[10{i}m   \033[0m" for i in range(8))
+    return [normal, bright]
 
 def get_ascii_lines() -> list[str]:
     clr = lambda: random.randint(16, 231)
