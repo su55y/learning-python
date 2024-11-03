@@ -59,6 +59,12 @@ def parse_args():
         metavar="PATH",
         help="config file path (default: %(default)s)",
     )
+    parser.add_argument(
+        "-i",
+        "--inspect",
+        action="store_true",
+        help="inspect notes files",
+    )
     return parser.parse_args()
 
 
@@ -102,6 +108,13 @@ def get_last_line(filepath: Path) -> str:
     return sp.getoutput(f"tail -n 1 {filepath!s}").strip()
 
 
+def choose_file(dir: Path) -> Path:
+    code, out = sp.getstatusoutput(f"find {dir!s} -type f | sort -r | fzf")
+    if code != 0:
+        exit(1)
+    return Path(out)
+
+
 if __name__ == "__main__":
     args = parse_args()
     if args.config.exists():
@@ -111,4 +124,15 @@ if __name__ == "__main__":
         config = default_config()
 
     notes = Notes(config)
-    notes.edit()
+    if args.inspect:
+        file = choose_file(config.notes_dir)
+
+        p = sp.run(
+            [config.editor, str(file), "+"],
+            capture_output=False,
+        )
+        if p.returncode != 0:
+            exit(1)
+
+    else:
+        notes.edit()
