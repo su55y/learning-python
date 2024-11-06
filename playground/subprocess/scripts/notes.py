@@ -109,7 +109,12 @@ def get_last_line(filepath: Path) -> str:
 
 
 def choose_file(dir: Path) -> Path:
-    code, out = sp.getstatusoutput(f"find {dir!s} -type f | sort -r | fzf")
+    code, out = sp.getstatusoutput(
+        f"""find {dir!s} -type f |\
+                sort -r |\
+                fzf --bind='ctrl-d:execute-silent(rm {{}})+reload(\
+                find {dir!s} -type f | sort -r)+clear-query'"""
+    )
     if code != 0:
         exit(1)
     return Path(out)
