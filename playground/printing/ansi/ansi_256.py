@@ -27,7 +27,7 @@ def print_color(color: int):
 
 
 def print_colors_range(start: int, colors_count: int):
-    for i in range(start, min(start + colors_count, 255)):
+    for i in range(start, min(start + colors_count, 256)):
         print_color(i)
 
 
