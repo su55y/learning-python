@@ -86,17 +86,23 @@ class Notes:
         if not self.month_dir.exists():
             self.month_dir.mkdir(mode=0o755)
 
+    def edit(self):
+        is_new = False
         if not self.today_file.exists():
             with open(self.today_file, "w") as f:
                 f.write(FILE_FMT)
+                is_new = True
 
-    def edit(self):
         p = sp.run(
             [self.config.editor, str(self.today_file), "+"],
             capture_output=False,
         )
         if p.returncode != 0:
             exit(1)
+
+        if is_new and len(FILE_FMT) == self.today_file.stat().st_size:
+            self.today_file.unlink()
+            return
 
         last_line = get_last_line(self.today_file)
         if last_line != "":
