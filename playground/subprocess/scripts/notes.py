@@ -92,15 +92,15 @@ class Notes:
 
     def edit(self):
         p = sp.run(
-            [self.config.editor, str(notes.today_file), "+"],
+            [self.config.editor, str(self.today_file), "+"],
             capture_output=False,
         )
         if p.returncode != 0:
             exit(1)
 
-        last_line = get_last_line(notes.today_file)
+        last_line = get_last_line(self.today_file)
         if last_line != "":
-            with open(notes.today_file, "a") as f:
+            with open(self.today_file, "a") as f:
                 f.write("\n\n")
 
 
