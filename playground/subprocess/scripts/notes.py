@@ -65,6 +65,12 @@ def parse_args():
         action="store_true",
         help="inspect notes files",
     )
+    parser.add_argument(
+        "-I",
+        "--inspect-loop",
+        action="store_true",
+        help="inspect notes files in loop",
+    )
     return parser.parse_args()
 
 
@@ -137,7 +143,8 @@ if __name__ == "__main__":
         config = default_config()
 
     notes = Notes(config)
-    if args.inspect:
+
+    def inspect():
         file = choose_file(config.notes_dir)
 
         p = sp.run(
@@ -147,5 +154,10 @@ if __name__ == "__main__":
         if p.returncode != 0:
             exit(1)
 
+    if args.inspect:
+        inspect()
+    elif args.inspect_loop:
+        while 1:
+            inspect()
     else:
         notes.edit()
