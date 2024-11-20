@@ -52,13 +52,13 @@ def get_ascii_lines() -> list[str]:
 
 if __name__ == "__main__":
     tab = " " * 4
-    distro_l = f"\033[33mOS\033[0m{tab}"
-    shell_l = f"\033[34mShell\033[0m{tab}"
-    uptime_l = f"\033[35mUptime\033[0m{tab}"
+    distro_l = f"\033[1;33mOS\033[0m{tab}"
+    shell_l = f"\033[1;34mShell\033[0m{tab}"
+    uptime_l = f"\033[1;35mUptime\033[0m{tab}"
     username = os.getlogin() or "Unknown"
     hostname = os.uname().nodename
     title_len = len(username) + len(hostname) + 1
-    title = f"\033[32m{username}\033[0m@\033[32m{hostname}\033[0m"
+    title = f"\033[1;32m{username}\033[0m@\033[1;32m{hostname}\033[0m"
     distro = get_distro().strip()
     shell = get_shell().strip()
     palette = get_palette()
