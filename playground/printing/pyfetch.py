@@ -20,11 +20,6 @@ def get_uptime():
         return f"{mins} min{'' if mins == 1 else 's'}"
 
 
-def get_kernel() -> str:
-    uname = os.uname()
-    return uname.release
-
-
 def get_distro() -> str:
     release_info = {}
     with open("/etc/os-release") as f:
@@ -43,11 +38,11 @@ def get_palette() -> list[str]:
     bright = "".join(f"\033[10{i}m   \033[0m" for i in range(8))
     return [normal, bright]
 
+
 def get_ascii_lines() -> list[str]:
     clr = lambda: random.randint(16, 231)
     bg = "\033[48;5;{c}m \033[0m"
-    return ["".join([bg.format(c=clr())for _ in range(8)]) for _ in range(4)]
-
+    return ["".join([bg.format(c=clr()) for _ in range(8)]) for _ in range(4)]
 
 
 if __name__ == "__main__":
@@ -55,11 +50,14 @@ if __name__ == "__main__":
     distro_l = f"\033[1;33mOS\033[0m{tab}"
     shell_l = f"\033[1;34mShell\033[0m{tab}"
     uptime_l = f"\033[1;35mUptime\033[0m{tab}"
+    uname = os.uname()
     username = os.getlogin() or "Unknown"
-    hostname = os.uname().nodename
+    hostname = uname.nodename
     title_len = len(username) + len(hostname) + 1
     title = f"\033[1;32m{username}\033[0m@\033[1;32m{hostname}\033[0m"
-    distro = get_distro().strip()
+    distro_name = get_distro().strip().strip('"')
+    kernel_version = uname.release
+    distro = f"\033[1m{distro_name}\033[0m {kernel_version}"
     shell = get_shell().strip()
     palette = get_palette()
     uptime = get_uptime()
@@ -67,7 +65,7 @@ if __name__ == "__main__":
     ascii_lines = get_ascii_lines()
     print(f"{title: >{12+len(title)}}")
     print(f"{ascii_lines[0]}{tab}{'-'*title_len}")
-    print(f"{ascii_lines[1]}{tab}{distro_l: <{max_len}}{distro.strip("\"")}")
+    print(f"{ascii_lines[1]}{tab}{distro_l: <{max_len}}{distro}")
     print(f"{ascii_lines[2]}{tab}{shell_l: <{max_len}}{shell}")
     print(f"{ascii_lines[3]}{tab}{uptime_l: <{max_len}}{uptime}")
     print()
