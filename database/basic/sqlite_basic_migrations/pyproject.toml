@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "basic_sqlite_migrations"
+version = "0.0.1"
+dependencies = []
+requires-python = ">= 3.10"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["basic_sqlite_migrations*"]
+
+[tool.setuptools.package-data]
+"basic_sqlite_migrations" = ["migrations/*.sql"]
+
+[project.scripts]
+basic-sqlite-migrations = "basic_sqlite_migrations.main:main"
