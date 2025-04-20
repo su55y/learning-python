@@ -1,6 +1,7 @@
 import curses
 from pathlib import Path
 import re
+import sys
 import tomllib
 
 PALETTES_DIR = Path(__file__).with_name("palettes")
@@ -14,6 +15,7 @@ rx_hex_color_3 = re.compile(r"^\#[a-f0-9]{3}$")
 
 
 def hex_to_rgb(h: str) -> tuple[int, int, int]:
+    h = h.lower()
     if rx_hex_color_6.match(h):
         return int(h[1:3], base=16), int(h[3:5], base=16), int(h[5:7], base=16)
     if rx_hex_color_3.match(h):
@@ -22,7 +24,7 @@ def hex_to_rgb(h: str) -> tuple[int, int, int]:
 
 
 def rgb_to_curses_rgb(rgb: tuple[int, int, int]) -> tuple[int, int, int]:
-    r, g, b = tuple(int(round(1000 * c / 255)) for c in rgb)
+    r, g, b = tuple(1000 * c // 255 for c in rgb)
     return r, g, b
 
 
@@ -54,9 +56,17 @@ def get_palettes_map() -> dict[str, dict]:
 
 
 def run(s: "curses._CursesWindow"):
-    curses.curs_set(0)
+    if not curses.has_colors() or curses.COLORS < 256:
+        raise NotImplementedError("TERM should be xterm-256color")
     if not curses.can_change_color():
-        raise Exception("Can't change color =(")
+        raise NotImplementedError("Can't change color =(")
+
+    curses.curs_set(0)
+    curses.use_default_colors()
+
+    order = ["black", "red", "green", "yellow", "blue", "magenta", "cyan", "white"]
+    for i in range(16):
+        curses.init_pair(i, 0, i)
 
     palettes_map = get_palettes_map()
     for palette in palettes_map.values():
@@ -65,31 +75,54 @@ def run(s: "curses._CursesWindow"):
                 curses.init_color(color["index"], *color["rgb"])
                 curses.init_pair(color["index"], 0, color["index"])
 
-    order = ["black", "red", "green", "yellow", "blue", "magenta", "cyan", "white"]
+    max_y, max_x = s.getmaxyx()
+    pad_pos = 0
+    pad_size = 3 + (3 * len(palettes_map))
+    pad = curses.newpad(pad_size + 1, max_x)
 
-    def draw():
-        s.clear()
-        for name, p in palettes_map.items():
-            s.addstr(f"{name}\n", curses.A_BOLD)
-            for k in order:
-                s.addstr("   ", curses.color_pair(p["normal"][k]["index"]))
-            s.addstr("\n")
-            for k in order:
-                s.addstr("   ", curses.color_pair(p["bright"][k]["index"]))
-            s.addstr("\n")
+    pad.addstr("Default\n", curses.A_BOLD)
+    for i in range(16):
+        pad.addstr("   ", curses.color_pair(i))
+        if (i + 1) % 8 == 0:
+            pad.addstr("\n")
+    for name, p in palettes_map.items():
+        pad.addstr(f"{name}\n", curses.A_BOLD)
+        for k in order:
+            pad.addstr("   ", curses.color_pair(p["normal"][k]["index"]))
+        pad.addstr("\n")
+        for k in order:
+            pad.addstr("   ", curses.color_pair(p["bright"][k]["index"]))
+        pad.addstr("\n")
+
+    pad.refresh(pad_pos, 0, 0, 0, max_y - 1, max_x - 1)
+    s.refresh()
 
     while True:
-        try:
-            draw()
-        except curses.error:
-            pass
-        try:
-            ch = s.getch()
-            if ch == ord("q"):
-                break
-        except KeyboardInterrupt:
+        max_y, max_x = s.getmaxyx()
+        pad.refresh(pad_pos, 0, 0, 0, max_y - 1, max_x - 1)
+        ch = s.getch()
+        if ch == ord("q"):
             break
+        elif ch in (ord("j"), curses.KEY_DOWN):
+            pad_pos = min(pad_pos + 1, pad.getyx()[0] - max_y)
+        elif ch in (ord("k"), curses.KEY_UP):
+            pad_pos = max(0, pad_pos - 1)
+        elif ch in (ord("g"), curses.KEY_HOME):
+            pad_pos = 0
+        elif ch in (ord("G"), curses.KEY_END):
+            pad_pos = max(pad_size - max_y, 0)
+        s.refresh()
+    return 0
+
+
+def main():
+    try:
+        return curses.wrapper(run)
+    except KeyboardInterrupt:
+        return 0
+    except Exception as e:
+        raise e
 
 
 if __name__ == "__main__":
-    curses.wrapper(run)
+    sys.exit(main())
