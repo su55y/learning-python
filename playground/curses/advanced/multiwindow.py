@@ -50,7 +50,7 @@ class LinesPrinter:
                 if self.index + 1 == len(self.lines):
                     self.scroll_top = max((self.index + 1) - max_rows, 0)
 
-    def run(self, stdscr: "curses._CursesWindow") -> None:
+    def run(self, stdscr: curses.window) -> None:
         self.config_curses()
         self._run(stdscr)
 
@@ -64,12 +64,12 @@ class LinesPrinter:
         except:
             curses.initscr()
 
-    def _run(self, stdscr: "curses._CursesWindow") -> None:
+    def _run(self, stdscr: curses.window) -> None:
         max_y, max_x = stdscr.getmaxyx()
         status_window = curses.newwin(1, max_x, 0, 0)
         lines_window = curses.newwin(max_y, max_x - 1, 1, 0)
 
-        def redraw_status(s: "curses._CursesWindow"):
+        def redraw_status(s: curses.window):
             _, max_x = s.getmaxyx()
             time_str = time.strftime("%T")
             text = " %s, scroll_top: %d, index: %d%s " % (
@@ -85,7 +85,7 @@ class LinesPrinter:
                 pass
             s.refresh()
 
-        def status_thread_loop(s: "curses._CursesWindow"):
+        def status_thread_loop(s: curses.window):
             s.refresh()
             while True:
                 redraw_status(s)
@@ -125,11 +125,7 @@ class LinesPrinter:
                 case Key.r:
                     stdscr.clear()
 
-    def print_status(self, status_window: "curses._CursesWindow") -> None:
-        _, max_x = status_window.getmaxyx()
-        status_window.addnstr(0, 1, "[%s]\n" % time.strftime("%T"), max_x - 2)
-
-    def switch_to_pad(self, s: "curses._CursesWindow") -> None:
+    def switch_to_pad(self, s: curses.window) -> None:
         s.clear()
         max_y, max_x = s.getmaxyx()
         pad_pos = self.scroll_top
@@ -164,7 +160,7 @@ class LinesPrinter:
                 case Key.G | curses.KEY_END:
                     pad_pos = len(self.raw_lines) - max_y
 
-    def print_lines(self, s: "curses._CursesWindow") -> None:
+    def print_lines(self, s: curses.window) -> None:
         max_y, max_x = s.getmaxyx()
         y, x = 0, 1
         max_rows = max_y - 1

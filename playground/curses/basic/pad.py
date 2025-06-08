@@ -18,7 +18,7 @@ def read_self_lines() -> List[str]:
         return f.readlines()
 
 
-def main(scr: "curses._CursesWindow"):
+def main(scr: curses.window):
     curses.use_default_colors()
     curses.curs_set(0)
     scr.keypad(True)

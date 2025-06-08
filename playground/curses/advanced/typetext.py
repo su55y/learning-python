@@ -332,7 +332,7 @@ class Game:
         self.keys_pressed_last_value = 0
         self.game_pps_last_recount = 0
 
-    def run(self, stdscr: "curses._CursesWindow") -> None:
+    def run(self, stdscr: curses.window) -> None:
         self._setup_curses()
         self.stdscr = stdscr
         while True:
@@ -359,7 +359,7 @@ class Game:
         self.status_color = curses.color_pair(4)
 
     @staticmethod
-    def try_addnstr(stdscr: "curses._CursesWindow", *args) -> None:
+    def try_addnstr(stdscr: curses.window, *args) -> None:
         try:
             stdscr.addnstr(*args)
         except:

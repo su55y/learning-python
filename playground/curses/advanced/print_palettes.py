@@ -55,7 +55,7 @@ def get_palettes_map() -> dict[str, dict]:
     return palettes
 
 
-def run(s: "curses._CursesWindow"):
+def run(s: curses.window):
     if not curses.has_colors() or curses.COLORS < 256:
         raise NotImplementedError("TERM should be xterm-256color")
     if not curses.can_change_color():

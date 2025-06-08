@@ -8,7 +8,7 @@ class LinesPrinter:
         self.lines = lines
         self.active_index = 0 if len(self.lines) else -1
 
-    def run(self, stdscr: "curses._CursesWindow") -> None:
+    def run(self, stdscr: curses.window) -> None:
         curses.curs_set(0)
         self.s = stdscr
         while 1:

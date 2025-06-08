@@ -70,7 +70,7 @@ class Picker:
             self.gravity,
         )
 
-    def draw(self, screen: "curses._CursesWindow") -> None:
+    def draw(self, screen: curses.window) -> None:
         # screen.clear()
         screen.refresh()
         x, y = 0, 0
@@ -96,7 +96,7 @@ class Picker:
             pass
         screen.refresh()
 
-    def run_loop(self, screen: "curses._CursesWindow") -> int:
+    def run_loop(self, screen: curses.window) -> int:
         while True:
             self.draw(screen)
             match screen.getch():
@@ -118,7 +118,7 @@ class Picker:
         except:
             curses.initscr()
 
-    def _start(self, screen: "curses._CursesWindow"):
+    def _start(self, screen: curses.window):
         self.config_curses()
         return self.run_loop(screen)
 
